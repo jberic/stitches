@@ -1,0 +1,49 @@
+/* All fonts are SIL OFL 1.1, self-hosted from public/fonts (licence files sit next to each font). */
+
+/* UI fonts */
+@font-face {
+  font-family: 'Fraunces';
+  src: url('/fonts/fraunces/Fraunces-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: block;
+}
+@font-face {
+  font-family: 'IBM Plex Sans';
+  src: url('/fonts/ibmplexsans/IBMPlexSans-Variable.ttf') format('truetype');
+  font-weight: 100 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/fonts/ibmplexmono/IBMPlexMono-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  src: url('/fonts/ibmplexmono/IBMPlexMono-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-display: swap;
+}
+
+/* Display fonts for patterns. Only loaded when a recipe asks for them. */
+@font-face {
+  font-family: 'Chango';
+  src: url('/fonts/chango/Chango-Regular.ttf') format('truetype');
+  font-display: block;
+}
+@font-face {
+  font-family: 'Shrikhand';
+  src: url('/fonts/shrikhand/Shrikhand-Regular.ttf') format('truetype');
+  font-display: block;
+}
+@font-face {
+  font-family: 'Bagel Fat One';
+  src: url('/fonts/bagelfatone/BagelFatOne-Regular.ttf') format('truetype');
+  font-display: block;
+}
+@font-face {
+  font-family: 'Rubik Mono One';
+  src: url('/fonts/rubikmonoone/RubikMonoOne-Regular.ttf') format('truetype');
+  font-display: block;
+}
