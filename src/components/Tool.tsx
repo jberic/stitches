@@ -10,7 +10,11 @@ const DEFAULT_TEXT = 'Hello sunshine'
 const INK = '#b8402f'
 const FONT = 'Chango'
 
-export function Tool() {
+interface Props {
+  inputRef?: React.Ref<HTMLInputElement>
+}
+
+export function Tool({ inputRef }: Props) {
   const [text, setText] = useState(DEFAULT_TEXT)
   const [width, setWidth] = useState(DEFAULT_WIDTH)
   const [result, setResult] = useState<GenerateResult | null>(null)
@@ -73,6 +77,7 @@ export function Tool() {
             Your words
           </label>
           <input
+            ref={inputRef}
             id={ids.text}
             className="phrase-input"
             type="text"

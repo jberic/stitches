@@ -27,6 +27,95 @@
   letter-spacing: -0.02em;
 }
 
+/* Intro: the header words are transformed to fill the screen, then return. */
+.wordmark-word {
+  display: inline-block;
+}
+
+.wordmark[data-phase='intro']:not([data-ready]) {
+  opacity: 0;
+}
+
+.wordmark[data-phase='intro'] {
+  position: relative;
+  z-index: 2;
+}
+
+.wordmark[data-phase='leaving'] {
+  position: relative;
+  z-index: 2;
+}
+
+.wordmark[data-phase='leaving'] .wordmark-word {
+  transition: transform 1100ms cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+/* Stitched variant: the heading waits while the stitched wordmark holds the screen. */
+.wordmark[data-variant='stitched'][data-phase='intro'] {
+  opacity: 0;
+}
+
+.wordmark[data-variant='stitched'][data-phase='leaving'] {
+  transition: opacity 600ms ease 500ms;
+}
+
+.wordmark-stitched {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.wordmark-stitched canvas {
+  display: block;
+  transform-origin: 0 0;
+  transition:
+    transform 1100ms cubic-bezier(0.76, 0, 0.24, 1),
+    opacity 500ms ease 700ms;
+}
+
+/* Hidden copy used only to measure the full-width layout. */
+.wordmark-ghost {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 clamp(1rem, 4vw, 3rem);
+  visibility: hidden;
+  pointer-events: none;
+  font-family: var(--font-heading);
+  font-weight: 750;
+  font-variation-settings: 'opsz' 72, 'SOFT' 100, 'WONK' 1;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.wordmark-ghost-line {
+  white-space: nowrap;
+}
+
+/* Stacked lines on phones sit tight, like set type. */
+.wordmark-ghost-line + .wordmark-ghost-line {
+  margin-top: -0.14em;
+}
+
+.reveal {
+  transition:
+    opacity 700ms ease 650ms,
+    transform 1000ms cubic-bezier(0.16, 1, 0.3, 1) 600ms;
+}
+
+.page[data-intro='intro'] .reveal {
+  opacity: 0;
+  transform: translateY(1.5rem);
+  transition: none;
+}
+
 .tagline {
   margin: 0;
   font-size: 0.875rem;
