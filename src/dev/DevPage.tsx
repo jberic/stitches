@@ -108,6 +108,12 @@ export function DevPage() {
   const deterministic = rows.filter((r) => r.deterministic).length
   const changedFont = rows.filter((r) => r.newFontOnGenerate).length
   const firstTry = rows.filter((r) => r.result.attempts.length === 1 && r.result.check.ok).length
+  // One short code for every stitch of every pattern. Compare it across browsers:
+  // if Safari and Chrome show the same code, shared links give identical patterns.
+  const fingerprint =
+    rows.length === TEST_PHRASES.length
+      ? hashString(rows.map((r) => `${r.seed}:${r.result.pattern.cells.join('')}`).join('|')).toString(36)
+      : '–'
 
   return (
     <main className="dev">
@@ -137,6 +143,7 @@ export function DevPage() {
           value={`${changedFont} / ${rows.length}`}
           ok={changedFont >= rows.length * 0.9}
         />
+        <Stat label="Pattern fingerprint (compare across browsers)" value={fingerprint} />
         {running && <p className="running">Running…</p>}
       </section>
 
