@@ -1,9 +1,8 @@
 .tool {
-  --chart-fabric: #fffdf8;
-  --chart-line: rgb(31 27 22 / 0.09);
-  --chart-guide: rgb(31 27 22 / 0.32);
-  --chart-number: #8a7f71;
-  --thread: #b8402f;
+  --chart-fabric: var(--sheet);
+  --chart-line: rgb(95 5 28 / 0.1);
+  --chart-guide: rgb(95 5 28 / 0.38);
+  --chart-number: var(--sheet-muted);
 
   display: grid;
   gap: clamp(2rem, 4vw, 4rem);
@@ -27,10 +26,10 @@
   background: var(--chart-fabric);
   padding: clamp(0.75rem, 2.5vw, 2.5rem);
   border-radius: 2px;
+  color: var(--sheet-ink);
   box-shadow:
-    0 1px 0 rgb(31 27 22 / 0.04),
-    0 2px 6px -2px rgb(31 27 22 / 0.08),
-    0 24px 48px -24px rgb(31 27 22 / 0.18);
+    0 2px 6px -2px rgb(20 0 6 / 0.35),
+    0 32px 64px -32px rgb(20 0 6 / 0.7);
 }
 
 .chart {
@@ -55,9 +54,9 @@
   gap: 0.25rem 1rem;
   margin-top: clamp(0.75rem, 2vw, 1.75rem);
   padding-top: 0.75rem;
-  border-top: 1px solid rgb(31 27 22 / 0.1);
+  border-top: 1px solid rgb(95 5 28 / 0.12);
   font-size: 0.8125rem;
-  color: var(--muted);
+  color: var(--sheet-muted);
 }
 
 .mono {
@@ -89,7 +88,7 @@
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--fg-muted);
 }
 
 .phrase-input {
@@ -97,11 +96,11 @@
   margin: 0;
   padding: 0.05em 0 0.15em;
   border: 0;
-  border-bottom: 2px solid var(--ink);
+  border-bottom: 2px solid var(--fg);
   border-radius: 0;
   background: transparent;
-  color: var(--ink);
-  caret-color: var(--thread);
+  color: var(--fg);
+  caret-color: var(--fg);
   font-family: var(--font-heading);
   font-size: clamp(2rem, 3.4vw, 3rem);
   font-weight: 650;
@@ -113,7 +112,7 @@
 
 .phrase-input:focus {
   outline: none;
-  border-bottom-color: var(--thread);
+  border-bottom-color: var(--fg);
 }
 
 .phrase-input:focus-visible {
@@ -131,7 +130,7 @@
   gap: 1rem;
   margin: 0;
   font-size: 0.875rem;
-  color: var(--muted);
+  color: var(--fg-muted);
 }
 
 .hint-count {
@@ -147,7 +146,7 @@
 
 .value span {
   font-size: 0.75rem;
-  color: var(--muted);
+  color: var(--fg-muted);
 }
 
 /* Range: a single thread pulled across. */
@@ -163,17 +162,17 @@
 
 .range::-webkit-slider-runnable-track {
   height: 2px;
-  background: linear-gradient(to right, var(--thread) var(--fill), rgb(31 27 22 / 0.18) var(--fill));
+  background: linear-gradient(to right, var(--fg) var(--fill), var(--line) var(--fill));
 }
 
 .range::-moz-range-track {
   height: 2px;
-  background: rgb(31 27 22 / 0.18);
+  background: var(--line);
 }
 
 .range::-moz-range-progress {
   height: 2px;
-  background: var(--thread);
+  background: var(--fg);
 }
 
 .range::-webkit-slider-thumb {
@@ -182,8 +181,8 @@
   height: 1.125rem;
   margin-top: calc(-0.5625rem + 1px);
   border-radius: 50%;
-  background: var(--ink);
-  box-shadow: 0 0 0 4px var(--paper);
+  background: var(--fg);
+  box-shadow: 0 0 0 4px var(--bg);
   transition: transform 160ms ease;
 }
 
@@ -192,8 +191,8 @@
   height: 1.125rem;
   border: 0;
   border-radius: 50%;
-  background: var(--ink);
-  box-shadow: 0 0 0 4px var(--paper);
+  background: var(--fg);
+  box-shadow: 0 0 0 4px var(--bg);
 }
 
 .range:hover::-webkit-slider-thumb,
@@ -220,7 +219,7 @@
   justify-content: space-between;
   margin-top: -0.25rem;
   font-size: 0.6875rem;
-  color: var(--muted);
+  color: var(--fg-muted);
 }
 
 .status:empty {
@@ -230,7 +229,7 @@
 .notice {
   margin: 0;
   padding: 0.25rem 0 0.25rem 1rem;
-  border-left: 2px solid var(--thread);
+  border-left: 2px solid var(--fg);
   font-size: 0.9375rem;
   line-height: 1.45;
 }
@@ -239,11 +238,11 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--ink);
+  color: var(--fg);
   font: inherit;
   font-weight: 600;
   text-decoration: underline;
-  text-decoration-color: var(--thread);
+  text-decoration-color: var(--fg);
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
   cursor: pointer;

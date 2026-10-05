@@ -1,16 +1,26 @@
 @import './fonts.css';
 
 :root {
-  --paper: #f6f1e7;
-  --ink: #1f1b16;
-  --muted: #6b6257;
-  --focus: #2457c5;
+  /* Brand pair: #FFCFC5 on #5F051C is 9.8:1 (WCAG AAA). */
+  --bg: #5f051c;
+  --fg: #ffcfc5;
+  /* Secondary text, 6.0:1 on --bg (AA). */
+  --fg-muted: #d79d9b;
+  /* Lines and control tracks, 3.4:1 on --bg (meets the 3:1 rule for UI parts). */
+  --line: #af6a70;
+  --focus: #fff1ec;
+
+  /* The pattern sheet stays light so a chart reads like a printed chart. */
+  --sheet: #fff6f1;
+  --sheet-ink: #5f051c;
+  /* 5.4:1 on --sheet. */
+  --sheet-muted: #76615c;
 
   --font-heading: 'Fraunces', Georgia, serif;
   --font-ui: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 *,
@@ -29,11 +39,16 @@ html {
 }
 
 body {
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--bg);
+  color: var(--fg);
   font-family: var(--font-ui);
   font-size: 1rem;
   line-height: 1.5;
+}
+
+::selection {
+  background: var(--fg);
+  color: var(--bg);
 }
 
 :focus-visible {
@@ -48,4 +63,16 @@ body {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }

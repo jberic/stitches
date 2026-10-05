@@ -1,10 +1,29 @@
 import type { Pattern } from '../pattern/types'
 
+export interface StitchColours {
+  /** The first leg of each cross, sewn bottom-left to top-right. */
+  under: string
+  /** The top leg, a touch lighter so the cross reads as two passes of floss. */
+  over: string
+}
+
+export interface StitchDrawer {
+  total: number
+  /** Draws stitches in sewing order up to `count`. Cheap to call every frame. */
+  drawUpTo(count: number): void
+}
+
 /**
- * Draws a pattern as stitched thread: each stitch is an X, the top leg slightly
- * lighter so the cross reads as two passes of floss. Purely decorative.
+ * Prepares a canvas to show a pattern as stitched thread. Stitches are ordered
+ * as a loose left-to-right sweep with a little per-stitch irregularity, so
+ * drawing them over time looks hand-sewn rather than scanned.
  */
-export function drawStitches(canvas: HTMLCanvasElement, pattern: Pattern, cell: number, thread: string) {
+export function prepareStitches(
+  canvas: HTMLCanvasElement,
+  pattern: Pattern,
+  cell: number,
+  colours: StitchColours,
+): StitchDrawer {
   const dpr = window.devicePixelRatio || 1
   const w = pattern.width * cell
   const h = pattern.height * cell
@@ -13,41 +32,66 @@ export function drawStitches(canvas: HTMLCanvasElement, pattern: Pattern, cell: 
   canvas.style.width = `${w}px`
   canvas.style.height = `${h}px`
   const ctx = canvas.getContext('2d')
-  if (!ctx) return
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-  ctx.clearRect(0, 0, w, h)
-  ctx.lineCap = 'round'
-  ctx.lineWidth = Math.max(1.2, cell * 0.3)
 
-  const inset = cell * 0.2
-  const legs = (under: boolean) => {
+  const order: number[] = []
+  for (let i = 0; i < pattern.cells.length; i++) if (pattern.cells[i]) order.push(i)
+  const key = (i: number) => {
+    const x = i % pattern.width
+    const y = Math.floor(i / pattern.width)
+    // Deterministic wobble: same pattern, same sewing order.
+    const wobble = ((x * 31 + y * 17) % 7) * 0.45
+    return x + y * 0.5 + wobble
+  }
+  order.sort((a, b) => key(a) - key(b))
+
+  let drawn = 0
+  const inset = cell * 0.18
+  const size = cell - inset * 2
+
+  const legs = (from: number, to: number, over: boolean) => {
+    if (!ctx) return
     ctx.beginPath()
-    for (let y = 0; y < pattern.height; y++) {
-      for (let x = 0; x < pattern.width; x++) {
-        if (!pattern.cells[y * pattern.width + x]) continue
-        const left = x * cell + inset
-        const top = y * cell + inset
-        const size = cell - inset * 2
-        if (under) {
-          ctx.moveTo(left, top + size)
-          ctx.lineTo(left + size, top)
-        } else {
-          ctx.moveTo(left, top)
-          ctx.lineTo(left + size, top + size)
-        }
+    for (let k = from; k < to; k++) {
+      const i = order[k]
+      const left = (i % pattern.width) * cell + inset
+      const top = Math.floor(i / pattern.width) * cell + inset
+      if (over) {
+        ctx.moveTo(left, top)
+        ctx.lineTo(left + size, top + size)
+      } else {
+        ctx.moveTo(left, top + size)
+        ctx.lineTo(left + size, top)
       }
     }
+    ctx.strokeStyle = over ? colours.over : colours.under
     ctx.stroke()
   }
 
-  ctx.strokeStyle = thread
-  legs(true)
-  ctx.strokeStyle = mix(thread, '#ffffff', 0.16)
-  legs(false)
+  const reset = () => {
+    if (!ctx) return
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    ctx.clearRect(0, 0, w, h)
+    ctx.lineCap = 'round'
+    ctx.lineWidth = Math.max(1, cell * 0.3)
+    drawn = 0
+  }
+  reset()
+
+  return {
+    total: order.length,
+    drawUpTo(count: number) {
+      const target = Math.max(0, Math.min(order.length, Math.round(count)))
+      if (target < drawn) reset()
+      if (target === drawn) return
+      legs(drawn, target, false)
+      legs(drawn, target, true)
+      drawn = target
+    },
+  }
 }
 
 /** Mixes two #rrggbb colours; t = 0 gives a, t = 1 gives b. */
-function mix(a: string, b: string, t: number): string {
+export function mix(a: string, b: string, t: number): string {
   const pa = parseInt(a.slice(1), 16)
   const pb = parseInt(b.slice(1), 16)
   const channel = (shift: number) => Math.round(((pa >> shift) & 255) * (1 - t) + ((pb >> shift) & 255) * t)

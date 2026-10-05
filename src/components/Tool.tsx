@@ -7,7 +7,7 @@ import './Tool.css'
 
 const DEFAULT_TEXT = 'Hello sunshine'
 // Placeholder until palettes arrive in step 4.
-const INK = '#b8402f'
+const INK = '#5f051c'
 const FONT = 'Chango'
 
 interface Props {
