@@ -28,9 +28,13 @@ export interface StackedBlockResult {
 const MEASURE_SIZE = 200
 
 interface Glyph {
-  source: HTMLCanvasElement
+  /** Null for a space: it takes up columns but draws nothing. */
+  source: HTMLCanvasElement | null
   box: InkBox
 }
+
+/** A space is about a third of an em in most display faces. */
+const SPACE: Glyph = { source: null, box: { x: 0, y: 0, width: MEASURE_SIZE * 0.32, height: 0 } }
 
 interface Word {
   glyphs: Glyph[]
@@ -52,10 +56,13 @@ function drawGlyph(char: string, font: DisplayFont): Glyph | null {
 }
 
 function measureWord(word: string, font: DisplayFont): Word | null {
-  const glyphs = [...word].map((char) => drawGlyph(char, font)).filter((g): g is Glyph => g !== null)
-  if (glyphs.length === 0) return null
-  const top = Math.min(...glyphs.map((g) => g.box.y))
-  const bottom = Math.max(...glyphs.map((g) => g.box.y + g.box.height))
+  const glyphs = [...word]
+    .map((char) => (/\s/u.test(char) ? SPACE : drawGlyph(char, font)))
+    .filter((g): g is Glyph => g !== null)
+  const inked = glyphs.filter((g) => g.source)
+  if (inked.length === 0) return null
+  const top = Math.min(...inked.map((g) => g.box.y))
+  const bottom = Math.max(...inked.map((g) => g.box.y + g.box.height))
   return { glyphs, top, bottom }
 }
 
@@ -105,7 +112,7 @@ export function renderStackedBlock(lines: string[], options: StackedBlockOptions
       width - gaps,
       word.glyphs.map((g) => g.box.width),
     )
-    const perLetter = (width - gaps) / word.glyphs.length
+    const perLetter = (width - gaps) / word.glyphs.filter((g) => g.source).length
     const capRows = Math.round(Math.min(maxRows, Math.max(minLineRows, perLetter * letterAspect)))
     const ky = (capRows * scale) / cap.height
     // Round letters overshoot the cap line and baseline slightly; only accents and
@@ -129,7 +136,7 @@ export function renderStackedBlock(lines: string[], options: StackedBlockOptions
       const { box } = glyph
       const w = cols[i] * scale
       const dy = y + (box.y - top) * ky
-      ctx.drawImage(glyph.source, box.x, box.y, box.width, box.height, x, dy, w, box.height * ky)
+      if (glyph.source) ctx.drawImage(glyph.source, box.x, box.y, box.width, box.height, x, dy, w, box.height * ky)
       x += w + letterGap * scale
     })
     y += lineH + lineGap * scale
