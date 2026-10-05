@@ -1,0 +1,147 @@
+.dev {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+.dev h1 {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-heading);
+}
+
+.dev header p {
+  margin: 0 0 1rem;
+  color: var(--fg-muted);
+}
+
+.dev-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: end;
+}
+
+.dev-controls label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+}
+
+.dev-controls input,
+.dev-controls button {
+  font: inherit;
+  font-size: 0.9375rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg);
+}
+
+.dev-controls button {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+  cursor: pointer;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2.5rem;
+  margin: 2rem 0;
+  padding: 1.25rem 0;
+  border-block: 1px solid var(--line);
+}
+
+.stat {
+  display: grid;
+}
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+}
+
+.stat[data-ok='false'] .stat-value::after {
+  content: ' ✕';
+}
+
+.stat-label {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+}
+
+.running {
+  align-self: center;
+  color: var(--fg-muted);
+}
+
+.rows {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 30rem), 1fr));
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rows > li {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.rows > li.fail {
+  border-color: var(--fg);
+  border-width: 2px;
+}
+
+.rows h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.rows h2 span {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--fg-muted);
+}
+
+.grids {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.mini {
+  margin: 0;
+}
+
+.mini canvas {
+  display: block;
+}
+
+.mini figcaption {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+}
+
+.attempts {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+}
+
+.attempts li.fail {
+  color: var(--fg-muted);
+}
+
+.attempts strong {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
