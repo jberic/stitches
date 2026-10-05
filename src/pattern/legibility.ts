@@ -1,5 +1,6 @@
 import type { Grid } from './cleanup'
 import { coverage, type Mask } from './downsample'
+import type { LetterBox } from './layouts/stackedBlock'
 
 export interface LegibilityCheck {
   ok: boolean
@@ -11,11 +12,24 @@ export interface LegibilityCheck {
     inkKept: number
     inkPrecision: number
     holes: { drawing: number; lost: number }
+    /** Letters whose open space (notches, bowls, the arms of E) filled in. */
+    countersLost: number
+    /** Letters stitched as a solid block although the drawing had shape inside the box. */
+    solidLetters: number
+    /** Per letter: share of the box stitched, and the drawing's average ink in the box. For tuning. */
+    letterFill: { fill: number; drawn: number }[]
     shapes: { drawing: number; stitched: number }
   }
 }
 
 const MIN_INK_KEPT = 0.8
+/** A letter box this full of stitches reads as a block, not a letter... */
+const SOLID_FILL = 0.95
+/**
+ * ...unless the drawing really was that solid. Measured over 360 renders: plain
+ * I's draw at 0.93 and up, the N that turned into a block at 0.84.
+ */
+const SOLID_DRAWN = 0.9
 const MIN_PRECISION = 0.65
 /** Shapes smaller than this in the drawing (in half-stitch cells) are specks, not marks. */
 const MIN_SHAPE_SUBCELLS = 3
@@ -27,7 +41,13 @@ const MIN_HOLE_SUBCELLS = 4
  * Shapes and holes are counted on the drawing at half-stitch resolution, which
  * keeps real details but ignores hairlines too thin to stitch.
  */
-export function checkLegibility(mask: Mask, scale: number, grid: Grid, cover: Float32Array): LegibilityCheck {
+export function checkLegibility(
+  mask: Mask,
+  scale: number,
+  grid: Grid,
+  cover: Float32Array,
+  letters: LetterBox[] = [],
+): LegibilityCheck {
   let inkTotal = 0
   let inkOnStitches = 0
   let stitches = 0
@@ -65,6 +85,9 @@ export function checkLegibility(mask: Mask, scale: number, grid: Grid, cover: Fl
       }),
   ).length
   const merged = drawingShapes - stitchedShapes
+  const countersLost = letters.reduce((n, box) => n + (letterLostCounter(sub, ratio, grid, box) ? 1 : 0), 0)
+  const letterFill = letters.map((box) => fillOf(grid, cover, box))
+  const solidLetters = letterFill.filter((l) => l.fill >= SOLID_FILL && l.drawn < SOLID_DRAWN).length
 
   const reasons: string[] = []
   let penalty = 0
@@ -79,6 +102,16 @@ export function checkLegibility(mask: Mask, scale: number, grid: Grid, cover: Fl
   if (holesLost > 0) {
     reasons.push(`${holesLost} ${holesLost === 1 ? 'hole' : 'holes'} in letters filled in`)
     penalty += holesLost * 3
+  }
+  if (countersLost > 0) {
+    reasons.push(
+      countersLost === 1 ? 'The open space in a letter filled in' : `The open space in ${countersLost} letters filled in`,
+    )
+    penalty += countersLost * 3
+  }
+  if (solidLetters > 0) {
+    reasons.push(solidLetters === 1 ? 'A letter turned into a solid block' : `${solidLetters} letters turned into solid blocks`)
+    penalty += solidLetters * 3
   }
   if (merged > 0) {
     reasons.push(merged === 1 ? 'Two marks ran together' : `${merged} marks ran together`)
@@ -96,9 +129,58 @@ export function checkLegibility(mask: Mask, scale: number, grid: Grid, cover: Fl
       inkKept,
       inkPrecision,
       holes: { drawing: drawingHoles.length, lost: holesLost },
+      countersLost,
+      solidLetters,
+      letterFill,
       shapes: { drawing: drawingShapes, stitched: stitchedShapes },
     },
   }
+}
+
+/** How much of a letter's box is stitched, and how much ink the drawing had there. */
+function fillOf(grid: Grid, cover: Float32Array, box: LetterBox) {
+  let stitched = 0
+  let drawn = 0
+  for (let y = box.y; y < box.y + box.height; y++)
+    for (let x = box.x; x < box.x + box.width; x++) {
+      const i = y * grid.width + x
+      stitched += grid.cells[i]
+      drawn += cover[i]
+    }
+  const area = box.width * box.height
+  return { fill: stitched / area, drawn: drawn / area }
+}
+
+/**
+ * True if some stitch-sized patch of background inside a letter's box (in the
+ * drawing) ended up fully stitched over. That's what turns an N into a block:
+ * it has no closed hole to lose, only open notches.
+ */
+function letterLostCounter(sub: Grid, ratio: number, grid: Grid, box: LetterBox): boolean {
+  const open = new Uint8Array(box.width * box.height)
+  for (let cy = 0; cy < box.height; cy++) {
+    for (let cx = 0; cx < box.width; cx++) {
+      let empty = true
+      for (let sy = 0; sy < ratio && empty; sy++)
+        for (let sx = 0; sx < ratio && empty; sx++) {
+          const x = (box.x + cx) * ratio + sx
+          const y = (box.y + cy) * ratio + sy
+          if (sub.cells[y * sub.width + x]) empty = false
+        }
+      if (!empty) open[cy * box.width + cx] = 1
+    }
+  }
+  // Open patches are the zeros here, so they group edge-to-edge like other background.
+  const region: Grid = { width: box.width, height: box.height, cells: open }
+  for (const area of components(region, false)) {
+    const stillOpen = area.cells.some((i) => {
+      const x = box.x + (i % box.width)
+      const y = box.y + Math.floor(i / box.width)
+      return grid.cells[y * grid.width + x] === 0
+    })
+    if (!stillOpen) return true
+  }
+  return false
 }
 
 interface Component {

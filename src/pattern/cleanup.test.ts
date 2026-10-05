@@ -40,7 +40,7 @@ describe('fillPinholes', () => {
 describe('thickenStrokes', () => {
   it('widens a one-stitch stroke towards the side with more ink', () => {
     const g = grid(['.#..', '.#..', '.#..'])
-    const c = cover(['.93.', '.93.', '.93.'])
+    const c = cover(['.94.', '.94.', '.94.'])
     expect(show(g, thickenStrokes(g, c))).toEqual(['.##.', '.##.', '.##.'])
   })
 

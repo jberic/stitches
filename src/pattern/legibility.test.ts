@@ -66,3 +66,33 @@ describe('checkLegibility', () => {
     expect(check(drawing, stitched).reasons).toContain('1 hole in letters filled in')
   })
 })
+
+describe('open counters', () => {
+  it('fails an N whose notches filled in, even with no closed hole to lose', () => {
+    const N = ['#..#', '##.#', '#.##', '#..#']
+    const mask = maskOf(N)
+    const solid = grid(['####', '####', '####', '####'])
+    const box = { x: 0, y: 0, width: 4, height: 4 }
+    const result = checkLegibility(mask, SCALE, solid, coverage(mask, SCALE), [box])
+    expect(result.reasons).toContain('The open space in a letter filled in')
+    expect(checkLegibility(mask, SCALE, grid(N), coverage(mask, SCALE), [box]).ok).toBe(true)
+  })
+})
+
+describe('solid letters', () => {
+  it('fails a letter stitched as a block when the drawing had shape', () => {
+    // Notches thinner than a stitch: no open patch to protect, but not solid either.
+    const mask: Mask = { width: 16, height: 16, data: new Uint8Array(256).map((_, i) => ((i % 16) % 5 === 2 ? 0 : 255)) }
+    const box = { x: 0, y: 0, width: 4, height: 4 }
+    const solid = grid(['####', '####', '####', '####'])
+    expect(checkLegibility(mask, SCALE, solid, coverage(mask, SCALE), [box]).reasons).toContain(
+      'A letter turned into a solid block',
+    )
+  })
+
+  it('accepts a letter that really is solid, like a plain I', () => {
+    const mask = maskOf(['####', '####', '####', '####'])
+    const box = { x: 0, y: 0, width: 4, height: 4 }
+    expect(checkLegibility(mask, SCALE, grid(['####', '####', '####', '####']), coverage(mask, SCALE), [box]).ok).toBe(true)
+  })
+})

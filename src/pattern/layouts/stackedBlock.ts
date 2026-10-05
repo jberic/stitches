@@ -19,10 +19,19 @@ export interface StackedBlockOptions {
   maxLineRatio?: number
 }
 
+/** Where a letter sits on the grid, in stitches. */
+export interface LetterBox {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 export interface StackedBlockResult {
   canvas: HTMLCanvasElement
   rows: number
   lineRows: number[]
+  letters: LetterBox[]
 }
 
 const MEASURE_SIZE = 200
@@ -128,11 +137,13 @@ export function renderStackedBlock(lines: string[], options: StackedBlockOptions
   ctx.imageSmoothingEnabled = true
   ctx.imageSmoothingQuality = 'high'
 
+  const letters: LetterBox[] = []
   let y = 0
   for (const { word, cols, ky, top, rows: lineRows } of layouts) {
     const lineH = lineRows * scale
     let x = 0
     word.glyphs.forEach((glyph, i) => {
+      if (glyph.source) letters.push({ x: x / scale, y: y / scale, width: cols[i], height: lineRows })
       const { box } = glyph
       const w = cols[i] * scale
       const dy = y + (box.y - top) * ky
@@ -142,5 +153,5 @@ export function renderStackedBlock(lines: string[], options: StackedBlockOptions
     y += lineH + lineGap * scale
   }
 
-  return { canvas, rows, lineRows: layouts.map((l) => l.rows) }
+  return { canvas, rows, lineRows: layouts.map((l) => l.rows), letters }
 }

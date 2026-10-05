@@ -12,8 +12,11 @@ export interface Grid {
 
 /** A gap is filled only where the drawing was mostly ink: real counters stay open. */
 const PINHOLE_MIN_COVER = 0.3
-/** A thin stroke is thickened only into cells where the drawing had some ink. */
-const THICKEN_MIN_COVER = 0.2
+/**
+ * A thin stroke is thickened only into cells the drawing inked at least this
+ * much. Lower values fill the open notches of narrow letters like N.
+ */
+const THICKEN_MIN_COVER = 0.35
 
 export function cleanup(grid: Grid, cover: Float32Array): Grid {
   let cells = removeStrays(grid)

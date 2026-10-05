@@ -42,7 +42,7 @@ export interface GenerateResult {
 export async function renderRecipe(lines: string[], width: number, recipe: Recipe, seed = ''): Promise<Rendered> {
   await loadDisplayFont(recipe.font)
   const upper = lines.map((line) => line.toLocaleUpperCase())
-  const { canvas } = renderStackedBlock(upper, {
+  const { canvas, letters } = renderStackedBlock(upper, {
     width,
     scale: SCALE,
     font: recipe.font,
@@ -54,7 +54,7 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
   const cover = coverage(mask, SCALE)
   const raw: Grid = { width, height: cover.length / width, cells: stitchesFrom(cover, recipe.threshold) }
   const tidy = cleanup(raw, cover)
-  const check = checkLegibility(mask, SCALE, tidy, cover)
+  const check = checkLegibility(mask, SCALE, tidy, cover, letters)
   const { cells, height } = trimRows(tidy.cells, width)
 
   return {
