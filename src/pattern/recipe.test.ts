@@ -40,6 +40,14 @@ describe('recipeFor', () => {
     expect(recipeFor('abcde', 2).font).toBe(font)
   })
 
+  it('switches font on the later retries', () => {
+    for (let s = 0; s < 50; s++) {
+      const font = recipeFor(`r${s}`).font
+      expect(recipeFor(`r${s}`, 3).font).not.toBe(font)
+      expect(recipeFor(`r${s}`, 4).font).not.toBe(font)
+    }
+  })
+
   it('stays inside the ranges that keep letters readable', () => {
     for (let s = 0; s < 200; s++) {
       for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { generatePattern } from '../pattern/generate'
+import { renderWordmark } from '../pattern/generate'
 import type { Pattern } from '../pattern/types'
 import { prepareStitches, type StitchDrawer } from './stitchArt'
 
@@ -53,7 +53,7 @@ export function Wordmark({ sew, onReady, finishSignal }: Props) {
       if (!patterns.has(id)) {
         patterns.set(
           id,
-          generatePattern({ lines: layout.lines, width: layout.width, font: 'Chango' }).then((r) => r.pattern),
+          renderWordmark(layout.lines, layout.width),
         )
       }
       const pattern = await patterns.get(id)!

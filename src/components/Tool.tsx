@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { DEFAULT_WIDTH, MAX_WIDTH, MIN_WIDTH, generatePattern, type GenerateResult } from '../pattern/generate'
+import { describeRecipe } from '../pattern/recipe'
 import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
 import { stitchCount } from '../pattern/types'
 import { PatternChart } from './PatternChart'
@@ -8,7 +9,8 @@ import './Tool.css'
 const DEFAULT_TEXT = 'Hello sunshine'
 // Placeholder until palettes arrive in step 4.
 const INK = '#5f051c'
-const FONT = 'Chango'
+// Until "Generate again" and the shareable link arrive.
+const SEED = 'k3j9a'
 
 interface Props {
   inputRef?: React.Ref<HTMLInputElement>
@@ -30,7 +32,7 @@ export function Tool({ inputRef }: Props) {
     if (linesKey === null) return
     const id = ++request.current
     const timer = window.setTimeout(() => {
-      generatePattern({ lines: linesKey.split('\n'), width, font: FONT })
+      generatePattern({ lines: linesKey.split('\n'), width, seed: SEED })
         .then((next) => {
           // Keep the previous pattern on screen until the newest request is ready.
           if (id === request.current) {
@@ -62,7 +64,7 @@ export function Tool({ inputRef }: Props) {
           )}
           {pattern && (
             <figcaption className="sheet-caption">
-              <span>Stacked block, {FONT}</span>
+              <span>{describeRecipe(pattern.meta.recipe)}</span>
               <span className="mono">
                 {pattern.width} × {pattern.height} · {stitchCount(pattern).toLocaleString('en')} stitches
               </span>

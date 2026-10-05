@@ -34,7 +34,8 @@ export function recipeFor(seed: string, attempt = 0): Recipe {
 
   return {
     layout: 'stacked-block',
-    font: attempt <= KEEP_FONT_UNTIL ? font : pick(rng, DISPLAY_FONTS),
+    // If the first font keeps failing, later attempts always try a different one.
+    font: attempt <= KEEP_FONT_UNTIL ? font : pick(rng, DISPLAY_FONTS.filter((f) => f !== font)),
     letterAspect: round2(Math.max(1, between(rng, 1.25, 1.9) - squash)),
     letterGap: rng() < 0.75 ? 1 : 2,
     lineGap: rng() < 0.7 ? 1 : 2,
