@@ -87,7 +87,7 @@ export async function generatePattern({
   let best: { rendered: Rendered; recipe: Recipe } | null = null
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const recipe = recipeFor(seed, attempt)
+    const recipe = recipeFor(seed, attempt, attempts[attempts.length - 1])
     const rendered = await renderRecipe(lines, width, recipe, seed)
     attempts.push({ recipe, check: rendered.check })
     if (!best || rendered.check.penalty < best.rendered.check.penalty) best = { rendered, recipe }
@@ -116,4 +116,16 @@ function narrowness(lines: string[], width: number): GenerateResult['tooNarrow']
   if (perLetter >= MIN_STITCHES_PER_LETTER) return undefined
   const needed = Math.ceil(letters * MIN_STITCHES_PER_LETTER + (letters - 1))
   return { word: longest, suggestedWidth: needed <= MAX_WIDTH ? needed : null }
+}
+
+/**
+ * For a phrase that isn't readable at this width: the narrowest wider width
+ * (in steps of 2) where the same seed gives a readable pattern, or null.
+ */
+export async function findReadableWidth(lines: string[], seed: string, from: number): Promise<number | null> {
+  for (let width = from + 2; width <= MAX_WIDTH; width += 2) {
+    const result = await generatePattern({ lines, width, seed })
+    if (result.check.ok) return width
+  }
+  return null
 }

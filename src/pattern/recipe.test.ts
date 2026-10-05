@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { hashString, isSeed, mulberry32, newSeed } from './random'
+import type { LegibilityCheck } from './legibility'
 import { MAX_ATTEMPTS, describeRecipe, recipeFor } from './recipe'
 
 describe('mulberry32', () => {
@@ -28,7 +29,21 @@ describe('seeds', () => {
   })
 })
 
+const result = (tooHeavy: boolean, tooLight: boolean) =>
+  ({ ok: false, reasons: [], penalty: 1, tooHeavy, tooLight, metrics: {} }) as unknown as LegibilityCheck
+
 describe('recipeFor', () => {
+  it('raises the threshold after a too-heavy result and lowers it after a too-light one', () => {
+    const first = recipeFor('adapt')
+    expect(recipeFor('adapt', 1, { recipe: first, check: result(true, false) }).threshold).toBeGreaterThan(first.threshold)
+    expect(recipeFor('adapt', 1, { recipe: first, check: result(false, true) }).threshold).toBeLessThan(first.threshold)
+  })
+
+  it('tightens letter spacing when letters were too heavy', () => {
+    const airy = { ...recipeFor('adapt'), letterGap: 2 }
+    expect(recipeFor('adapt', 1, { recipe: airy, check: result(true, false) }).letterGap).toBe(1)
+  })
+
   it('is deterministic per seed and attempt', () => {
     expect(recipeFor('k3j9a', 0)).toEqual(recipeFor('k3j9a', 0))
     expect(recipeFor('k3j9a', 3)).toEqual(recipeFor('k3j9a', 3))
@@ -52,12 +67,12 @@ describe('recipeFor', () => {
     for (let s = 0; s < 200; s++) {
       for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
         const r = recipeFor(`s${s}`, attempt)
-        expect(r.letterAspect).toBeGreaterThanOrEqual(1)
+        expect(r.letterAspect).toBeGreaterThanOrEqual(1.25)
         expect(r.letterAspect).toBeLessThanOrEqual(1.9)
         expect([1, 2]).toContain(r.letterGap)
         expect([1, 2]).toContain(r.lineGap)
-        expect(r.threshold).toBeGreaterThanOrEqual(0.44)
-        expect(r.threshold).toBeLessThanOrEqual(0.56)
+        expect(r.threshold).toBeGreaterThanOrEqual(0.38)
+        expect(r.threshold).toBeLessThanOrEqual(0.66)
       }
     }
   })

@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { MAX_WIDTH, MIN_WIDTH, generatePattern, type GenerateResult } from '../pattern/generate'
-import { newSeed } from '../pattern/random'
-import { describeRecipe, recipeFor } from '../pattern/recipe'
+import { MAX_WIDTH, MIN_WIDTH, findReadableWidth, generatePattern, type GenerateResult } from '../pattern/generate'
+import { describeRecipe, seedWithNewFont } from '../pattern/recipe'
 import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
 import { stitchCount } from '../pattern/types'
 import { readShareState, writeShareState } from '../state/url'
@@ -10,15 +9,6 @@ import './Tool.css'
 
 // Placeholder until palettes arrive in step 4.
 const INK = '#5f051c'
-
-/** A new seed whose style starts from a different font, so the change is always visible. */
-function nextSeed(currentFont: string | undefined): string {
-  for (let i = 0; i < 20; i++) {
-    const seed = newSeed()
-    if (recipeFor(seed).font !== currentFont) return seed
-  }
-  return newSeed()
-}
 
 interface Props {
   inputRef?: React.Ref<HTMLInputElement>
@@ -31,6 +21,8 @@ export function Tool({ inputRef }: Props) {
   const [seed, setSeed] = useState(initial.seed)
   const [result, setResult] = useState<GenerateResult | null>(null)
   const [failed, setFailed] = useState(false)
+  /** For a hard-to-read result: a width that works, keyed by the result it belongs to. */
+  const [readableAt, setReadableAt] = useState<{ for: GenerateResult; width: number | null } | null>(null)
   const request = useRef(0)
   /** How the next state change should land in browser history. */
   const historyMode = useRef<'replace' | 'push' | 'none'>('replace')
@@ -75,7 +67,7 @@ export function Tool({ inputRef }: Props) {
 
   const generateAgain = () => {
     historyMode.current = 'push'
-    setSeed(nextSeed(result?.recipe.font))
+    setSeed(seedWithNewFont(result?.recipe.font))
     // On short screens the button sits below the pattern; bring the new one into view.
     const sheet = sheetRef.current
     if (sheet && sheet.getBoundingClientRect().top < 0) {
@@ -87,6 +79,25 @@ export function Tool({ inputRef }: Props) {
   const pattern = result?.pattern
   const tooNarrow = result?.tooNarrow
   const hardToRead = result && !result.check.ok && !tooNarrow
+
+  // When no attempt was readable, look for the narrowest width that is.
+  useEffect(() => {
+    if (!result || result.check.ok || result.tooNarrow) return
+    let alive = true
+    findReadableWidth(result.pattern.meta.text.split(' '), result.pattern.meta.seed, result.pattern.width).then(
+      (width) => alive && setReadableAt({ for: result, width }),
+    )
+    return () => {
+      alive = false
+    }
+  }, [result])
+  const suggestedWidth = readableAt?.for === result ? readableAt.width : null
+
+  const applyWidth = (next: number) => {
+    setWidth(next)
+    // The button that called this disappears once the width fits, so keep keyboard focus nearby.
+    widthRef.current?.focus()
+  }
   const charsLeft = MAX_CHARS - text.trim().length
 
   return (
@@ -181,18 +192,21 @@ export function Tool({ inputRef }: Props) {
           {phrase.ok && failed && <p className="notice">Something went wrong drawing that. Try again.</p>}
           {phrase.ok && hardToRead && (
             <p className="notice">
-              This one is hard to read at {width} stitches wide. Try it wider, with fewer words, or generate again.
+              This one is hard to read at {width} stitches wide.{' '}
+              {suggestedWidth ? (
+                <button type="button" className="link-button" onClick={() => applyWidth(suggestedWidth)}>
+                  Make it {suggestedWidth} wide
+                </button>
+              ) : (
+                'Try it wider, with fewer words, or generate again.'
+              )}
             </p>
           )}
           {phrase.ok && tooNarrow && (
             <p className="notice">
               “{tooNarrow.word}” is too long to read clearly at {width} stitches wide.{' '}
               {tooNarrow.suggestedWidth ? (
-                <button type="button" className="link-button" onClick={() => {
-                    setWidth(tooNarrow.suggestedWidth!)
-                    // This button disappears once the width fits, so keep keyboard focus nearby.
-                    widthRef.current?.focus()
-                  }}>
+                <button type="button" className="link-button" onClick={() => applyWidth(tooNarrow.suggestedWidth!)}>
                   Make it {tooNarrow.suggestedWidth} wide
                 </button>
               ) : (

@@ -8,6 +8,10 @@ export interface LegibilityCheck {
   reasons: string[]
   /** Lower is better. Used to pick the least-bad result if every attempt fails. */
   penalty: number
+  /** Too much stitched: holes filled, letters solid or run together. A higher threshold helps. */
+  tooHeavy: boolean
+  /** Too little stitched: strokes broke apart or ink was lost. A lower threshold helps. */
+  tooLight: boolean
   metrics: {
     inkKept: number
     inkPrecision: number
@@ -125,6 +129,8 @@ export function checkLegibility(
     ok: reasons.length === 0,
     reasons,
     penalty,
+    tooHeavy: holesLost > 0 || countersLost > 0 || solidLetters > 0 || merged > 0 || inkPrecision < MIN_PRECISION,
+    tooLight: merged < 0 || inkKept < MIN_INK_KEPT,
     metrics: {
       inkKept,
       inkPrecision,
