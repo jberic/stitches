@@ -12,7 +12,7 @@ Web tool: type a phrase, get a two-colour cross-stitch pattern in a retro letter
 - Generation is deterministic: the same text and seed always give the same pattern. Use a seeded random generator, never `Math.random()` in the generator.
 - Put the text and seed in the URL so a result can be shared.
 - Every result goes through the legibility check. If it fails, derive a new recipe from the same seed and retry (max 5 attempts).
-- Fonts must be open-licence, self-hosted, and include å, ä and ö. Wait for fonts to load before drawing.
+- Fonts must be open-licence and self-hosted. Wait for fonts to load before drawing.
 - Icons are drawn for this project as small bitmaps. Do not copy patterns, icons or artwork from reference images or other sites.
 - Colours come from a curated list of pairs. Thread data lives in `src/data/threads.json` as `{ code, name, hex }`. Never hand-type it. Record the source and licence in the README.
 - No brand logos. Thread codes appear as plain text only.
