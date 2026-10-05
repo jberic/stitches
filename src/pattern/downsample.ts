@@ -6,14 +6,14 @@ export interface Mask {
 }
 
 /**
- * Turns a mask into a stitch grid. `scale` is mask pixels per stitch; a cell
- * becomes a stitch when its average coverage reaches `threshold` (0 to 1).
+ * Average ink per block of `scale` × `scale` mask pixels, from 0 to 1.
+ * With `scale` = pixels per stitch this is the coverage of each stitch cell.
  */
-export function downsample(mask: Mask, scale: number, threshold = 0.5): Uint8Array {
+export function coverage(mask: Mask, scale: number): Float32Array {
   const cols = Math.floor(mask.width / scale)
   const rows = Math.floor(mask.height / scale)
-  const cells = new Uint8Array(cols * rows)
-  const limit = threshold * 255 * scale * scale
+  const out = new Float32Array(cols * rows)
+  const full = 255 * scale * scale
 
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
@@ -22,10 +22,22 @@ export function downsample(mask: Mask, scale: number, threshold = 0.5): Uint8Arr
         const offset = y * mask.width
         for (let x = col * scale; x < (col + 1) * scale; x++) sum += mask.data[offset + x]
       }
-      if (sum >= limit) cells[row * cols + col] = 1
+      out[row * cols + col] = sum / full
     }
   }
+  return out
+}
+
+/** A cell becomes a stitch when its coverage reaches `threshold` (0 to 1). */
+export function stitchesFrom(cover: Float32Array, threshold = 0.5): Uint8Array {
+  const cells = new Uint8Array(cover.length)
+  for (let i = 0; i < cover.length; i++) if (cover[i] >= threshold) cells[i] = 1
   return cells
+}
+
+/** Turns a mask into a stitch grid. `scale` is mask pixels per stitch. */
+export function downsample(mask: Mask, scale: number, threshold = 0.5): Uint8Array {
+  return stitchesFrom(coverage(mask, scale), threshold)
 }
 
 /** Drops fully empty rows from the top and bottom of a grid. */
