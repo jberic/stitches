@@ -1,6 +1,6 @@
-# Say It In Stitches
+# Say It With Stitches
 
-The site is called "Say It In Stitches". Use that name in the page title, header, README and metadata. Do not use any thread brand name in the product name.
+The site is called "Say It With Stitches". Use that name in the page title, header, README and metadata. Do not use any thread brand name in the product name.
 
 Web tool: type a phrase, get a two-colour cross-stitch pattern in a retro lettering style; "Generate again" gives the same words in a new style. See `embroidery-build-brief.md` (kept locally, not in the repo) for scope and build order.
 
@@ -19,7 +19,9 @@ Web tool: type a phrase, get a two-colour cross-stitch pattern in a retro letter
 
 ## Design
 
-- Page load: the "Say It In Stitches" wordmark fills the full screen width first, then shrinks into a small header as the tool appears (first keystroke or about 2 seconds). Respect `prefers-reduced-motion`. See the "Page load" section of the brief.
+- Wordmark: "SAY IT WITH STITCHES" in capitals, drawn as a stitch pattern by the tool's own engine. It is the full-width header and never changes style or position.
+- Page load: the wordmark sews itself in, a short line appears word by word, then drifts away while the tool rises in (pattern from ol.studio; do not copy its fonts, imagery or layout). First keystroke or click skips ahead. Plays once per session. Respect `prefers-reduced-motion`.
+- Colours: text #FFCFC5 on background #5F051C (9.8:1). The pattern sheet stays light. Check contrast for any new colour.
 
 - Fraunces for headings, IBM Plex Sans for UI, IBM Plex Mono for codes and counts.
 - Every colour has a distinct symbol that works in black and white.

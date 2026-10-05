@@ -3,7 +3,7 @@ import { generatePattern } from '../pattern/generate'
 import type { Pattern } from '../pattern/types'
 import { prepareStitches, type StitchDrawer } from './stitchArt'
 
-export const SITE_NAME = 'Say it with stitches'
+export const SITE_NAME = 'Say It With Stitches'
 
 /** One line where there is room for it; two on phones so the letters stay readable. */
 const WIDE = { lines: ['Say it with stitches'], width: 120 }

@@ -1,4 +1,4 @@
-# Say It In Stitches
+# Say It With Stitches
 
 Type a phrase, get a two-colour cross-stitch pattern in a retro lettering style. "Generate again" gives the same words in a new style.
 
