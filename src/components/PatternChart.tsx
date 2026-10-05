@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Pattern } from '../pattern/types'
 
 interface Props {
@@ -9,6 +9,24 @@ interface Props {
 
 /** Unstitched fabric around the design, in stitches. */
 const MARGIN = 2
+const SEW_MS = 480
+
+/**
+ * When each stitch appears during the sew-in, from 0 to 1: a loose
+ * left-to-right sweep with a little irregularity, like the wordmark.
+ */
+function sewingOrder(pattern: Pattern): Float32Array {
+  const rank = new Float32Array(pattern.cells.length)
+  let max = 0
+  for (let i = 0; i < rank.length; i++) {
+    const x = i % pattern.width
+    const y = Math.floor(i / pattern.width)
+    rank[i] = x + y * 0.5 + ((x * 31 + y * 17) % 7) * 0.45
+    if (rank[i] > max) max = rank[i]
+  }
+  for (let i = 0; i < rank.length; i++) rank[i] /= max || 1
+  return rank
+}
 
 function cssVar(el: Element, name: string): string {
   return getComputedStyle(el).getPropertyValue(name).trim()
@@ -18,6 +36,8 @@ export function PatternChart({ pattern, ink, label }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [available, setAvailable] = useState(0)
+  const sewnRef = useRef<Pattern | null>(null)
+  const order = useMemo(() => sewingOrder(pattern), [pattern])
 
   useEffect(() => {
     const wrap = wrapRef.current
@@ -47,65 +67,87 @@ export function PatternChart({ pattern, ink, label }: Props) {
     canvas.height = Math.round(cssH * dpr)
     canvas.style.width = `${cssW}px`
     canvas.style.height = `${cssH}px`
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    ctx.clearRect(0, 0, cssW, cssH)
 
     const fabric = cssVar(canvas, '--chart-fabric')
     const line = cssVar(canvas, '--chart-line')
     const guide = cssVar(canvas, '--chart-guide')
     const numbers = cssVar(canvas, '--chart-number')
+    const mono = cssVar(canvas, '--font-mono')
 
-    ctx.save()
-    ctx.translate(gutter, gutter)
-    ctx.fillStyle = fabric
-    ctx.fillRect(0, 0, gridW, gridH)
+    const paint = (progress: number) => {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      ctx.clearRect(0, 0, cssW, cssH)
+      ctx.save()
+      ctx.translate(gutter, gutter)
+      ctx.fillStyle = fabric
+      ctx.fillRect(0, 0, gridW, gridH)
 
-    ctx.fillStyle = ink
-    for (let y = 0; y < pattern.height; y++) {
-      for (let x = 0; x < pattern.width; x++) {
-        if (pattern.cells[y * pattern.width + x]) {
-          ctx.fillRect((x + MARGIN) * cell, (y + MARGIN) * cell, cell, cell)
+      ctx.fillStyle = ink
+      for (let y = 0; y < pattern.height; y++) {
+        for (let x = 0; x < pattern.width; x++) {
+          const i = y * pattern.width + x
+          if (pattern.cells[i] && order[i] <= progress) {
+            ctx.fillRect((x + MARGIN) * cell, (y + MARGIN) * cell, cell, cell)
+          }
+        }
+      }
+
+      // Hairlines on device pixels so they stay crisp at any zoom.
+      const hair = 1 / dpr
+      const snap = (v: number) => Math.round(v * dpr) / dpr + hair / 2
+      const drawLines = (every: number, colour: string, weight: number) => {
+        ctx.strokeStyle = colour
+        ctx.lineWidth = weight
+        ctx.beginPath()
+        for (let x = 0; x <= cols; x++) {
+          if ((x - MARGIN) % every !== 0) continue
+          ctx.moveTo(snap(x * cell), 0)
+          ctx.lineTo(snap(x * cell), gridH)
+        }
+        for (let y = 0; y <= rows; y++) {
+          if ((y - MARGIN) % every !== 0) continue
+          ctx.moveTo(0, snap(y * cell))
+          ctx.lineTo(gridW, snap(y * cell))
+        }
+        ctx.stroke()
+      }
+      if (cell >= 5) drawLines(1, line, hair)
+      drawLines(10, guide, Math.max(hair, 1))
+      ctx.restore()
+
+      if (gutter > 0) {
+        ctx.fillStyle = numbers
+        ctx.font = `500 10px ${mono}`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        for (let x = 10; x <= pattern.width; x += 10) {
+          ctx.fillText(String(x), gutter + (x + MARGIN) * cell, gutter / 2)
+        }
+        ctx.textAlign = 'right'
+        for (let y = 10; y <= pattern.height; y += 10) {
+          ctx.fillText(String(y), gutter - 5, gutter + (y + MARGIN) * cell)
         }
       }
     }
 
-    // Hairlines on device pixels so they stay crisp at any zoom.
-    const hair = 1 / dpr
-    const snap = (v: number) => Math.round(v * dpr) / dpr + hair / 2
-    const drawLines = (every: number, colour: string, weight: number) => {
-      ctx.strokeStyle = colour
-      ctx.lineWidth = weight
-      ctx.beginPath()
-      for (let x = 0; x <= cols; x++) {
-        if ((x - MARGIN) % every !== 0) continue
-        ctx.moveTo(snap(x * cell), 0)
-        ctx.lineTo(snap(x * cell), gridH)
-      }
-      for (let y = 0; y <= rows; y++) {
-        if ((y - MARGIN) % every !== 0) continue
-        ctx.moveTo(0, snap(y * cell))
-        ctx.lineTo(gridW, snap(y * cell))
-      }
-      ctx.stroke()
+    // Sew in a new pattern; a resize of the same pattern just redraws.
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const sew = sewnRef.current !== pattern && !reduced
+    sewnRef.current = pattern
+    if (!sew) {
+      paint(1)
+      return
     }
-    if (cell >= 5) drawLines(1, line, hair)
-    drawLines(10, guide, Math.max(hair, 1))
-    ctx.restore()
-
-    if (gutter > 0) {
-      ctx.fillStyle = numbers
-      ctx.font = `500 10px ${cssVar(canvas, '--font-mono')}`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      for (let x = 10; x <= pattern.width; x += 10) {
-        ctx.fillText(String(x), gutter + (x + MARGIN) * cell, gutter / 2)
-      }
-      ctx.textAlign = 'right'
-      for (let y = 10; y <= pattern.height; y += 10) {
-        ctx.fillText(String(y), gutter - 5, gutter + (y + MARGIN) * cell)
-      }
+    let frame = 0
+    const start = performance.now()
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / SEW_MS)
+      paint(1 - Math.pow(1 - t, 3))
+      if (t < 1) frame = requestAnimationFrame(step)
     }
-  }, [pattern, ink, available])
+    frame = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(frame)
+  }, [pattern, ink, available, order])
 
   return (
     <div ref={wrapRef} className="chart">
