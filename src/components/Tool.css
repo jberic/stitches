@@ -1,0 +1,250 @@
+.tool {
+  --chart-fabric: #fffdf8;
+  --chart-line: rgb(31 27 22 / 0.09);
+  --chart-guide: rgb(31 27 22 / 0.32);
+  --chart-number: #8a7f71;
+  --thread: #b8402f;
+
+  display: grid;
+  gap: clamp(2rem, 4vw, 4rem);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .tool {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+  }
+  .tool-controls {
+    position: sticky;
+    top: 2rem;
+  }
+}
+
+/* The sheet: the pattern sits on it like a printed chart on a table. */
+.sheet {
+  margin: 0;
+  background: var(--chart-fabric);
+  padding: clamp(0.75rem, 2.5vw, 2.5rem);
+  border-radius: 2px;
+  box-shadow:
+    0 1px 0 rgb(31 27 22 / 0.04),
+    0 2px 6px -2px rgb(31 27 22 / 0.08),
+    0 24px 48px -24px rgb(31 27 22 / 0.18);
+}
+
+.chart {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.chart canvas {
+  display: block;
+  max-width: 100%;
+}
+
+.sheet-empty {
+  aspect-ratio: 5 / 4;
+}
+
+.sheet-caption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  margin-top: clamp(0.75rem, 2vw, 1.75rem);
+  padding-top: 0.75rem;
+  border-top: 1px solid rgb(31 27 22 / 0.1);
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'zero' 0;
+  letter-spacing: 0;
+}
+
+/* Controls */
+.tool-controls {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.field-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.phrase-input {
+  width: 100%;
+  margin: 0;
+  padding: 0.05em 0 0.15em;
+  border: 0;
+  border-bottom: 2px solid var(--ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--thread);
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  font-weight: 650;
+  font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  transition: border-color 160ms ease;
+}
+
+.phrase-input:focus {
+  outline: none;
+  border-bottom-color: var(--thread);
+}
+
+.phrase-input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 6px;
+}
+
+.phrase-input[aria-invalid='true'] {
+  border-bottom-style: dashed;
+}
+
+.hint {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.hint-count {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.value {
+  font-size: 1.5rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.value span {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* Range: a single thread pulled across. */
+.range {
+  --fill: 25%;
+  appearance: none;
+  width: 100%;
+  height: 1.5rem;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.range::-webkit-slider-runnable-track {
+  height: 2px;
+  background: linear-gradient(to right, var(--thread) var(--fill), rgb(31 27 22 / 0.18) var(--fill));
+}
+
+.range::-moz-range-track {
+  height: 2px;
+  background: rgb(31 27 22 / 0.18);
+}
+
+.range::-moz-range-progress {
+  height: 2px;
+  background: var(--thread);
+}
+
+.range::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: calc(-0.5625rem + 1px);
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 4px var(--paper);
+  transition: transform 160ms ease;
+}
+
+.range::-moz-range-thumb {
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 4px var(--paper);
+}
+
+.range:hover::-webkit-slider-thumb,
+.range:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+.range:focus {
+  outline: none;
+}
+
+.range:focus-visible::-webkit-slider-thumb {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.range:focus-visible::-moz-range-thumb {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.range-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -0.25rem;
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+.status:empty {
+  display: none;
+}
+
+.notice {
+  margin: 0;
+  padding: 0.25rem 0 0.25rem 1rem;
+  border-left: 2px solid var(--thread);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--thread);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}

@@ -1,55 +1,50 @@
 .page {
-  max-width: 60rem;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 84rem;
   margin: 0 auto;
-  padding: 2rem 1rem 4rem;
+  padding: 0 clamp(1rem, 4vw, 3rem);
 }
 
-.wordmark {
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: clamp(2.5rem, 10vw, 7rem);
-  line-height: 1;
-  letter-spacing: -0.02em;
-  margin: 0 0 1rem;
-}
-
-.lede {
-  color: var(--muted);
-  margin: 0 0 3rem;
-}
-
-.specimen h2 {
-  font-family: var(--font-ui);
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-}
-
-.specimen ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.specimen li {
+.masthead {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.25rem 1rem;
-  padding: 0.75rem 0;
-  border-top: 1px solid #d9d0c1;
+  gap: 0.25rem 1.5rem;
+  padding: clamp(1.25rem, 3vw, 2rem) 0 clamp(1.5rem, 4vw, 3rem);
 }
 
-.specimen-sample {
-  font-size: clamp(1.5rem, 6vw, 2.5rem);
-  line-height: 1.2;
+.wordmark {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.375rem, 2.2vw, 1.75rem);
+  font-weight: 750;
+  font-variation-settings: 'opsz' 72, 'SOFT' 100, 'WONK' 1;
+  line-height: 1;
+  letter-spacing: -0.02em;
 }
 
-.specimen-name {
-  font-family: var(--font-mono);
+.tagline {
+  margin: 0;
   font-size: 0.875rem;
   color: var(--muted);
+}
+
+.colophon {
+  padding: clamp(3rem, 8vw, 6rem) 0 2rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.colophon p {
+  margin: 0;
+  max-width: 40rem;
+}
+
+.colophon a {
+  color: inherit;
+  text-underline-offset: 2px;
 }

@@ -1,27 +1,24 @@
-import { DISPLAY_FONTS } from './fonts'
+import { Tool } from './components/Tool'
 import './App.css'
 
-// Step 1 placeholder. The specimen is a temporary check that every display
-// font loads and renders; it goes away when the tool arrives in step 2.
 export default function App() {
   return (
-    <main className="page">
-      <h1 className="wordmark">Say It In Stitches</h1>
-      <p className="lede">Type a phrase, get a cross-stitch pattern. Coming soon.</p>
+    <div className="page">
+      <header className="masthead">
+        <h1 className="wordmark">Say It In Stitches</h1>
+        <p className="tagline">Type a phrase, get a cross-stitch pattern.</p>
+      </header>
 
-      <section className="specimen" aria-labelledby="specimen-title">
-        <h2 id="specimen-title">Pattern fonts</h2>
-        <ul>
-          {DISPLAY_FONTS.map((font) => (
-            <li key={font}>
-              <span className="specimen-sample" style={{ fontFamily: `"${font}"` }}>
-                Hello sunshine!
-              </span>
-              <span className="specimen-name">{font}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-    </main>
+      <main>
+        <Tool />
+      </main>
+
+      <footer className="colophon">
+        <p>
+          Colour data: <a href="https://github.com/makebead/craft-color-codes">craft-color-codes</a> by MakeBead (CC
+          BY 4.0). Not affiliated with any thread maker.
+        </p>
+      </footer>
+    </div>
   )
 }
