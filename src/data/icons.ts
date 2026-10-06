@@ -2,7 +2,8 @@
  * Icons drawn for this project as stitch bitmaps ('#' = stitch), in two
  * themed sets. Each is a single-thread silhouette: details are gaps, because
  * a pattern stitches its icon in one tonal thread. Drawn by hand from scratch,
- * not traced from any reference chart. Sizes are widths in stitches.
+ * not traced from any reference chart. Sizes are widths in stitches; every
+ * icon comes at 15, most at 11, and a few simple ones at 7.
  */
 
 export type IconSize = 7 | 11 | 15
@@ -51,7 +52,16 @@ export const ICON_LABELS: Record<IconName, string> = {
 }
 
 /** Icons whose shape is mirror-symmetric (tests hold them to it). */
-export const SYMMETRIC: IconName[] = ['tree', 'rainbow', 'ladybird', 'croissant', 'icecream', 'lemon', 'strawberry']
+export const SYMMETRIC: IconName[] = [
+  'tree',
+  'rainbow',
+  'ladybird',
+  'croissant',
+  'icecream',
+  'doughnut',
+  'lemon',
+  'strawberry',
+]
 
 export const ICONS: Record<IconName, Partial<Record<IconSize, string[]>>> = {
   mushroom: {
@@ -193,18 +203,6 @@ export const ICONS: Record<IconName, Partial<Record<IconSize, string[]>>> = {
     ],
   },
   ladybird: {
-    11: [
-      '....###....',
-      '...........',
-      '..###.###..',
-      '.#..#.#..#.',
-      '##..#.#..##',
-      '.####.####.',
-      '.##.#.#.##.',
-      '###.#.#.###',
-      '..###.###..',
-      '...##.##...',
-    ],
     15: [
       '......###......',
       '.....#####.....',
@@ -223,16 +221,22 @@ export const ICONS: Record<IconName, Partial<Record<IconSize, string[]>>> = {
     ],
   },
   croissant: {
-    11: ['....###....', '..#.###.#..', '.##.###.##.', '###.###.###', '##...#...##', '#.........#'],
+    11: [
+      '...#####...',
+      '..#.###.#..',
+      '.##.###.##.',
+      '#.##...##.#',
+      '##.......##',
+      '#.........#',
+    ],
     15: [
       '.....#####.....',
       '...##.###.##...',
       '..###.###.###..',
-      '.####.###.####.',
-      '####..###..####',
-      '###...###...###',
-      '##.....#.....##',
-      '#.............#',
+      '.#.##.....##.#.',
+      '##.##.....##.##',
+      '###.........###',
+      '.#...........#.',
     ],
   },
   coffee: {
@@ -394,24 +398,21 @@ export const ICONS: Record<IconName, Partial<Record<IconSize, string[]>>> = {
     11: [
       '.#########.',
       '###########',
-      '...........',
-      '.#########.',
-      '.##.######.',
-      '..#####.#..',
       '..#######..',
-      '...#.###...',
+      '..#..####..',
+      '...###.#...',
+      '...##.##...',
       '....###....',
       '.....#.....',
     ],
     15: [
       '.#############.',
       '###############',
-      '...............',
-      '.#############.',
+      '..###########..',
       '..##..#######..',
-      '..##..###..##..',
+      '...#..###..##..',
       '...######..#...',
-      '...#########...',
+      '....#######....',
       '....##..###....',
       '.....#..##.....',
       '.....#####.....',
@@ -422,30 +423,30 @@ export const ICONS: Record<IconName, Partial<Record<IconSize, string[]>>> = {
   doughnut: {
     11: [
       '...#####...',
-      '.#########.',
-      '###.#######',
-      '#######.###',
-      '####...####',
-      '##.#...####',
-      '####...#.##',
-      '#.#.###.#.#',
+      '.##.###.##.',
+      '####.#.####',
       '###########',
-      '.#########.',
+      '####...####',
+      '#.##...##.#',
+      '####...####',
+      '###########',
+      '#.#.###.#.#',
+      '.##.###.##.',
       '...#####...',
     ],
     15: [
       '.....#####.....',
       '...#########...',
-      '..####.######..',
-      '.#######.#####.',
-      '.###.#########.',
+      '..###.###.###..',
+      '.#####.#.#####.',
+      '.#############.',
       '######...######',
+      '##.##.....##.##',
+      '###.#.....#.###',
       '#####.....#####',
-      '#.###.....#####',
-      '#####.....###.#',
       '######...######',
       '.#.#.#####.#.#.',
-      '.#############.',
+      '.##.#######.##.',
       '..###########..',
       '...#########...',
       '.....#####.....',

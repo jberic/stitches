@@ -12,8 +12,9 @@ describe('icons', () => {
     expect(new Set([...ICON_SETS.nature, ...ICON_SETS.food]).size).toBe(names.length)
   })
 
-  it.each(names)('%s comes at 11 and 15 stitches', (name) => {
-    expect(iconSizes(name)).toEqual(expect.arrayContaining([11, 15]))
+  it.each(names)('%s comes at 15 stitches, and at 11 unless too busy to read there', (name) => {
+    expect(iconSizes(name)).toContain(15)
+    if (name !== 'ladybird') expect(iconSizes(name)).toContain(11)
   })
 
   it.each(all)('$name $size: every row is $size wide, at most $size tall', ({ name, size }) => {
