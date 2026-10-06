@@ -199,3 +199,34 @@
   text-transform: uppercase;
   color: var(--fg-muted);
 }
+
+.glyph-grid,
+.glyph-samples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem 1.25rem;
+  padding: 1.25rem;
+  border-radius: 4px;
+}
+
+.glyph-samples {
+  margin-top: 0.75rem;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.glyph-cell {
+  margin: 0;
+}
+
+.glyph-cell canvas {
+  display: block;
+}
+
+.glyph-cell figcaption {
+  margin-top: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--sheet-muted);
+}
