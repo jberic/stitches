@@ -12,7 +12,7 @@ import type { Pattern } from './types'
 import { warpMask } from './warp'
 
 export const MIN_WIDTH = 40
-export const MAX_WIDTH = 80
+export const MAX_WIDTH = 100
 export const DEFAULT_WIDTH = 50
 
 /** Mask pixels per stitch. */
@@ -170,7 +170,8 @@ function narrowness(lines: string[], width: number): GenerateResult['tooNarrow']
 
 /**
  * For a phrase that isn't readable at this width: the narrowest wider width
- * (in steps of 2) where the same seed gives a readable pattern, or null.
+ * (in steps of 2, up to 30 stitches wider) where the same seed gives a
+ * readable pattern, or null.
  */
 export async function findReadableWidth(
   lines: string[],
@@ -178,7 +179,7 @@ export async function findReadableWidth(
   from: number,
   choices: Choices = DEFAULT_CHOICES,
 ): Promise<number | null> {
-  for (let width = from + 2; width <= MAX_WIDTH; width += 2) {
+  for (let width = from + 2; width <= Math.min(MAX_WIDTH, from + 30); width += 2) {
     const result = await generatePattern({ lines, width, seed, choices })
     if (result.check.ok) return width
   }
