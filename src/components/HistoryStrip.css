@@ -1,0 +1,63 @@
+.history {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: clamp(1.25rem, 3vw, 2rem);
+}
+
+.history h2 {
+  margin: 0;
+}
+
+.history-list {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.25rem 0.25rem 0.5rem;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+
+.history-list li {
+  flex: none;
+  scroll-snap-align: start;
+}
+
+.history-item {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  cursor: pointer;
+  opacity: 0.72;
+  transition:
+    opacity 200ms ease,
+    transform 300ms cubic-bezier(0.62, 0.28, 0.02, 1);
+}
+
+.history-item canvas {
+  display: block;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+
+.history-item:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+/* The one on screen now: full strength and ringed, like the picked palette. */
+.history-item[aria-current] {
+  opacity: 1;
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 0 4px var(--fg);
+}
+
+.history-item:focus-visible {
+  opacity: 1;
+  outline: 3px solid var(--focus);
+  outline-offset: 5px;
+}

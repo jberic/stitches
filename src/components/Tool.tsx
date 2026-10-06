@@ -5,7 +5,9 @@ import { describeRecipe, seedWithNewStyle, type Motif } from '../pattern/recipe'
 import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
 import { legendFor } from '../pattern/legend'
 import { FABRIC_COUNTS, finishedSize, type FabricCount } from '../pattern/size'
-import { readShareState, writeShareState } from '../state/url'
+import { addToHistory, encodeCells, entryKey, loadHistory, saveHistory, type HistoryEntry } from '../state/history'
+import { readShareState, shareSearch, writeShareState, type ShareState } from '../state/url'
+import { HistoryStrip } from './HistoryStrip'
 import { Legend } from './Legend'
 import { PalettePicker } from './PalettePicker'
 import { Segmented } from './Segmented'
@@ -24,6 +26,7 @@ export function Tool({ inputRef }: Props) {
   const [paletteId, setPaletteId] = useState(initial.palette)
   const [fabricCount, setFabricCount] = useState<FabricCount>(initial.fabric)
   const [motif, setMotif] = useState<Motif>(initial.motif)
+  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory())
   // Read by the link writer without re-running generation when only the palette changes.
   const paletteRef = useRef(paletteId)
   useEffect(() => {
@@ -138,6 +141,52 @@ export function Tool({ inputRef }: Props) {
     // The button that called this disappears once the width fits, so keep keyboard focus nearby.
     widthRef.current?.focus()
   }
+  // The settings behind what's on screen now, for the history strip.
+  const shownState = useMemo<ShareState | null>(
+    () =>
+      pattern
+        ? { text: pattern.meta.text, seed: pattern.meta.seed, width: pattern.width, palette: palette.id, fabric: fabricCount, motif }
+        : null,
+    [pattern, palette.id, fabricCount, motif],
+  )
+  const shownKey = shownState && shareSearch(shownState)
+
+  // A result joins the history once it has stayed on screen for a second,
+  // so half-typed words don't fill the strip.
+  useEffect(() => {
+    if (!pattern || !shownState) return
+    const timer = window.setTimeout(() => {
+      const entry: HistoryEntry = {
+        state: shownState,
+        grid: { width: pattern.width, height: pattern.height, cells: encodeCells(pattern.cells) },
+        label: `${shownState.text}: ${describeRecipe(pattern.meta.recipe)}, ${palette.name.toLowerCase()}`,
+      }
+      setHistory((list) => addToHistory(list, entry))
+    }, 1000)
+    return () => window.clearTimeout(timer)
+  }, [pattern, shownState, palette.name])
+
+  useEffect(() => saveHistory(history), [history])
+
+  const restore = (entry: HistoryEntry) => {
+    if (entryKey(entry) === shownKey) return
+    // Write the link now: if only the colours differ, no new pattern is generated to write it.
+    writeShareState(entry.state, 'push')
+    const regenerates =
+      entry.state.text !== shownState?.text ||
+      entry.state.seed !== shownState?.seed ||
+      entry.state.width !== shownState?.width ||
+      entry.state.motif !== shownState?.motif
+    // Only a regeneration consumes this; set it otherwise and the next edit wouldn't update the link.
+    if (regenerates) historyMode.current = 'none'
+    setText(entry.state.text)
+    setWidth(entry.state.width)
+    setSeed(entry.state.seed)
+    setPaletteId(entry.state.palette)
+    setFabricCount(entry.state.fabric)
+    setMotif(entry.state.motif)
+  }
+
   const charsLeft = MAX_CHARS - text.trim().length
   const size = pattern && finishedSize(pattern.width, pattern.height, fabricCount)
 
@@ -167,6 +216,7 @@ export function Tool({ inputRef }: Props) {
             <Legend legend={legend} highlight={highlight} pinned={pinned} onPreview={setPreview} onPin={setPinned} />
           )}
         </figure>
+        <HistoryStrip entries={history} currentKey={shownKey} onSelect={restore} />
       </section>
 
       <section className="tool-controls" aria-label="Pattern settings">
