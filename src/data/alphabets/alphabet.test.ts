@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { REQUIRED_CHARACTERS, type AlphabetSizeId } from './alphabet'
-import { BLOCK } from './block'
+import { ALPHABETS } from '.'
 
-const sizes: AlphabetSizeId[] = ['regular', 'small']
+const cases = Object.values(ALPHABETS).flatMap((alphabet) =>
+  (['regular', 'small'] as AlphabetSizeId[]).map((sizeId) => [alphabet.name, sizeId, alphabet] as const),
+)
 
-describe.each(sizes)('Block %s', (sizeId) => {
-  const size = BLOCK.sizes[sizeId]
+describe.each(cases)('%s %s', (_name, sizeId, alphabet) => {
+  const size = alphabet.sizes[sizeId]
   const height = size.capRows + size.descRows
 
   it('draws every required character', () => {
