@@ -55,11 +55,12 @@ describe('recipeFor', () => {
     expect(recipeFor('abcde', 2).font).toBe(font)
   })
 
-  it('switches font on the later retries', () => {
+  it('switches font on the later retries, except a wavy seed first tries its own font as stacked block', () => {
     for (let s = 0; s < 50; s++) {
-      const font = recipeFor(`r${s}`).font
-      expect(recipeFor(`r${s}`, 3).font).not.toBe(font)
-      expect(recipeFor(`r${s}`, 4).font).not.toBe(font)
+      const first = recipeFor(`r${s}`)
+      if (first.layout === 'wavy') expect(recipeFor(`r${s}`, 3).font).toBe(first.font)
+      else expect(recipeFor(`r${s}`, 3).font).not.toBe(first.font)
+      expect(recipeFor(`r${s}`, 4).font).not.toBe(first.font)
     }
   })
 
@@ -71,6 +72,7 @@ describe('recipeFor', () => {
         expect(r.letterAspect).toBeLessThanOrEqual(1.9)
         expect([1, 2]).toContain(r.letterGap)
         expect([1, 2, 3]).toContain(r.lineGap)
+        expect(r.wave !== null).toBe(r.layout === 'wavy')
         expect(r.threshold).toBeGreaterThanOrEqual(0.38)
         expect(r.threshold).toBeLessThanOrEqual(0.66)
       }
@@ -105,6 +107,13 @@ describe('recipeFor', () => {
         expect(recipeFor(`c${s}`, attempt).icon).toBe(first.icon)
         expect(recipeFor(`c${s}`, attempt).shadow).toBe(first.shadow)
       }
+    }
+  })
+
+  it('falls back to stacked block for the last two attempts', () => {
+    for (let s = 0; s < 30; s++) {
+      expect(recipeFor(`f${s}`, 3).layout).toBe('stacked-block')
+      expect(recipeFor(`f${s}`, 4).layout).toBe('stacked-block')
     }
   })
 

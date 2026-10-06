@@ -57,6 +57,17 @@ const THRESHOLDS: Record<DisplayFont, [number, number]> = {
 /** When the seed's font can't make a phrase readable, try these, sturdiest first. */
 const FALLBACK_FONTS: DisplayFont[] = ['Bagel Fat One', 'Chango', 'Rubik Mono One', 'Shrikhand']
 
+/**
+ * The threshold at which each font rescued the hardest test phrases (long
+ * words with small counters: Butterfly, Wonderful, Happy birthday).
+ */
+const RESCUE_THRESHOLDS: Record<DisplayFont, number> = {
+  Chango: 0.62,
+  Shrikhand: 0.5,
+  'Bagel Fat One': 0.46,
+  'Rubik Mono One': 0.46,
+}
+
 const THRESHOLD_STEP = 0.07
 const THRESHOLD_LIMITS: [number, number] = [0.38, 0.66]
 /** How much a too-heavy wavy attempt calms the warp. */
@@ -95,7 +106,8 @@ function calmer(wave: StitchWave | null): StitchWave | null {
  * Retries react to why the last attempt failed: too heavy (holes filled in,
  * letters solid or merged) raises the threshold and tightens letter spacing;
  * too light (strokes broke, ink lost) lowers it. Attempts 1 and 2 keep the
- * font; 3 and 4 each try a different fallback font. Every step depends only on
+ * font and layout; 3 and 4 are stacked block in two different fallback fonts.
+ * Every step depends only on
  * the seed and earlier results, so the outcome is still deterministic.
  */
 export function recipeFor(seed: string, attempt = 0, previous?: PreviousAttempt): Recipe {
@@ -112,20 +124,21 @@ export function recipeFor(seed: string, attempt = 0, previous?: PreviousAttempt)
   if (base.layout === 'wavy') base.lineGap += 1
   if (attempt === 0) return base
 
-  // Last two chances: two different fallback fonts, so one font's weakness
-  // can't sink both. The last one sits at the heavy-safe end of its range.
+  // The last two chances are stacked block, which passed every test phrase,
+  // with tight spacing and each font's measured rescue threshold. A wavy seed
+  // first tries its own font, so its style changes as little as possible.
   if (attempt >= 3) {
-    const fallbacks = FALLBACK_FONTS.filter((f) => f !== font)
-    const fallback = fallbacks[attempt - 3]
-    const [low, high] = THRESHOLDS[fallback]
-    const threshold = attempt === 3 ? (low + high) / 2 : high + 0.02
+    const others = FALLBACK_FONTS.filter((f) => f !== font)
+    const fonts = base.layout === 'wavy' ? [font, ...others] : others
+    const fallback = fonts[attempt - 3]
     return {
       ...base,
+      layout: 'stacked-block',
+      wave: null,
       font: fallback,
-      letterGap: attempt === 3 ? base.letterGap : 1,
-      threshold: round2(threshold),
-      // The very last chance also calms a warp right down.
-      wave: attempt === 3 ? calmer(base.wave) : calmer(calmer(base.wave)),
+      letterGap: 1,
+      lineGap: Math.min(2, base.lineGap),
+      threshold: RESCUE_THRESHOLDS[fallback],
     }
   }
 

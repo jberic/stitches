@@ -35,7 +35,7 @@ export interface WavyResult {
  * block, short words stay short instead of stretching to the full width.
  */
 export function renderWavy(lines: string[], options: WavyOptions): WavyResult {
-  const { width, scale, font, letterAspect, letterGap, lineGap, reach, fill = 0.86, minCapRows = 11 } = options
+  const { width, scale, font, letterAspect, letterGap, lineGap, reach, fill = 0.92, minCapRows = 11 } = options
   const maxCapRows = options.maxCapRows ?? Math.round(width * 0.32)
   const words = lines.map((line) => measureWord(line, font)).filter((w): w is Word => w !== null)
   const cap = drawGlyph('H', font)?.box ?? { y: 0, height: MEASURE_SIZE * 0.7 }
