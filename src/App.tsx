@@ -121,9 +121,13 @@ export default function App() {
       </main>
 
       <footer className="colophon reveal" style={{ '--order': 2 } as React.CSSProperties}>
-        <p>
-          Colour data: <a href="https://github.com/makebead/craft-color-codes">craft-color-codes</a> by MakeBead (CC
-          BY 4.0). Not affiliated with any thread maker.
+        <p className="colophon-maker">
+          Made by <a href="https://bertino.co">Jennie Bertino</a>
+        </p>
+        {/* The thread data's licence (CC BY 4.0) asks for a visible credit. */}
+        <p className="colophon-credit">
+          Colour data: <a href="https://github.com/makebead/craft-color-codes">craft-color-codes</a> by MakeBead, CC BY
+          4.0
         </p>
       </footer>
 
