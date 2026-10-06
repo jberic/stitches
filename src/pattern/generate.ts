@@ -7,7 +7,7 @@ import { coverage, stitchesFrom, trimRows, type Mask } from './downsample'
 import { renderStackedBlock, type LetterBox } from './layouts/stackedBlock'
 import { renderWavy } from './layouts/wavy'
 import { checkLegibility, type LegibilityCheck } from './legibility'
-import { DEFAULT_MOTIF, MAX_ATTEMPTS, WORDMARK_RECIPE, recipeFor, type Motif, type Recipe } from './recipe'
+import { DEFAULT_CHOICES, MAX_ATTEMPTS, WORDMARK_RECIPE, recipeFor, type Choices, type Recipe } from './recipe'
 import type { Pattern } from './types'
 import { warpMask } from './warp'
 
@@ -17,6 +17,8 @@ export const DEFAULT_WIDTH = 50
 
 /** Mask pixels per stitch. */
 const SCALE = 8
+/** Lowercase letters sit under the cap height, so lines need more rows to keep them readable. */
+const MIN_ROWS = { upper: 11, lower: 15 }
 /** Narrower than this per letter (gap excluded) and the strokes can't hold their shape. */
 const MIN_STITCHES_PER_LETTER = 4
 
@@ -54,6 +56,7 @@ function drawLettering(upper: string[], width: number, recipe: Recipe): { mask: 
       letterGap: recipe.letterGap,
       lineGap: recipe.lineGap,
       reach: { x: wave.ax, y: wave.ay },
+      minCapRows: MIN_ROWS[recipe.letterCase],
     })
     const mask = warpMask(maskFromCanvas(canvas), {
       ax: wave.ax * SCALE,
@@ -72,6 +75,7 @@ function drawLettering(upper: string[], width: number, recipe: Recipe): { mask: 
     letterAspect: recipe.letterAspect,
     letterGap: recipe.letterGap,
     lineGap: recipe.lineGap,
+    minLineRows: MIN_ROWS[recipe.letterCase],
   })
   return { mask: maskFromCanvas(canvas), letters }
 }
@@ -92,8 +96,8 @@ function decorate(lettering: Grid, recipe: Recipe): Grid {
 /** Draws, downsamples, tidies and checks one recipe. Deterministic for the same inputs. */
 export async function renderRecipe(lines: string[], width: number, recipe: Recipe, seed = ''): Promise<Rendered> {
   await loadDisplayFont(recipe.font)
-  const upper = lines.map((line) => line.toLocaleUpperCase())
-  const { mask, letters } = drawLettering(upper, width, recipe)
+  const cased = lines.map((line) => (recipe.letterCase === 'upper' ? line.toLocaleUpperCase() : line.toLocaleLowerCase()))
+  const { mask, letters } = drawLettering(cased, width, recipe)
   const cover = coverage(mask, SCALE)
   const raw: Grid = { width, height: cover.length / width, cells: stitchesFrom(cover, recipe.threshold) }
   const tidy = cleanup(raw, cover)
@@ -106,7 +110,7 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
       width,
       height,
       cells,
-      meta: { text: lines.join(' '), lines: upper, layout: recipe.layout, font: recipe.font, seed, recipe },
+      meta: { text: lines.join(' '), lines: cased, layout: recipe.layout, font: recipe.font, seed, recipe },
     },
     raw,
     check,
@@ -122,18 +126,18 @@ export async function generatePattern({
   lines,
   width,
   seed,
-  motif = DEFAULT_MOTIF,
+  choices = DEFAULT_CHOICES,
 }: {
   lines: string[]
   width: number
   seed: string
-  motif?: Motif
+  choices?: Choices
 }): Promise<GenerateResult> {
   const attempts: Attempt[] = []
   let best: { rendered: Rendered; recipe: Recipe } | null = null
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const recipe = recipeFor(seed, attempt, attempts[attempts.length - 1], motif)
+    const recipe = recipeFor(seed, attempt, attempts[attempts.length - 1], choices)
     const rendered = await renderRecipe(lines, width, recipe, seed)
     attempts.push({ recipe, check: rendered.check })
     if (!best || rendered.check.penalty < best.rendered.check.penalty) best = { rendered, recipe }
@@ -172,10 +176,10 @@ export async function findReadableWidth(
   lines: string[],
   seed: string,
   from: number,
-  motif: Motif = DEFAULT_MOTIF,
+  choices: Choices = DEFAULT_CHOICES,
 ): Promise<number | null> {
   for (let width = from + 2; width <= MAX_WIDTH; width += 2) {
-    const result = await generatePattern({ lines, width, seed, motif })
+    const result = await generatePattern({ lines, width, seed, choices })
     if (result.check.ok) return width
   }
   return null

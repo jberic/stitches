@@ -1,5 +1,5 @@
 import { ICON_LABELS, ICON_SETS, type IconName } from '../data/icons'
-import { DISPLAY_FONTS, type DisplayFont } from '../fonts'
+import { CAPITALS_ONLY, DISPLAY_FONTS, type DisplayFont } from '../fonts'
 import { between, newSeed, pick, randomFor } from './random'
 import type { LegibilityCheck } from './legibility'
 import type { LayoutId } from './types'
@@ -22,6 +22,15 @@ export interface Recipe {
   icon: IconName | null
   /** A tonal drop shadow in the accent thread. */
   shadow: boolean
+  letterCase: LetterCase
+}
+
+export type LetterCase = 'upper' | 'lower'
+
+/** What the person chose; everything else in a recipe comes from the seed. */
+export interface Choices {
+  motif: Motif
+  letterCase: LetterCase
 }
 
 /** A warp in stitch units (see pattern/warp.ts for what each part does). */
@@ -79,6 +88,12 @@ const ALL_ICONS: IconName[] = [...ICON_SETS.nature, ...ICON_SETS.food]
 export type Motif = 'any' | 'nature' | 'food' | 'none'
 export const MOTIFS: Motif[] = ['any', 'nature', 'food', 'none']
 export const DEFAULT_MOTIF: Motif = 'any'
+export const DEFAULT_CHOICES: Choices = { motif: DEFAULT_MOTIF, letterCase: 'upper' }
+
+/** Fonts that can draw the chosen case. */
+function fontsFor(letterCase: LetterCase): readonly DisplayFont[] {
+  return letterCase === 'lower' ? DISPLAY_FONTS.filter((f) => !CAPITALS_ONLY.includes(f)) : DISPLAY_FONTS
+}
 
 /**
  * The icon for a seed, from its own random stream: changing the motif only
@@ -125,9 +140,15 @@ function calmer(wave: StitchWave | null): StitchWave | null {
  * Every step depends only on
  * the seed and earlier results, so the outcome is still deterministic.
  */
-export function recipeFor(seed: string, attempt = 0, previous?: PreviousAttempt, motif: Motif = DEFAULT_MOTIF): Recipe {
+export function recipeFor(
+  seed: string,
+  attempt = 0,
+  previous?: PreviousAttempt,
+  choices: Choices = DEFAULT_CHOICES,
+): Recipe {
   const rng = randomFor('recipe', seed, 0)
-  const font = pick(rng, DISPLAY_FONTS)
+  // One draw either way, so the rest of the recipe doesn't shift with the case.
+  const font = pick(rng, fontsFor(choices.letterCase))
   const base: Recipe = {
     font,
     letterAspect: round2(between(rng, 1.25, 1.9)),
@@ -135,7 +156,8 @@ export function recipeFor(seed: string, attempt = 0, previous?: PreviousAttempt,
     lineGap: rng() < 0.7 ? 1 : 2,
     threshold: round2(between(rng, ...THRESHOLDS[font])),
     ...styleFor(seed),
-    icon: iconFor(seed, motif),
+    icon: iconFor(seed, choices.motif),
+    letterCase: choices.letterCase,
   }
   if (base.layout === 'wavy') base.lineGap += 1
   if (attempt === 0) return base
@@ -144,7 +166,7 @@ export function recipeFor(seed: string, attempt = 0, previous?: PreviousAttempt,
   // with tight spacing and each font's measured rescue threshold. A wavy seed
   // first tries its own font, so its style changes as little as possible.
   if (attempt >= 3) {
-    const others = FALLBACK_FONTS.filter((f) => f !== font)
+    const others = FALLBACK_FONTS.filter((f) => f !== font && fontsFor(choices.letterCase).includes(f))
     const fonts = base.layout === 'wavy' ? [font, ...others] : others
     const fallback = fonts[attempt - 3]
     return {
@@ -182,6 +204,7 @@ export const WORDMARK_RECIPE: Recipe = {
   wave: null,
   icon: null,
   shadow: false,
+  letterCase: 'upper',
 }
 
 /** Plain-words name for a style, so people can say what they liked. */
@@ -197,7 +220,8 @@ export function describeRecipe(recipe: Recipe): string {
   const spacing = stacked && recipe.letterGap > 1 ? 'airy' : null
   const extras = [recipe.shadow ? 'a shadow' : null, recipe.icon ? `a ${ICON_LABELS[recipe.icon]}` : null].filter(Boolean)
   const withPart = extras.length ? `with ${extras.join(' and ')}` : null
-  return [stacked ? 'Stacked block' : 'Wavy', recipe.font, shape, spacing, withPart].filter(Boolean).join(' · ')
+  const lower = recipe.letterCase === 'lower' ? 'lowercase' : null
+  return [stacked ? 'Stacked block' : 'Wavy', recipe.font, lower, shape, spacing, withPart].filter(Boolean).join(' · ')
 }
 
 function round2(n: number) {
@@ -211,12 +235,12 @@ function round2(n: number) {
 export function seedWithNewStyle(
   current: Recipe | undefined,
   makeSeed: () => string = newSeed,
-  motif: Motif = DEFAULT_MOTIF,
+  choices: Choices = DEFAULT_CHOICES,
 ): string {
   for (let i = 0; i < 30; i++) {
     const seed = makeSeed()
     if (!current) return seed
-    const next = recipeFor(seed, 0, undefined, motif)
+    const next = recipeFor(seed, 0, undefined, choices)
     const newLook = next.font !== current.font || next.layout !== current.layout
     if (newLook && (next.icon === null || next.icon !== current.icon)) return seed
   }

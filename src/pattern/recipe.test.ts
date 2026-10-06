@@ -103,17 +103,28 @@ describe('recipeFor', () => {
 
   it('follows the motif choice', () => {
     for (let s = 0; s < 40; s++) {
-      expect(recipeFor(`m${s}`, 0, undefined, 'none').icon).toBeNull()
-      expect(ICON_SETS.nature).toContain(recipeFor(`m${s}`, 0, undefined, 'nature').icon)
-      expect(ICON_SETS.food).toContain(recipeFor(`m${s}`, 0, undefined, 'food').icon)
+      const motif = (m: 'none' | 'nature' | 'food') => ({ motif: m, letterCase: 'upper' }) as const
+      expect(recipeFor(`m${s}`, 0, undefined, motif('none')).icon).toBeNull()
+      expect(ICON_SETS.nature).toContain(recipeFor(`m${s}`, 0, undefined, motif('nature')).icon)
+      expect(ICON_SETS.food).toContain(recipeFor(`m${s}`, 0, undefined, motif('food')).icon)
     }
   })
 
   it('changes only the icon when the motif changes', () => {
     for (let s = 0; s < 40; s++) {
-      const { icon: _a, ...any } = recipeFor(`m${s}`, 0, undefined, 'any')
-      const { icon: _b, ...food } = recipeFor(`m${s}`, 0, undefined, 'food')
+      const { icon: _a, ...any } = recipeFor(`m${s}`, 0, undefined, { motif: 'any', letterCase: 'upper' })
+      const { icon: _b, ...food } = recipeFor(`m${s}`, 0, undefined, { motif: 'food', letterCase: 'upper' })
       expect(food).toEqual(any)
+    }
+  })
+
+  it('never uses a capitals-only font for lowercase, even on retries', () => {
+    for (let s = 0; s < 60; s++) {
+      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        const r = recipeFor(`lc${s}`, attempt, undefined, { motif: 'any', letterCase: 'lower' })
+        expect(r.font).not.toBe('Rubik Mono One')
+        expect(r.letterCase).toBe('lower')
+      }
     }
   })
 

@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { paletteById, patternColours } from '../data/palettes'
 import { MAX_WIDTH, MIN_WIDTH, findReadableWidth, generatePattern, type GenerateResult } from '../pattern/generate'
-import { describeRecipe, seedWithNewStyle, type Motif } from '../pattern/recipe'
+import { describeRecipe, seedWithNewStyle, type Choices, type LetterCase, type Motif } from '../pattern/recipe'
 import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
 import { legendFor } from '../pattern/legend'
 import { FABRIC_COUNTS, finishedSize, type FabricCount } from '../pattern/size'
@@ -26,6 +26,8 @@ export function Tool({ inputRef }: Props) {
   const [paletteId, setPaletteId] = useState(initial.palette)
   const [fabricCount, setFabricCount] = useState<FabricCount>(initial.fabric)
   const [motif, setMotif] = useState<Motif>(initial.motif)
+  const [letterCase, setLetterCase] = useState<LetterCase>(initial.letterCase)
+  const choices = useMemo<Choices>(() => ({ motif, letterCase }), [motif, letterCase])
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory())
   // Read by the link writer without re-running generation when only the palette changes.
   const paletteRef = useRef(paletteId)
@@ -53,7 +55,7 @@ export function Tool({ inputRef }: Props) {
     if (linesKey === null) return
     const id = ++request.current
     const timer = window.setTimeout(() => {
-      generatePattern({ lines: linesKey.split('\n'), width, seed, motif })
+      generatePattern({ lines: linesKey.split('\n'), width, seed, choices })
         .then((next) => {
           // Keep the previous pattern on screen until the newest request is ready.
           if (id !== request.current) return
@@ -64,13 +66,13 @@ export function Tool({ inputRef }: Props) {
           if (mode !== 'none') {
             const current = readShareState(window.location.search)
             const text = linesKey.split('\n').join(' ')
-            writeShareState({ ...current, text, seed, width, motif, palette: paletteRef.current }, mode)
+            writeShareState({ ...current, text, seed, width, ...choices, palette: paletteRef.current }, mode)
           }
         })
         .catch(() => id === request.current && setFailed(true))
     }, 90)
     return () => window.clearTimeout(timer)
-  }, [linesKey, width, seed, motif])
+  }, [linesKey, width, seed, choices])
 
   // Back and Forward step through styles you have generated.
   useEffect(() => {
@@ -83,6 +85,7 @@ export function Tool({ inputRef }: Props) {
       setPaletteId(state.palette)
       setFabricCount(state.fabric)
       setMotif(state.motif)
+      setLetterCase(state.letterCase)
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
@@ -90,7 +93,7 @@ export function Tool({ inputRef }: Props) {
 
   const generateAgain = () => {
     historyMode.current = 'push'
-    setSeed(seedWithNewStyle(result?.recipe, undefined, motif))
+    setSeed(seedWithNewStyle(result?.recipe, undefined, choices))
     // On short screens the button sits below the pattern; bring the new one into view.
     const sheet = sheetRef.current
     if (sheet && sheet.getBoundingClientRect().top < 0) {
@@ -127,13 +130,13 @@ export function Tool({ inputRef }: Props) {
     if (!result || result.check.ok || result.tooNarrow) return
     let alive = true
     const { meta } = result.pattern
-    findReadableWidth(meta.text.split(' '), meta.seed, result.pattern.width, motif).then(
+    findReadableWidth(meta.text.split(' '), meta.seed, result.pattern.width, choices).then(
       (width) => alive && setReadableAt({ for: result, width }),
     )
     return () => {
       alive = false
     }
-  }, [result, motif])
+  }, [result, choices])
   const suggestedWidth = readableAt?.for === result ? readableAt.width : null
 
   const applyWidth = (next: number) => {
@@ -145,9 +148,16 @@ export function Tool({ inputRef }: Props) {
   const shownState = useMemo<ShareState | null>(
     () =>
       pattern
-        ? { text: pattern.meta.text, seed: pattern.meta.seed, width: pattern.width, palette: palette.id, fabric: fabricCount, motif }
+        ? {
+            text: pattern.meta.text,
+            seed: pattern.meta.seed,
+            width: pattern.width,
+            palette: palette.id,
+            fabric: fabricCount,
+            ...choices,
+          }
         : null,
-    [pattern, palette.id, fabricCount, motif],
+    [pattern, palette.id, fabricCount, choices],
   )
   const shownKey = shownState && shareSearch(shownState)
 
@@ -176,7 +186,8 @@ export function Tool({ inputRef }: Props) {
       entry.state.text !== shownState?.text ||
       entry.state.seed !== shownState?.seed ||
       entry.state.width !== shownState?.width ||
-      entry.state.motif !== shownState?.motif
+      entry.state.motif !== shownState?.motif ||
+      entry.state.letterCase !== shownState?.letterCase
     // Only a regeneration consumes this; set it otherwise and the next edit wouldn't update the link.
     if (regenerates) historyMode.current = 'none'
     setText(entry.state.text)
@@ -185,6 +196,7 @@ export function Tool({ inputRef }: Props) {
     setPaletteId(entry.state.palette)
     setFabricCount(entry.state.fabric)
     setMotif(entry.state.motif)
+    setLetterCase(entry.state.letterCase)
   }
 
   const charsLeft = MAX_CHARS - text.trim().length
@@ -268,6 +280,18 @@ export function Tool({ inputRef }: Props) {
             ]}
             value={motif}
             onChange={(next: Motif) => setMotif(next)}
+          />
+        </div>
+
+        <div className="field">
+          <Segmented
+            legend="Letters"
+            options={[
+              { value: 'upper', label: 'Capitals' },
+              { value: 'lower', label: 'Lowercase' },
+            ]}
+            value={letterCase}
+            onChange={(next: LetterCase) => setLetterCase(next)}
           />
         </div>
 
