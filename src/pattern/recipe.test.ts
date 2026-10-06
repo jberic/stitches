@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { hashString, isSeed, mulberry32, newSeed } from './random'
 import type { LegibilityCheck } from './legibility'
 import { ICON_SETS } from '../data/icons'
-import { CAPITALS_ONLY } from '../fonts'
+import { CAPITALS_ONLY, SCRIPT_FONTS } from '../fonts'
 import { MAX_ATTEMPTS, describeRecipe, recipeFor, textCase } from './recipe'
 
 describe('mulberry32', () => {
@@ -168,5 +168,16 @@ describe('textCase', () => {
     for (let s = 0; s < 40; s++) {
       expect(CAPITALS_ONLY).not.toContain(recipeFor(`tc${s}`, 0, undefined, { motif: 'any', letterCase: 'mixed' }).font)
     }
+  })
+})
+
+describe('script fonts set too small', () => {
+  it('switch to a font that is not a script, keeping the style', () => {
+    const choices = { motif: 'any', letterCase: 'mixed' } as const
+    const first = { ...recipeFor('small', 0, undefined, choices), font: 'Shrikhand' as const }
+    const next = recipeFor('small', 1, { recipe: first, check: { ...result(false, false), tooSmall: true } }, choices)
+    expect(SCRIPT_FONTS).not.toContain(next.font)
+    expect(CAPITALS_ONLY).not.toContain(next.font)
+    expect({ ...next, font: first.font, threshold: first.threshold }).toEqual(first)
   })
 })

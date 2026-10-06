@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { downsample, trimRows, type Mask } from './downsample'
 import { apportion } from './layouts/stackedBlock'
+import { narrowestLineLetterWidth } from './generate'
 import { parsePhrase } from './text'
 
 describe('parsePhrase', () => {
@@ -68,5 +69,14 @@ describe('trimRows', () => {
     const { cells: out, height } = trimRows(cells, 2)
     expect(height).toBe(3)
     expect([...out]).toEqual([1, 0, 0, 0, 0, 1])
+  })
+})
+
+describe('narrowestLineLetterWidth', () => {
+  it('takes the median per line and returns the narrowest line', () => {
+    const box = (y: number, width: number) => ({ x: 0, y, width, height: 10 })
+    const hello = [9, 9, 10, 4, 10].map((w) => box(0, w))
+    const sunshine = [6, 6, 6, 6, 3, 6, 6, 6].map((w) => box(18, w))
+    expect(narrowestLineLetterWidth([...hello, ...sunshine])).toBe(6)
   })
 })

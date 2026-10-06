@@ -1,6 +1,6 @@
 import { ALPHABETS, ALPHABET_IDS, type AlphabetId } from '../data/alphabets'
 import { ICON_LABELS, ICON_SETS, type IconName } from '../data/icons'
-import { CAPITALS_ONLY, DISPLAY_FONTS, type DisplayFont } from '../fonts'
+import { CAPITALS_ONLY, DISPLAY_FONTS, SCRIPT_FONTS, type DisplayFont } from '../fonts'
 import { between, newSeed, pick, randomFor } from './random'
 import type { LegibilityCheck } from './legibility'
 import type { LayoutId } from './types'
@@ -197,6 +197,15 @@ export function recipeFor(
   // The alphabet can't draw this phrase (a missing character, or too wide even
   // in its small size): keep the style, use the font.
   if (previous?.check.unsupported) return { ...(previous.recipe ?? base), alphabet: null }
+
+  // Script lowercase too small to read: a threshold won't fix that, so keep
+  // the style and switch to a font that isn't a script.
+  if (previous?.check.tooSmall) {
+    const from = previous.recipe ?? base
+    const plain = FALLBACK_FONTS.find((f) => !SCRIPT_FONTS.includes(f) && fontsFor(choices.letterCase).includes(f))!
+    const [lo, hi] = THRESHOLDS[plain]
+    return { ...from, font: plain, threshold: round2((lo + hi) / 2) }
+  }
 
   // The last two chances are stacked block, which passed every test phrase,
   // with tight spacing and each font's measured rescue threshold. A wavy seed

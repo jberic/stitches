@@ -1,6 +1,6 @@
 import { ALPHABETS } from '../data/alphabets'
 import { iconCells, iconSizes } from '../data/icons'
-import { loadDisplayFont } from '../fonts'
+import { SCRIPT_FONTS, loadDisplayFont } from '../fonts'
 import { maskFromCanvas } from './canvas'
 import { cleanup, type Grid } from './cleanup'
 import { addShadow, iconSizeFor, placeIconBelow } from './compose'
@@ -21,6 +21,40 @@ export const DEFAULT_WIDTH = 50
 const SCALE = 8
 /** Lowercase letters sit under the cap height, so lines need more rows to keep them readable. */
 const MIN_ROWS = { upper: 11, lower: 15, mixed: 15 }
+
+/**
+ * Script lowercase needs room: at 50 stitches, Shrikhand read well at about 9
+ * stitches per letter ("Home sweet home") and lost its bowls at 6 ("Sunshine").
+ */
+export const MIN_SCRIPT_LETTER_WIDTH = 8
+
+/** The narrowest line's median letter width, in stitches. Lines are letters sharing a top edge. */
+export function narrowestLineLetterWidth(letters: LetterBox[]): number {
+  const lines = new Map<number, number[]>()
+  for (const box of letters) {
+    const key = Math.round(box.y)
+    lines.set(key, [...(lines.get(key) ?? []), box.width])
+  }
+  let narrowest = Infinity
+  for (const widths of lines.values()) {
+    const sorted = widths.sort((a, b) => a - b)
+    narrowest = Math.min(narrowest, sorted[Math.floor(sorted.length / 2)])
+  }
+  return narrowest
+}
+
+/** Fails a script font whose lowercase is set too small to read. */
+function checkScriptSize(check: LegibilityCheck, letters: LetterBox[], recipe: Recipe): LegibilityCheck {
+  if (recipe.alphabet || recipe.letterCase === 'upper' || !SCRIPT_FONTS.includes(recipe.font)) return check
+  if (narrowestLineLetterWidth(letters) >= MIN_SCRIPT_LETTER_WIDTH) return check
+  return {
+    ...check,
+    ok: false,
+    tooSmall: true,
+    reasons: [...check.reasons, 'Letters too small for a script font'],
+    penalty: check.penalty + 100,
+  }
+}
 /** Narrower than this per letter (gap excluded) and the strokes can't hold their shape. */
 const MIN_STITCHES_PER_LETTER = 4
 
@@ -131,7 +165,8 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
   const cover = coverage(mask, SCALE)
   const raw: Grid = { width, height: cover.length / width, cells: stitchesFrom(cover, recipe.threshold) }
   const tidy = cleanup(raw, cover)
-  const check = checkLegibility(mask, SCALE, tidy, cover, letters, recipe.layout === 'wavy')
+  const legible = checkLegibility(mask, SCALE, tidy, cover, letters, recipe.layout === 'wavy')
+  const check = checkScriptSize(legible, letters, recipe)
   const trimmed = trimRows(tidy.cells, width)
   const { cells, height } = decorate({ width, height: trimmed.height, cells: trimmed.cells }, recipe)
 
