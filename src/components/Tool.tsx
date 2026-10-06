@@ -247,9 +247,6 @@ export function Tool({ inputRef }: Props) {
 
         <div className="generate">
           <button type="button" className="generate-button" onClick={generateAgain} disabled={!phrase.ok}>
-            <span className="generate-icon" aria-hidden="true">
-              ✕
-            </span>
             Generate again
           </button>
           <p className="hint">Same words, new style.</p>

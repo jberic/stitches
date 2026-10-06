@@ -256,8 +256,7 @@
 .generate-button {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.9rem 1.5rem 0.9rem 1.25rem;
+  padding: 0.9rem 1.5rem;
   border: 0;
   border-radius: 999px;
   background: var(--fg);
@@ -288,18 +287,6 @@
 .generate-button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
-}
-
-.generate-icon {
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: transform 400ms cubic-bezier(0.62, 0.28, 0.02, 1);
-}
-
-.generate-button:hover:not(:disabled) .generate-icon {
-  transform: rotate(90deg);
 }
 
 /* Finished size: the answer to "how big will it be?", under the size controls. */
