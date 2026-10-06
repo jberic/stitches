@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { contrast, luminance } from './colour'
-import { PALETTES, paletteById, patternColours } from './palettes'
+import { contrast } from './colour'
+import { FABRIC, PALETTES, paletteById, patternColours } from './palettes'
 
 describe('palettes', () => {
-  it('has the 12 palettes from the handoff with unique ids', () => {
+  it('has 12 palettes with unique ids, all on the one fabric', () => {
     expect(PALETTES).toHaveLength(12)
     expect(new Set(PALETTES.map((p) => p.id)).size).toBe(12)
+    for (const p of PALETTES) expect(patternColours(p).fabric).toBe(FABRIC.hex)
   })
 
   it.each(PALETTES)('$id $name: every thread code exists', (palette) => {
@@ -17,11 +18,11 @@ describe('palettes', () => {
     expect(contrast(lettering.hex, fabric)).toBeGreaterThanOrEqual(4.5)
   })
 
-  it.each(PALETTES)('$id $name: the heart is a 2:1 tone of the fabric, in its direction', (palette) => {
-    const { fabric, heart, lettering } = patternColours(palette)
-    expect(contrast(heart.hex, fabric)).toBeGreaterThanOrEqual(2)
-    expect(luminance(heart.hex) > luminance(fabric)).toBe(palette.heart.tone === 'light')
-    expect(contrast(heart.hex, lettering.hex)).toBeGreaterThanOrEqual(1.5)
+  it.each(PALETTES)('$id $name: the accent is visible on the fabric and apart from the lettering', (palette) => {
+    const { fabric, lettering, accent } = patternColours(palette)
+    expect(contrast(accent.hex, fabric)).toBeGreaterThanOrEqual(2)
+    expect(contrast(accent.hex, lettering.hex)).toBeGreaterThanOrEqual(1.5)
+    expect(accent.code).not.toBe(lettering.code)
   })
 
   it('falls back to the first palette for an unknown id', () => {

@@ -17,7 +17,7 @@ function Thumbnail({ entry }: { entry: HistoryEntry }) {
     const canvas = ref.current
     if (!canvas) return
     const { width, height, cells } = entry.grid
-    const { fabric, lettering, heart } = patternColours(paletteById(entry.state.palette))
+    const { fabric, lettering, accent } = patternColours(paletteById(entry.state.palette))
     const cell = THUMB_PX / (width + 4)
     const dpr = window.devicePixelRatio || 1
     const w = THUMB_PX
@@ -31,7 +31,7 @@ function Thumbnail({ entry }: { entry: HistoryEntry }) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.fillStyle = fabric
     ctx.fillRect(0, 0, w, h)
-    const inks = ['', lettering.hex, heart.hex]
+    const inks = ['', lettering.hex, accent.hex]
     const grid = decodeCells(cells)
     for (let i = 0; i < grid.length; i++) {
       if (!grid[i]) continue

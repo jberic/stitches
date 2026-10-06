@@ -7,8 +7,8 @@ export interface ChartColours {
   fabric: string
   /** Index 1. */
   lettering: string
-  /** Index 2. */
-  heart: string
+  /** Index 2: icon and shadow. */
+  accent: string
 }
 
 interface Props {
@@ -111,7 +111,7 @@ export function PatternChart({ pattern, colours, label, highlight = null }: Prop
     const wash = darkFabric ? '255 255 255' : '0 0 0'
     const line = `rgb(${wash} / ${darkFabric ? 0.12 : 0.1})`
     const guide = `rgb(${wash} / ${darkFabric ? 0.42 : 0.38})`
-    const inks = ['', colours.lettering, colours.heart]
+    const inks = ['', colours.lettering, colours.accent]
     const symbols = cell >= SYMBOL_MIN_CELL
     const numbers = cssVar(canvas, '--chart-number')
     const mono = cssVar(canvas, '--font-mono')

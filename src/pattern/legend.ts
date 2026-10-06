@@ -1,5 +1,5 @@
 import { ICON_LABELS } from '../data/icons'
-import { patternColours, type Palette, type Thread } from '../data/palettes'
+import { FABRIC, patternColours, type Palette, type Thread } from '../data/palettes'
 import { ACCENT, LETTERING } from './compose'
 import type { Pattern } from './types'
 
@@ -27,18 +27,18 @@ export function stitchCounts(pattern: Pattern): Map<number, number> {
 
 /** The key for a pattern: one row per thread actually used, plus the fabric. */
 export function legendFor(pattern: Pattern, palette: Palette): Legend {
-  const { lettering, heart } = patternColours(palette)
+  const { lettering, accent } = patternColours(palette)
   const { icon, shadow } = pattern.meta.recipe
   const accentUse =
     icon && shadow ? `${capitalise(ICON_LABELS[icon])} and shadow` : icon ? capitalise(ICON_LABELS[icon]) : 'Shadow'
   const counts = stitchCounts(pattern)
   const rows: LegendRow[] = [
     { index: LETTERING, thread: lettering, use: 'Lettering', stitches: counts.get(LETTERING) ?? 0 },
-    { index: ACCENT, thread: heart, use: accentUse, stitches: counts.get(ACCENT) ?? 0 },
+    { index: ACCENT, thread: accent, use: accentUse, stitches: counts.get(ACCENT) ?? 0 },
   ].filter((row) => row.stitches > 0)
   return {
     rows,
-    fabric: { name: palette.fabric.name, hex: palette.fabric.hex },
+    fabric: { name: FABRIC.name, hex: FABRIC.hex },
     total: rows.reduce((sum, row) => sum + row.stitches, 0),
   }
 }

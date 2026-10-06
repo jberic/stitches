@@ -12,8 +12,8 @@
   --hairline: #8a2a40;
   --focus: #fff1ec;
 
-  /* The pattern sheet stays light so a chart reads like a printed chart. */
-  --sheet: #fff6f1;
+  /* The pattern sheet is the fabric itself: one background for every pattern. */
+  --sheet: #fbf3ec;
   --sheet-ink: #5f051c;
   /* 5.4:1 on --sheet. */
   --sheet-muted: #76615c;

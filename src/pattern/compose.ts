@@ -1,7 +1,7 @@
 import type { Grid } from './cleanup'
 
 /**
- * Steps that add colour 2 (the heart thread) to a finished lettering grid.
+ * Steps that add colour 2 (the accent thread) to a finished lettering grid.
  * They run after the legibility check, so they can never hide a problem with
  * the letters themselves.
  */

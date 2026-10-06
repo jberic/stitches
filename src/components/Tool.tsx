@@ -115,8 +115,8 @@ export function Tool({ inputRef }: Props) {
 
   const palette = paletteById(paletteId)
   const chartColours = useMemo<ChartColours>(() => {
-    const { fabric, lettering, heart } = patternColours(palette)
-    return { fabric, lettering: lettering.hex, heart: heart.hex }
+    const { fabric, lettering, accent } = patternColours(palette)
+    return { fabric, lettering: lettering.hex, accent: accent.hex }
   }, [palette])
 
   const pattern = result?.pattern

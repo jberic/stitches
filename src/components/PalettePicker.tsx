@@ -7,9 +7,9 @@ interface Props {
   onChange: (id: string) => void
 }
 
-/** A swatch: the fabric with one lettering stitch and one heart stitch on it. */
+/** A swatch: one lettering stitch and one accent stitch on the fabric. */
 function Swatch({ palette }: { palette: Palette }) {
-  const { fabric, lettering, heart } = patternColours(palette)
+  const { fabric, lettering, accent } = patternColours(palette)
   const cross = (x: number, colour: string) => (
     <path d={`M${x} 6.5L${x + 7} 13.5M${x + 7} 6.5L${x} 13.5`} stroke={colour} strokeWidth="2.6" strokeLinecap="round" />
   )
@@ -17,7 +17,7 @@ function Swatch({ palette }: { palette: Palette }) {
     <svg viewBox="0 0 24 20" aria-hidden="true">
       <rect width="24" height="20" fill={fabric} />
       {cross(3.5, lettering.hex)}
-      {cross(13.5, heart.hex)}
+      {cross(13.5, accent.hex)}
     </svg>
   )
 }
@@ -26,7 +26,7 @@ function Swatch({ palette }: { palette: Palette }) {
 export function PalettePicker({ value, onChange }: Props) {
   const name = useId()
   const selected = PALETTES.find((p) => p.id === value) ?? PALETTES[0]
-  const { lettering, heart } = patternColours(selected)
+  const { lettering, accent } = patternColours(selected)
 
   return (
     <fieldset className="palettes">
@@ -54,9 +54,8 @@ export function PalettePicker({ value, onChange }: Props) {
           {lettering.code} {lettering.name}
         </span>
         <span>
-          {heart.code} {heart.name}
+          {accent.code} {accent.name}
         </span>
-        <span>{selected.fabric.name} fabric</span>
       </p>
     </fieldset>
   )
