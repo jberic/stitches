@@ -1,3 +1,4 @@
+import { DEFAULT_PALETTE_ID, PALETTES } from '../data/palettes'
 import { DEFAULT_WIDTH, MAX_WIDTH, MIN_WIDTH } from '../pattern/generate'
 import { isSeed } from '../pattern/random'
 import { MAX_CHARS } from '../pattern/text'
@@ -7,9 +8,15 @@ export interface ShareState {
   text: string
   seed: string
   width: number
+  palette: string
 }
 
-export const DEFAULT_STATE: ShareState = { text: 'Hello sunshine', seed: 'k3j9a', width: DEFAULT_WIDTH }
+export const DEFAULT_STATE: ShareState = {
+  text: 'Hello sunshine',
+  seed: 'k3j9a',
+  width: DEFAULT_WIDTH,
+  palette: DEFAULT_PALETTE_ID,
+}
 
 /** Reads a link. Anything missing or broken falls back to the default. */
 export function readShareState(search: string): ShareState {
@@ -17,15 +24,17 @@ export function readShareState(search: string): ShareState {
   const text = params.get('text')
   const seed = params.get('seed')
   const width = Number(params.get('w'))
+  const palette = params.get('p')
   return {
     text: text && text.trim() && text.length <= MAX_CHARS * 2 ? text : DEFAULT_STATE.text,
     seed: isSeed(seed) ? seed : DEFAULT_STATE.seed,
     width: Number.isInteger(width) && width >= MIN_WIDTH && width <= MAX_WIDTH ? width : DEFAULT_STATE.width,
+    palette: PALETTES.some((p) => p.id === palette) ? palette! : DEFAULT_STATE.palette,
   }
 }
 
 export function shareSearch(state: ShareState): string {
-  const params = new URLSearchParams({ text: state.text, seed: state.seed, w: String(state.width) })
+  const params = new URLSearchParams({ text: state.text, seed: state.seed, w: String(state.width), p: state.palette })
   return `?${params.toString().replace(/\+/g, '%20')}`
 }
 

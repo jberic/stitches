@@ -1,14 +1,13 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { paletteById, patternColours } from '../data/palettes'
 import { MAX_WIDTH, MIN_WIDTH, findReadableWidth, generatePattern, type GenerateResult } from '../pattern/generate'
 import { describeRecipe, seedWithNewFont } from '../pattern/recipe'
 import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
 import { stitchCount } from '../pattern/types'
 import { readShareState, writeShareState } from '../state/url'
-import { PatternChart } from './PatternChart'
+import { PalettePicker } from './PalettePicker'
+import { PatternChart, type ChartColours } from './PatternChart'
 import './Tool.css'
-
-// Placeholder until palettes arrive in step 4.
-const INK = '#5f051c'
 
 interface Props {
   inputRef?: React.Ref<HTMLInputElement>
@@ -19,6 +18,12 @@ export function Tool({ inputRef }: Props) {
   const [text, setText] = useState(initial.text)
   const [width, setWidth] = useState(initial.width)
   const [seed, setSeed] = useState(initial.seed)
+  const [paletteId, setPaletteId] = useState(initial.palette)
+  // Read by the link writer without re-running generation when only the palette changes.
+  const paletteRef = useRef(paletteId)
+  useEffect(() => {
+    paletteRef.current = paletteId
+  }, [paletteId])
   const [result, setResult] = useState<GenerateResult | null>(null)
   const [failed, setFailed] = useState(false)
   /** For a hard-to-read result: a width that works, keyed by the result it belongs to. */
@@ -45,7 +50,9 @@ export function Tool({ inputRef }: Props) {
           setFailed(false)
           const mode = historyMode.current
           historyMode.current = 'replace'
-          if (mode !== 'none') writeShareState({ text: linesKey.split('\n').join(' '), seed, width }, mode)
+          if (mode !== 'none') {
+            writeShareState({ text: linesKey.split('\n').join(' '), seed, width, palette: paletteRef.current }, mode)
+          }
         })
         .catch(() => id === request.current && setFailed(true))
     }, 90)
@@ -60,6 +67,7 @@ export function Tool({ inputRef }: Props) {
       setText(state.text)
       setWidth(state.width)
       setSeed(state.seed)
+      setPaletteId(state.palette)
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
@@ -75,6 +83,18 @@ export function Tool({ inputRef }: Props) {
       sheet.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' })
     }
   }
+
+  // A new palette only recolours the pattern; the link is updated in place.
+  const choosePalette = (id: string) => {
+    setPaletteId(id)
+    writeShareState({ ...readShareState(window.location.search), palette: id }, 'replace')
+  }
+
+  const palette = paletteById(paletteId)
+  const chartColours = useMemo<ChartColours>(() => {
+    const { fabric, lettering, heart } = patternColours(palette)
+    return { fabric, lettering: lettering.hex, heart: heart.hex }
+  }, [palette])
 
   const pattern = result?.pattern
   const tooNarrow = result?.tooNarrow
@@ -107,8 +127,8 @@ export function Tool({ inputRef }: Props) {
           {pattern ? (
             <PatternChart
               pattern={pattern}
-              ink={INK}
-              label={`Cross-stitch pattern of “${pattern.meta.text}”, ${pattern.width} by ${pattern.height} stitches.`}
+              colours={chartColours}
+              label={`Cross-stitch pattern of “${pattern.meta.text}”, ${pattern.width} by ${pattern.height} stitches, ${palette.name.toLowerCase()}.`}
             />
           ) : (
             <div className="sheet-empty" aria-hidden="true" />
@@ -158,6 +178,11 @@ export function Tool({ inputRef }: Props) {
             Generate again
           </button>
           <p className="hint">Same words, new style.</p>
+        </div>
+
+        <div className="field">
+          <PalettePicker value={palette.id} onChange={choosePalette} />
+          <p className="hint">Screen colours are approximate. Check against your physical thread card.</p>
         </div>
 
         <div className="field">

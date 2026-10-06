@@ -4,10 +4,12 @@
   /* Brand pair: #FFCFC5 on #5F051C is 9.8:1 (WCAG AAA). */
   --bg: #5f051c;
   --fg: #ffcfc5;
-  /* Secondary text, 6.0:1 on --bg (AA). */
-  --fg-muted: #d79d9b;
+  /* Secondary text, 7.0:1 on --bg (AAA). From the stitch palettes handoff. */
+  --fg-muted: #f2a797;
   /* Lines and control tracks, 3.4:1 on --bg (meets the 3:1 rule for UI parts). */
   --line: #af6a70;
+  /* Decorative dividers only, 1.6:1 on --bg: too faint for anything that must be seen. */
+  --hairline: #8a2a40;
   --focus: #fff1ec;
 
   /* The pattern sheet stays light so a chart reads like a printed chart. */

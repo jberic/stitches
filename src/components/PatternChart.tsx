@@ -1,10 +1,46 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { luminance } from '../data/colour'
 import type { Pattern } from '../pattern/types'
+
+/** Screen colours for a pattern: the fabric, then one per colour index. */
+export interface ChartColours {
+  fabric: string
+  /** Index 1. */
+  lettering: string
+  /** Index 2. */
+  heart: string
+}
 
 interface Props {
   pattern: Pattern
-  ink: string
+  colours: ChartColours
   label: string
+}
+
+/** Smallest cell, in CSS pixels, at which colour symbols are still legible. */
+const SYMBOL_MIN_CELL = 7
+
+/**
+ * One symbol per colour, so a black-and-white print still tells them apart.
+ * Drawn in black or white, whichever contrasts with the stitch colour.
+ */
+function drawSymbol(ctx: CanvasRenderingContext2D, index: number, x: number, y: number, cell: number, fill: string) {
+  ctx.strokeStyle = ctx.fillStyle = luminance(fill) > 0.25 ? 'rgb(0 0 0 / 0.55)' : 'rgb(255 255 255 / 0.8)'
+  const c = cell / 2
+  if (index === 1) {
+    const r = cell * 0.22
+    ctx.lineWidth = Math.max(1, cell * 0.11)
+    ctx.beginPath()
+    ctx.moveTo(x + c - r, y + c - r)
+    ctx.lineTo(x + c + r, y + c + r)
+    ctx.moveTo(x + c + r, y + c - r)
+    ctx.lineTo(x + c - r, y + c + r)
+    ctx.stroke()
+  } else {
+    ctx.beginPath()
+    ctx.arc(x + c, y + c, cell * 0.2, 0, Math.PI * 2)
+    ctx.fill()
+  }
 }
 
 /** Unstitched fabric around the design, in stitches. */
@@ -32,7 +68,7 @@ function cssVar(el: Element, name: string): string {
   return getComputedStyle(el).getPropertyValue(name).trim()
 }
 
-export function PatternChart({ pattern, ink, label }: Props) {
+export function PatternChart({ pattern, colours, label }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [available, setAvailable] = useState(0)
@@ -68,9 +104,13 @@ export function PatternChart({ pattern, ink, label }: Props) {
     canvas.style.width = `${cssW}px`
     canvas.style.height = `${cssH}px`
 
-    const fabric = cssVar(canvas, '--chart-fabric')
-    const line = cssVar(canvas, '--chart-line')
-    const guide = cssVar(canvas, '--chart-guide')
+    // Grid lines are a wash of black on light fabric, white on dark fabric.
+    const darkFabric = luminance(colours.fabric) < 0.18
+    const wash = darkFabric ? '255 255 255' : '0 0 0'
+    const line = `rgb(${wash} / ${darkFabric ? 0.12 : 0.1})`
+    const guide = `rgb(${wash} / ${darkFabric ? 0.42 : 0.38})`
+    const inks = ['', colours.lettering, colours.heart]
+    const symbols = cell >= SYMBOL_MIN_CELL
     const numbers = cssVar(canvas, '--chart-number')
     const mono = cssVar(canvas, '--font-mono')
 
@@ -79,16 +119,19 @@ export function PatternChart({ pattern, ink, label }: Props) {
       ctx.clearRect(0, 0, cssW, cssH)
       ctx.save()
       ctx.translate(gutter, gutter)
-      ctx.fillStyle = fabric
+      ctx.fillStyle = colours.fabric
       ctx.fillRect(0, 0, gridW, gridH)
 
-      ctx.fillStyle = ink
       for (let y = 0; y < pattern.height; y++) {
         for (let x = 0; x < pattern.width; x++) {
           const i = y * pattern.width + x
-          if (pattern.cells[i] && order[i] <= progress) {
-            ctx.fillRect((x + MARGIN) * cell, (y + MARGIN) * cell, cell, cell)
-          }
+          const index = pattern.cells[i]
+          if (!index || order[i] > progress) continue
+          const px = (x + MARGIN) * cell
+          const py = (y + MARGIN) * cell
+          ctx.fillStyle = inks[index]
+          ctx.fillRect(px, py, cell, cell)
+          if (symbols) drawSymbol(ctx, index, px, py, cell, inks[index])
         }
       }
 
@@ -147,7 +190,7 @@ export function PatternChart({ pattern, ink, label }: Props) {
     }
     frame = requestAnimationFrame(step)
     return () => cancelAnimationFrame(frame)
-  }, [pattern, ink, available, order])
+  }, [pattern, colours, available, order])
 
   return (
     <div ref={wrapRef} className="chart">

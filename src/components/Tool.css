@@ -1,7 +1,4 @@
 .tool {
-  --chart-fabric: var(--sheet);
-  --chart-line: rgb(95 5 28 / 0.1);
-  --chart-guide: rgb(95 5 28 / 0.38);
   --chart-number: var(--sheet-muted);
 
   display: grid;
@@ -24,7 +21,7 @@
 .sheet {
   scroll-margin-top: 1rem;
   margin: 0;
-  background: var(--chart-fabric);
+  background: var(--sheet);
   padding: clamp(0.75rem, 2.5vw, 2.5rem);
   border-radius: 2px;
   color: var(--sheet-ink);

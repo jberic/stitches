@@ -25,6 +25,15 @@ All fonts are under the [SIL Open Font License 1.1](https://openfontlicense.org)
 | IBM Plex Sans | Interface | © 2017 IBM Corp. Reserved Font Name "Plex" |
 | IBM Plex Mono | Codes and counts | © 2017 IBM Corp. Reserved Font Name "Plex" |
 
+## Stitch palettes
+
+`src/data/palettes.ts` holds the 12 palettes from the design handoff ("Cross Stitch Design System", stitch palettes): a fabric, a heart thread in a tone of the fabric, and one lettering thread.
+
+- Threads are stored as codes only; names and screen colours come from `threads.json`. Each code is the closest thread (CIEDE2000) to the handoff colour that still passes the palette rules: lettering at least 4.5:1 and the heart at least 2:1 against the fabric. Tests check every palette.
+- The handoff's garnet (#5F051C) has no close thread; the nearest, 814 Garnet Dark, is a little lighter. Pine in palette 10 maps to 890, a deeper green than designed.
+- Fabric colours are on-screen guesses for coloured Aida, not thread data. Three were lightened slightly so their lettering thread passes 4.5:1: 01 mustard, 02 olive and 10 dusty rose.
+- Screen colours are approximate for every thread. Check against a physical thread card.
+
 ## Thread colour data
 
 `src/data/threads.json` lists 489 DMC stranded cotton colours as `{ code, name, hex }`.
