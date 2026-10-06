@@ -45,7 +45,8 @@ export function prepareStitches(
   order.sort((a, b) => key(a) - key(b))
 
   let drawn = 0
-  const inset = cell * 0.18
+  // Stitch spec from the design handoff: ~20% inset, stroke ~27% of the cell, round caps.
+  const inset = cell * 0.2
   const size = cell - inset * 2
 
   const legs = (from: number, to: number, over: boolean) => {
@@ -72,7 +73,7 @@ export function prepareStitches(
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.clearRect(0, 0, w, h)
     ctx.lineCap = 'round'
-    ctx.lineWidth = Math.max(1, cell * 0.3)
+    ctx.lineWidth = Math.max(1, cell * 0.27)
     drawn = 0
   }
   reset()
