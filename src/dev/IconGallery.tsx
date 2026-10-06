@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { ICONS, ICON_SIZES, iconCells, type IconName, type IconSize } from '../data/icons'
+import { ICON_LABELS, ICON_SETS, iconCells, iconSizes, type IconName, type IconSize } from '../data/icons'
 import { paletteById, patternColours } from '../data/palettes'
 import { prepareStitches } from '../components/stitchArt'
 import type { Pattern } from '../pattern/types'
@@ -20,7 +20,7 @@ function StitchedIcon({ name, size, paletteId }: { name: IconName; size: IconSiz
     const grid = iconCells(name, size) as unknown as Pattern
     prepareStitches(canvas, grid, CELL, { under: heart.hex, over: heart.hex }).drawUpTo(Infinity)
   }, [name, size, paletteId])
-  return <canvas ref={ref} role="img" aria-label={`${name}, ${size} stitches`} />
+  return <canvas ref={ref} role="img" aria-label={`${ICON_LABELS[name]}, ${size} stitches`} />
 }
 
 export function IconGallery() {
@@ -28,7 +28,7 @@ export function IconGallery() {
     <main className="dev">
       <header>
         <h1>Icons</h1>
-        <p>Dev only. Each icon at 7, 11 and 15 stitches wide, stitched in the heart thread of four palettes.</p>
+        <p>Dev only. The nature and food sets at every size they come in (7, 11, 15 stitches), stitched in the heart thread of four palettes.</p>
       </header>
       {PALETTES_SHOWN.map((id) => {
         const palette = paletteById(id)
@@ -38,18 +38,23 @@ export function IconGallery() {
             <h2>
               {palette.name} <span>heart thread {heart.code} {heart.name}</span>
             </h2>
-            <div className="icon-grid" style={{ background: fabric }}>
-              {(Object.keys(ICONS) as IconName[]).map((name) => (
-                <figure key={name} className="icon-cell">
-                  <div className="icon-sizes">
-                    {ICON_SIZES.map((size) => (
-                      <StitchedIcon key={size} name={name} size={size} paletteId={id} />
-                    ))}
-                  </div>
-                  <figcaption style={{ color: patternColours(palette).lettering.hex }}>{name}</figcaption>
-                </figure>
-              ))}
-            </div>
+            {(Object.keys(ICON_SETS) as (keyof typeof ICON_SETS)[]).map((set) => (
+              <div key={set}>
+                <h3 className="icon-set-name">{set}</h3>
+                <div className="icon-grid" style={{ background: fabric }}>
+                  {(ICON_SETS[set] as readonly IconName[]).map((name) => (
+                    <figure key={name} className="icon-cell">
+                      <div className="icon-sizes">
+                        {iconSizes(name).map((size) => (
+                          <StitchedIcon key={size} name={name} size={size} paletteId={id} />
+                        ))}
+                      </div>
+                      <figcaption style={{ color: patternColours(palette).lettering.hex }}>{ICON_LABELS[name]}</figcaption>
+                    </figure>
+                  ))}
+                </div>
+              </div>
+            ))}
           </section>
         )
       })}
