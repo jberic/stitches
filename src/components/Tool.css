@@ -301,3 +301,30 @@
 .generate-button:hover:not(:disabled) .generate-icon {
   transform: rotate(90deg);
 }
+
+/* Finished size: the answer to "how big will it be?", under the size controls. */
+.finished-size {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+}
+
+.finished-size .mono:first-child {
+  font-size: 1.25rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.finished-size-inches {
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.hint-inline {
+  flex-basis: 100%;
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+}

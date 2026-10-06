@@ -4,9 +4,11 @@ import { MAX_WIDTH, MIN_WIDTH, findReadableWidth, generatePattern, type Generate
 import { describeRecipe, seedWithNewStyle } from '../pattern/recipe'
 import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
 import { legendFor } from '../pattern/legend'
+import { FABRIC_COUNTS, finishedSize, type FabricCount } from '../pattern/size'
 import { readShareState, writeShareState } from '../state/url'
 import { Legend } from './Legend'
 import { PalettePicker } from './PalettePicker'
+import { Segmented } from './Segmented'
 import { PatternChart, type ChartColours } from './PatternChart'
 import './Tool.css'
 
@@ -20,6 +22,7 @@ export function Tool({ inputRef }: Props) {
   const [width, setWidth] = useState(initial.width)
   const [seed, setSeed] = useState(initial.seed)
   const [paletteId, setPaletteId] = useState(initial.palette)
+  const [fabricCount, setFabricCount] = useState<FabricCount>(initial.fabric)
   // Read by the link writer without re-running generation when only the palette changes.
   const paletteRef = useRef(paletteId)
   useEffect(() => {
@@ -55,7 +58,8 @@ export function Tool({ inputRef }: Props) {
           const mode = historyMode.current
           historyMode.current = 'replace'
           if (mode !== 'none') {
-            writeShareState({ text: linesKey.split('\n').join(' '), seed, width, palette: paletteRef.current }, mode)
+            const current = readShareState(window.location.search)
+            writeShareState({ ...current, text: linesKey.split('\n').join(' '), seed, width, palette: paletteRef.current }, mode)
           }
         })
         .catch(() => id === request.current && setFailed(true))
@@ -72,6 +76,7 @@ export function Tool({ inputRef }: Props) {
       setWidth(state.width)
       setSeed(state.seed)
       setPaletteId(state.palette)
+      setFabricCount(state.fabric)
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
@@ -92,6 +97,11 @@ export function Tool({ inputRef }: Props) {
   const choosePalette = (id: string) => {
     setPaletteId(id)
     writeShareState({ ...readShareState(window.location.search), palette: id }, 'replace')
+  }
+
+  const chooseFabric = (count: FabricCount) => {
+    setFabricCount(count)
+    writeShareState({ ...readShareState(window.location.search), fabric: count }, 'replace')
   }
 
   const palette = paletteById(paletteId)
@@ -125,6 +135,7 @@ export function Tool({ inputRef }: Props) {
     widthRef.current?.focus()
   }
   const charsLeft = MAX_CHARS - text.trim().length
+  const size = pattern && finishedSize(pattern.width, pattern.height, fabricCount)
 
   return (
     <div className="tool">
@@ -220,6 +231,26 @@ export function Tool({ inputRef }: Props) {
             <span>{MIN_WIDTH}</span>
             <span>{MAX_WIDTH}</span>
           </div>
+        </div>
+
+        <div className="field">
+          <Segmented
+            legend="Fabric"
+            options={FABRIC_COUNTS.map((count) => ({ value: count, label: `${count}-count` }))}
+            value={fabricCount}
+            onChange={chooseFabric}
+          />
+          {size && (
+            <p className="finished-size" aria-live="polite">
+              <span className="mono">
+                {size.cm.width.toFixed(1)} × {size.cm.height.toFixed(1)} cm
+              </span>
+              <span className="mono finished-size-inches">
+                {size.inches.width.toFixed(1)} × {size.inches.height.toFixed(1)} in
+              </span>
+              <span className="hint-inline">finished design on {fabricCount}-count Aida</span>
+            </p>
+          )}
         </div>
 
         <div id={ids.status} className="status" role="status" aria-live="polite">
