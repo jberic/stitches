@@ -145,3 +145,47 @@
   font-family: var(--font-mono);
   font-weight: 500;
 }
+
+.icon-sheet {
+  margin: 2rem 0;
+}
+
+.icon-sheet h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.icon-sheet h2 span {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--fg-muted);
+}
+
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 4px;
+}
+
+.icon-cell {
+  margin: 0;
+}
+
+.icon-sizes {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.icon-sizes canvas {
+  display: block;
+}
+
+.icon-cell figcaption {
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
