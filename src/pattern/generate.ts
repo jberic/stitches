@@ -9,7 +9,7 @@ import { renderAlphabet } from './layouts/alphabet'
 import { renderStackedBlock, type LetterBox } from './layouts/stackedBlock'
 import { renderWavy } from './layouts/wavy'
 import { checkLegibility, type LegibilityCheck } from './legibility'
-import { DEFAULT_CHOICES, MAX_ATTEMPTS, WORDMARK_RECIPE, recipeFor, type Choices, type Recipe } from './recipe'
+import { DEFAULT_CHOICES, MAX_ATTEMPTS, WORDMARK_RECIPE, recipeFor, resolveChoices, type Choices, type Recipe } from './recipe'
 import type { Pattern } from './types'
 import { warpMask } from './warp'
 
@@ -20,7 +20,7 @@ export const DEFAULT_WIDTH = 50
 /** Mask pixels per stitch. */
 const SCALE = 8
 /** Lowercase letters sit under the cap height, so lines need more rows to keep them readable. */
-const MIN_ROWS = { upper: 11, lower: 15 }
+const MIN_ROWS = { upper: 11, lower: 15, mixed: 15 }
 /** Narrower than this per letter (gap excluded) and the strokes can't hold their shape. */
 const MIN_STITCHES_PER_LETTER = 4
 
@@ -119,7 +119,13 @@ function decorate(lettering: Grid, recipe: Recipe): Grid {
 /** Draws, downsamples, tidies and checks one recipe. Deterministic for the same inputs. */
 export async function renderRecipe(lines: string[], width: number, recipe: Recipe, seed = ''): Promise<Rendered> {
   await loadDisplayFont(recipe.font)
-  const cased = lines.map((line) => (recipe.letterCase === 'upper' ? line.toLocaleUpperCase() : line.toLocaleLowerCase()))
+  const cased = lines.map((line) =>
+    recipe.letterCase === 'upper'
+      ? line.toLocaleUpperCase()
+      : recipe.letterCase === 'lower'
+        ? line.toLocaleLowerCase()
+        : line,
+  )
   const { mask, letters, unsupported } = drawLettering(cased, width, recipe)
   if (unsupported) return unsupportedResult(lines, cased, width, recipe, seed, unsupported)
   const cover = coverage(mask, SCALE)
@@ -186,9 +192,10 @@ export async function generatePattern({
 }): Promise<GenerateResult> {
   const attempts: Attempt[] = []
   let best: { rendered: Rendered; recipe: Recipe } | null = null
+  const resolved = resolveChoices(lines, choices)
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const recipe = recipeFor(seed, attempt, attempts[attempts.length - 1], choices)
+    const recipe = recipeFor(seed, attempt, attempts[attempts.length - 1], resolved)
     const rendered = await renderRecipe(lines, width, recipe, seed)
     attempts.push({ recipe, check: rendered.check })
     if (!best || rendered.check.penalty < best.rendered.check.penalty) best = { rendered, recipe }

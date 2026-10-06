@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { hashString, isSeed, mulberry32, newSeed } from './random'
 import type { LegibilityCheck } from './legibility'
 import { ICON_SETS } from '../data/icons'
-import { MAX_ATTEMPTS, describeRecipe, recipeFor } from './recipe'
+import { CAPITALS_ONLY } from '../fonts'
+import { MAX_ATTEMPTS, describeRecipe, recipeFor, textCase } from './recipe'
 
 describe('mulberry32', () => {
   it('repeats exactly for the same seed', () => {
@@ -150,5 +151,22 @@ describe('recipeFor', () => {
     const first = recipeFor(wavy)
     const next = recipeFor(wavy, 1, { recipe: first, check: result(true, false) })
     expect(next.wave!.ay).toBeLessThan(first.wave!.ay)
+  })
+})
+
+describe('textCase', () => {
+  it('keeps the case as typed, and forces it when asked', () => {
+    expect(textCase(['Sun'], 'typed')).toBe('mixed')
+    expect(textCase(['SUN'], 'typed')).toBe('upper')
+    expect(textCase(['sun'], 'typed')).toBe('lower')
+    expect(textCase(['Sun'], 'upper')).toBe('upper')
+    expect(textCase(['Sun'], 'lower')).toBe('lower')
+    expect(textCase(['42!'], 'typed')).toBe('upper')
+  })
+
+  it('never picks a capitals-only font when the phrase has lowercase', () => {
+    for (let s = 0; s < 40; s++) {
+      expect(CAPITALS_ONLY).not.toContain(recipeFor(`tc${s}`, 0, undefined, { motif: 'any', letterCase: 'mixed' }).font)
+    }
   })
 })

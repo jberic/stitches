@@ -287,6 +287,7 @@ export function Tool({ inputRef }: Props) {
           <Segmented
             legend="Letters"
             options={[
+              { value: 'typed', label: 'As typed' },
               { value: 'upper', label: 'Capitals' },
               { value: 'lower', label: 'Lowercase' },
             ]}

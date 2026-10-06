@@ -23,7 +23,7 @@ export const DEFAULT_STATE: ShareState = {
   palette: DEFAULT_PALETTE_ID,
   fabric: DEFAULT_FABRIC_COUNT,
   motif: DEFAULT_MOTIF,
-  letterCase: 'upper',
+  letterCase: 'typed',
 }
 
 /** Reads a link. Anything missing or broken falls back to the default. */
@@ -43,7 +43,7 @@ export function readShareState(search: string): ShareState {
     palette: PALETTES.some((p) => p.id === palette) ? palette! : DEFAULT_STATE.palette,
     fabric: isFabricCount(fabric) ? fabric : DEFAULT_STATE.fabric,
     motif: motif && MOTIFS.includes(motif) ? motif : DEFAULT_STATE.motif,
-    letterCase: letterCase === 'lower' ? 'lower' : DEFAULT_STATE.letterCase,
+    letterCase: letterCase === 'upper' || letterCase === 'lower' ? letterCase : DEFAULT_STATE.letterCase,
   }
 }
 

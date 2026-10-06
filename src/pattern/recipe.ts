@@ -23,17 +23,39 @@ export interface Recipe {
   icon: IconName | null
   /** A tonal drop shadow in the accent thread. */
   shadow: boolean
-  letterCase: LetterCase
+  letterCase: TextCase
   /** Letters drawn from a stitch alphabet instead of the font, or null for the font. */
   alphabet: AlphabetId | null
 }
 
-export type LetterCase = 'upper' | 'lower'
+/** The person's choice: keep the case they typed, or force capitals or lowercase. */
+export type LetterCase = 'typed' | 'upper' | 'lower'
+/** The case the pattern is actually stitched in. */
+export type TextCase = 'upper' | 'lower' | 'mixed'
 
 /** What the person chose; everything else in a recipe comes from the seed. */
 export interface Choices {
   motif: Motif
   letterCase: LetterCase
+}
+
+/** Choices with the case worked out for a particular phrase. */
+export interface ResolvedChoices {
+  motif: Motif
+  letterCase: TextCase
+}
+
+/** The case a phrase is stitched in. "As typed" with only capitals (or only lowercase) is just that. */
+export function textCase(lines: string[], choice: LetterCase): TextCase {
+  if (choice !== 'typed') return choice
+  const text = lines.join(' ')
+  const hasLower = text !== text.toLocaleUpperCase()
+  const hasUpper = text !== text.toLocaleLowerCase()
+  return hasLower && hasUpper ? 'mixed' : hasLower ? 'lower' : 'upper'
+}
+
+export function resolveChoices(lines: string[], choices: Choices): ResolvedChoices {
+  return { motif: choices.motif, letterCase: textCase(lines, choices.letterCase) }
 }
 
 /** A warp in stitch units (see pattern/warp.ts for what each part does). */
@@ -91,7 +113,7 @@ const ALL_ICONS: IconName[] = [...ICON_SETS.nature, ...ICON_SETS.food]
 export type Motif = 'any' | 'nature' | 'food' | 'none'
 export const MOTIFS: Motif[] = ['any', 'nature', 'food', 'none']
 export const DEFAULT_MOTIF: Motif = 'any'
-export const DEFAULT_CHOICES: Choices = { motif: DEFAULT_MOTIF, letterCase: 'upper' }
+export const DEFAULT_CHOICES: Choices = { motif: DEFAULT_MOTIF, letterCase: 'typed' }
 
 /** Half of all seeds use a stitch alphabet; the rest a display font. Its own stream, like the icon. */
 function alphabetFor(seed: string): AlphabetId | null {
@@ -99,9 +121,9 @@ function alphabetFor(seed: string): AlphabetId | null {
   return rng() < 0.5 ? pick(rng, ALPHABET_IDS) : null
 }
 
-/** Fonts that can draw the chosen case. */
-function fontsFor(letterCase: LetterCase): readonly DisplayFont[] {
-  return letterCase === 'lower' ? DISPLAY_FONTS.filter((f) => !CAPITALS_ONLY.includes(f)) : DISPLAY_FONTS
+/** Fonts that can draw the case: any lowercase rules out capitals-only fonts. */
+function fontsFor(letterCase: TextCase): readonly DisplayFont[] {
+  return letterCase === 'upper' ? DISPLAY_FONTS : DISPLAY_FONTS.filter((f) => !CAPITALS_ONLY.includes(f))
 }
 
 /**
@@ -153,7 +175,7 @@ export function recipeFor(
   seed: string,
   attempt = 0,
   previous?: PreviousAttempt,
-  choices: Choices = DEFAULT_CHOICES,
+  choices: ResolvedChoices = { motif: DEFAULT_MOTIF, letterCase: 'upper' },
 ): Recipe {
   const rng = randomFor('recipe', seed, 0)
   // One draw either way, so the rest of the recipe doesn't shift with the case.
@@ -258,7 +280,8 @@ export function seedWithNewStyle(
   for (let i = 0; i < 30; i++) {
     const seed = makeSeed()
     if (!current) return seed
-    const next = recipeFor(seed, 0, undefined, choices)
+    // Same phrase, so the same case as the pattern on screen.
+    const next = recipeFor(seed, 0, undefined, { motif: choices.motif, letterCase: current.letterCase })
     const letterform = (r: Recipe) => r.alphabet ?? r.font
     const newLook = letterform(next) !== letterform(current) || next.layout !== current.layout
     if (newLook && (next.icon === null || next.icon !== current.icon)) return seed
