@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { hashString, isSeed, mulberry32, newSeed } from './random'
 import type { LegibilityCheck } from './legibility'
+import { ICON_SETS } from '../data/icons'
 import { MAX_ATTEMPTS, describeRecipe, recipeFor } from './recipe'
 
 describe('mulberry32', () => {
@@ -98,6 +99,22 @@ describe('recipeFor', () => {
     const recipes = Array.from({ length: 60 }, (_, i) => recipeFor(`l${i}`))
     expect(new Set(recipes.map((r) => r.layout))).toEqual(new Set(['stacked-block', 'wavy']))
     for (const r of recipes) expect(r.wave !== null).toBe(r.layout === 'wavy')
+  })
+
+  it('follows the motif choice', () => {
+    for (let s = 0; s < 40; s++) {
+      expect(recipeFor(`m${s}`, 0, undefined, 'none').icon).toBeNull()
+      expect(ICON_SETS.nature).toContain(recipeFor(`m${s}`, 0, undefined, 'nature').icon)
+      expect(ICON_SETS.food).toContain(recipeFor(`m${s}`, 0, undefined, 'food').icon)
+    }
+  })
+
+  it('changes only the icon when the motif changes', () => {
+    for (let s = 0; s < 40; s++) {
+      const { icon: _a, ...any } = recipeFor(`m${s}`, 0, undefined, 'any')
+      const { icon: _b, ...food } = recipeFor(`m${s}`, 0, undefined, 'food')
+      expect(food).toEqual(any)
+    }
   })
 
   it('keeps the icon and shadow across retries, so a seed keeps its character', () => {

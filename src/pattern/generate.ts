@@ -7,7 +7,7 @@ import { coverage, stitchesFrom, trimRows, type Mask } from './downsample'
 import { renderStackedBlock, type LetterBox } from './layouts/stackedBlock'
 import { renderWavy } from './layouts/wavy'
 import { checkLegibility, type LegibilityCheck } from './legibility'
-import { MAX_ATTEMPTS, WORDMARK_RECIPE, recipeFor, type Recipe } from './recipe'
+import { DEFAULT_MOTIF, MAX_ATTEMPTS, WORDMARK_RECIPE, recipeFor, type Motif, type Recipe } from './recipe'
 import type { Pattern } from './types'
 import { warpMask } from './warp'
 
@@ -122,16 +122,18 @@ export async function generatePattern({
   lines,
   width,
   seed,
+  motif = DEFAULT_MOTIF,
 }: {
   lines: string[]
   width: number
   seed: string
+  motif?: Motif
 }): Promise<GenerateResult> {
   const attempts: Attempt[] = []
   let best: { rendered: Rendered; recipe: Recipe } | null = null
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const recipe = recipeFor(seed, attempt, attempts[attempts.length - 1])
+    const recipe = recipeFor(seed, attempt, attempts[attempts.length - 1], motif)
     const rendered = await renderRecipe(lines, width, recipe, seed)
     attempts.push({ recipe, check: rendered.check })
     if (!best || rendered.check.penalty < best.rendered.check.penalty) best = { rendered, recipe }
@@ -166,9 +168,14 @@ function narrowness(lines: string[], width: number): GenerateResult['tooNarrow']
  * For a phrase that isn't readable at this width: the narrowest wider width
  * (in steps of 2) where the same seed gives a readable pattern, or null.
  */
-export async function findReadableWidth(lines: string[], seed: string, from: number): Promise<number | null> {
+export async function findReadableWidth(
+  lines: string[],
+  seed: string,
+  from: number,
+  motif: Motif = DEFAULT_MOTIF,
+): Promise<number | null> {
   for (let width = from + 2; width <= MAX_WIDTH; width += 2) {
-    const result = await generatePattern({ lines, width, seed })
+    const result = await generatePattern({ lines, width, seed, motif })
     if (result.check.ok) return width
   }
   return null

@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { paletteById, patternColours } from '../data/palettes'
 import { MAX_WIDTH, MIN_WIDTH, findReadableWidth, generatePattern, type GenerateResult } from '../pattern/generate'
-import { describeRecipe, seedWithNewStyle } from '../pattern/recipe'
+import { describeRecipe, seedWithNewStyle, type Motif } from '../pattern/recipe'
 import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
 import { legendFor } from '../pattern/legend'
 import { FABRIC_COUNTS, finishedSize, type FabricCount } from '../pattern/size'
@@ -23,6 +23,7 @@ export function Tool({ inputRef }: Props) {
   const [seed, setSeed] = useState(initial.seed)
   const [paletteId, setPaletteId] = useState(initial.palette)
   const [fabricCount, setFabricCount] = useState<FabricCount>(initial.fabric)
+  const [motif, setMotif] = useState<Motif>(initial.motif)
   // Read by the link writer without re-running generation when only the palette changes.
   const paletteRef = useRef(paletteId)
   useEffect(() => {
@@ -49,7 +50,7 @@ export function Tool({ inputRef }: Props) {
     if (linesKey === null) return
     const id = ++request.current
     const timer = window.setTimeout(() => {
-      generatePattern({ lines: linesKey.split('\n'), width, seed })
+      generatePattern({ lines: linesKey.split('\n'), width, seed, motif })
         .then((next) => {
           // Keep the previous pattern on screen until the newest request is ready.
           if (id !== request.current) return
@@ -59,13 +60,14 @@ export function Tool({ inputRef }: Props) {
           historyMode.current = 'replace'
           if (mode !== 'none') {
             const current = readShareState(window.location.search)
-            writeShareState({ ...current, text: linesKey.split('\n').join(' '), seed, width, palette: paletteRef.current }, mode)
+            const text = linesKey.split('\n').join(' ')
+            writeShareState({ ...current, text, seed, width, motif, palette: paletteRef.current }, mode)
           }
         })
         .catch(() => id === request.current && setFailed(true))
     }, 90)
     return () => window.clearTimeout(timer)
-  }, [linesKey, width, seed])
+  }, [linesKey, width, seed, motif])
 
   // Back and Forward step through styles you have generated.
   useEffect(() => {
@@ -77,6 +79,7 @@ export function Tool({ inputRef }: Props) {
       setSeed(state.seed)
       setPaletteId(state.palette)
       setFabricCount(state.fabric)
+      setMotif(state.motif)
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
@@ -84,7 +87,7 @@ export function Tool({ inputRef }: Props) {
 
   const generateAgain = () => {
     historyMode.current = 'push'
-    setSeed(seedWithNewStyle(result?.recipe))
+    setSeed(seedWithNewStyle(result?.recipe, undefined, motif))
     // On short screens the button sits below the pattern; bring the new one into view.
     const sheet = sheetRef.current
     if (sheet && sheet.getBoundingClientRect().top < 0) {
@@ -120,13 +123,14 @@ export function Tool({ inputRef }: Props) {
   useEffect(() => {
     if (!result || result.check.ok || result.tooNarrow) return
     let alive = true
-    findReadableWidth(result.pattern.meta.text.split(' '), result.pattern.meta.seed, result.pattern.width).then(
+    const { meta } = result.pattern
+    findReadableWidth(meta.text.split(' '), meta.seed, result.pattern.width, motif).then(
       (width) => alive && setReadableAt({ for: result, width }),
     )
     return () => {
       alive = false
     }
-  }, [result])
+  }, [result, motif])
   const suggestedWidth = readableAt?.for === result ? readableAt.width : null
 
   const applyWidth = (next: number) => {
@@ -204,6 +208,20 @@ export function Tool({ inputRef }: Props) {
         <div className="field">
           <PalettePicker value={palette.id} onChange={choosePalette} />
           <p className="hint">Screen colours are approximate. Check against your physical thread card.</p>
+        </div>
+
+        <div className="field">
+          <Segmented
+            legend="Motif"
+            options={[
+              { value: 'any', label: 'Any' },
+              { value: 'nature', label: 'Nature' },
+              { value: 'food', label: 'Food' },
+              { value: 'none', label: 'None' },
+            ]}
+            value={motif}
+            onChange={(next: Motif) => setMotif(next)}
+          />
         </div>
 
         <div className="field">

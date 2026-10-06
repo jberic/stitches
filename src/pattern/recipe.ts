@@ -75,11 +75,27 @@ const WAVE_CALM = 0.6
 
 const ALL_ICONS: IconName[] = [...ICON_SETS.nature, ...ICON_SETS.food]
 
+/** What kind of icon a pattern may have. "any" lets the seed decide, including none. */
+export type Motif = 'any' | 'nature' | 'food' | 'none'
+export const MOTIFS: Motif[] = ['any', 'nature', 'food', 'none']
+export const DEFAULT_MOTIF: Motif = 'any'
+
+/**
+ * The icon for a seed, from its own random stream: changing the motif only
+ * ever changes the icon, never the font, layout or shadow.
+ */
+function iconFor(seed: string, motif: Motif): IconName | null {
+  const rng = randomFor('icon', seed)
+  if (motif === 'none') return null
+  if (motif === 'any') return rng() < 0.7 ? pick(rng, ALL_ICONS) : null
+  return pick(rng, ICON_SETS[motif] as readonly IconName[])
+}
+
 /**
  * Layout, warp, icon and shadow come from their own random stream, so adding
  * them didn't change the font and letter shape of seeds made before.
  */
-function styleFor(seed: string): Pick<Recipe, 'layout' | 'wave' | 'icon' | 'shadow'> {
+function styleFor(seed: string): Pick<Recipe, 'layout' | 'wave' | 'shadow'> {
   const rng = randomFor('style', seed)
   const layout = rng() < 0.5 ? 'stacked-block' : 'wavy'
   // Long, gentle waves: about one bend across the pattern. Shorter ones shear
@@ -92,9 +108,8 @@ function styleFor(seed: string): Pick<Recipe, 'layout' | 'wave' | 'icon' | 'shad
     px: round2(between(rng, 0, Math.PI * 2)),
     py: round2(between(rng, 0, Math.PI * 2)),
   }
-  const icon = rng() < 0.7 ? pick(rng, ALL_ICONS) : null
   const shadow = rng() < 0.3
-  return { layout, wave: layout === 'wavy' ? wave : null, icon, shadow }
+  return { layout, wave: layout === 'wavy' ? wave : null, shadow }
 }
 
 function calmer(wave: StitchWave | null): StitchWave | null {
@@ -110,7 +125,7 @@ function calmer(wave: StitchWave | null): StitchWave | null {
  * Every step depends only on
  * the seed and earlier results, so the outcome is still deterministic.
  */
-export function recipeFor(seed: string, attempt = 0, previous?: PreviousAttempt): Recipe {
+export function recipeFor(seed: string, attempt = 0, previous?: PreviousAttempt, motif: Motif = DEFAULT_MOTIF): Recipe {
   const rng = randomFor('recipe', seed, 0)
   const font = pick(rng, DISPLAY_FONTS)
   const base: Recipe = {
@@ -120,6 +135,7 @@ export function recipeFor(seed: string, attempt = 0, previous?: PreviousAttempt)
     lineGap: rng() < 0.7 ? 1 : 2,
     threshold: round2(between(rng, ...THRESHOLDS[font])),
     ...styleFor(seed),
+    icon: iconFor(seed, motif),
   }
   if (base.layout === 'wavy') base.lineGap += 1
   if (attempt === 0) return base
@@ -192,11 +208,15 @@ function round2(n: number) {
  * A new seed whose style visibly differs from the current one: a different
  * font or a different layout, and never the same icon twice in a row.
  */
-export function seedWithNewStyle(current: Recipe | undefined, makeSeed: () => string = newSeed): string {
+export function seedWithNewStyle(
+  current: Recipe | undefined,
+  makeSeed: () => string = newSeed,
+  motif: Motif = DEFAULT_MOTIF,
+): string {
   for (let i = 0; i < 30; i++) {
     const seed = makeSeed()
     if (!current) return seed
-    const next = recipeFor(seed)
+    const next = recipeFor(seed, 0, undefined, motif)
     const newLook = next.font !== current.font || next.layout !== current.layout
     if (newLook && (next.icon === null || next.icon !== current.icon)) return seed
   }
