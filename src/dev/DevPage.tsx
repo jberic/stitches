@@ -46,7 +46,9 @@ async function runPhrase(phrase: string, width: number, salt: string): Promise<R
     result,
     raw,
     deterministic: result.pattern.cells.join('') === again.pattern.cells.join(''),
-    newFontOnGenerate: next.recipe.font !== result.recipe.font || next.recipe.layout !== result.recipe.layout,
+    newFontOnGenerate:
+      (next.recipe.alphabet ?? next.recipe.font) !== (result.recipe.alphabet ?? result.recipe.font) ||
+      next.recipe.layout !== result.recipe.layout,
   }
 }
 

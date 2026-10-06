@@ -12,6 +12,8 @@ export interface LegibilityCheck {
   tooHeavy: boolean
   /** Too little stitched: strokes broke apart or ink was lost. A lower threshold helps. */
   tooLight: boolean
+  /** The style can't draw this phrase at all (a stitch alphabet missing a character, or too wide). */
+  unsupported?: boolean
   metrics: {
     inkKept: number
     inkPrecision: number

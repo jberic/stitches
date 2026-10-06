@@ -1,9 +1,11 @@
+import { ALPHABETS } from '../data/alphabets'
 import { iconCells, iconSizes } from '../data/icons'
 import { loadDisplayFont } from '../fonts'
 import { maskFromCanvas } from './canvas'
 import { cleanup, type Grid } from './cleanup'
 import { addShadow, iconSizeFor, placeIconBelow } from './compose'
 import { coverage, stitchesFrom, trimRows, type Mask } from './downsample'
+import { renderAlphabet } from './layouts/alphabet'
 import { renderStackedBlock, type LetterBox } from './layouts/stackedBlock'
 import { renderWavy } from './layouts/wavy'
 import { checkLegibility, type LegibilityCheck } from './legibility'
@@ -44,8 +46,37 @@ export interface GenerateResult {
   tooNarrow?: { word: string; suggestedWidth: number | null }
 }
 
+interface Lettering {
+  mask: Mask
+  letters: LetterBox[]
+  /** Set when a stitch alphabet can't draw this phrase. */
+  unsupported?: string
+}
+
+function toPixels(wave: NonNullable<Recipe['wave']>) {
+  return { ax: wave.ax * SCALE, wy: wave.wy * SCALE, ay: wave.ay * SCALE, wx: wave.wx * SCALE, px: wave.px, py: wave.py }
+}
+
 /** Draws the lettering for a recipe as a high-resolution mask, with each letter's box. */
-function drawLettering(upper: string[], width: number, recipe: Recipe): { mask: Mask; letters: LetterBox[] } {
+function drawLettering(upper: string[], width: number, recipe: Recipe): Lettering {
+  if (recipe.alphabet) {
+    const wave = recipe.layout === 'wavy' ? recipe.wave : null
+    const result = renderAlphabet(upper, {
+      width,
+      scale: SCALE,
+      alphabet: ALPHABETS[recipe.alphabet],
+      letterGap: recipe.letterGap,
+      lineGap: recipe.lineGap + 1 + (wave ? 1 : 0),
+      // Gentle steps: at most two rows up or down, over roughly a word.
+      wave: wave ? { amplitude: Math.min(2, wave.ay), length: Math.max(24, wave.wx), phase: wave.py } : undefined,
+    })
+    if (!result.ok) {
+      const empty: Mask = { width: width * SCALE, height: SCALE, data: new Uint8Array(width * SCALE * SCALE) }
+      const why = result.reason === 'missing' ? `This alphabet has no "${result.char}"` : 'Too wide for this alphabet'
+      return { mask: empty, letters: [], unsupported: why }
+    }
+    return { mask: result.mask, letters: result.letters }
+  }
   if (recipe.layout === 'wavy' && recipe.wave) {
     const wave = recipe.wave
     const { canvas, letters } = renderWavy(upper, {
@@ -58,15 +89,7 @@ function drawLettering(upper: string[], width: number, recipe: Recipe): { mask: 
       reach: { x: wave.ax, y: wave.ay },
       minCapRows: MIN_ROWS[recipe.letterCase],
     })
-    const mask = warpMask(maskFromCanvas(canvas), {
-      ax: wave.ax * SCALE,
-      wy: wave.wy * SCALE,
-      ay: wave.ay * SCALE,
-      wx: wave.wx * SCALE,
-      px: wave.px,
-      py: wave.py,
-    })
-    return { mask, letters }
+    return { mask: warpMask(maskFromCanvas(canvas), toPixels(wave)), letters }
   }
   const { canvas, letters } = renderStackedBlock(upper, {
     width,
@@ -97,7 +120,8 @@ function decorate(lettering: Grid, recipe: Recipe): Grid {
 export async function renderRecipe(lines: string[], width: number, recipe: Recipe, seed = ''): Promise<Rendered> {
   await loadDisplayFont(recipe.font)
   const cased = lines.map((line) => (recipe.letterCase === 'upper' ? line.toLocaleUpperCase() : line.toLocaleLowerCase()))
-  const { mask, letters } = drawLettering(cased, width, recipe)
+  const { mask, letters, unsupported } = drawLettering(cased, width, recipe)
+  if (unsupported) return unsupportedResult(lines, cased, width, recipe, seed, unsupported)
   const cover = coverage(mask, SCALE)
   const raw: Grid = { width, height: cover.length / width, cells: stitchesFrom(cover, recipe.threshold) }
   const tidy = cleanup(raw, cover)
@@ -114,6 +138,33 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
     },
     raw,
     check,
+  }
+}
+
+/** An attempt the style can't draw at all; it fails the check so the next attempt uses the font. */
+function unsupportedResult(lines: string[], cased: string[], width: number, recipe: Recipe, seed: string, why: string): Rendered {
+  const cells = new Uint8Array(width)
+  return {
+    pattern: { width, height: 1, cells, meta: { text: lines.join(' '), lines: cased, layout: recipe.layout, font: recipe.font, seed, recipe } },
+    raw: { width, height: 1, cells },
+    check: {
+      ok: false,
+      reasons: [why],
+      penalty: Infinity,
+      tooHeavy: false,
+      tooLight: false,
+      unsupported: true,
+      metrics: {
+        inkKept: 0,
+        inkPrecision: 0,
+        holes: { drawing: 0, lost: 0 },
+        countersLost: 0,
+        solidLetters: 0,
+        brokenLetters: 0,
+        letterFill: [],
+        shapes: { drawing: 0, stitched: 0 },
+      },
+    },
   }
 }
 

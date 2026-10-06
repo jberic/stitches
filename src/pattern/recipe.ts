@@ -1,3 +1,4 @@
+import { ALPHABETS, ALPHABET_IDS, type AlphabetId } from '../data/alphabets'
 import { ICON_LABELS, ICON_SETS, type IconName } from '../data/icons'
 import { CAPITALS_ONLY, DISPLAY_FONTS, type DisplayFont } from '../fonts'
 import { between, newSeed, pick, randomFor } from './random'
@@ -23,6 +24,8 @@ export interface Recipe {
   /** A tonal drop shadow in the accent thread. */
   shadow: boolean
   letterCase: LetterCase
+  /** Letters drawn from a stitch alphabet instead of the font, or null for the font. */
+  alphabet: AlphabetId | null
 }
 
 export type LetterCase = 'upper' | 'lower'
@@ -89,6 +92,12 @@ export type Motif = 'any' | 'nature' | 'food' | 'none'
 export const MOTIFS: Motif[] = ['any', 'nature', 'food', 'none']
 export const DEFAULT_MOTIF: Motif = 'any'
 export const DEFAULT_CHOICES: Choices = { motif: DEFAULT_MOTIF, letterCase: 'upper' }
+
+/** Half of all seeds use a stitch alphabet; the rest a display font. Its own stream, like the icon. */
+function alphabetFor(seed: string): AlphabetId | null {
+  const rng = randomFor('alphabet', seed)
+  return rng() < 0.5 ? pick(rng, ALPHABET_IDS) : null
+}
 
 /** Fonts that can draw the chosen case. */
 function fontsFor(letterCase: LetterCase): readonly DisplayFont[] {
@@ -158,9 +167,14 @@ export function recipeFor(
     ...styleFor(seed),
     icon: iconFor(seed, choices.motif),
     letterCase: choices.letterCase,
+    alphabet: alphabetFor(seed),
   }
   if (base.layout === 'wavy') base.lineGap += 1
   if (attempt === 0) return base
+
+  // The alphabet can't draw this phrase (a missing character, or too wide even
+  // in its small size): keep the style, use the font.
+  if (previous?.check.unsupported) return { ...(previous.recipe ?? base), alphabet: null }
 
   // The last two chances are stacked block, which passed every test phrase,
   // with tight spacing and each font's measured rescue threshold. A wavy seed
@@ -173,6 +187,7 @@ export function recipeFor(
       ...base,
       layout: 'stacked-block',
       wave: null,
+      alphabet: null,
       font: fallback,
       letterGap: 1,
       lineGap: Math.min(2, base.lineGap),
@@ -205,6 +220,7 @@ export const WORDMARK_RECIPE: Recipe = {
   icon: null,
   shadow: false,
   letterCase: 'upper',
+  alphabet: null,
 }
 
 /** Plain-words name for a style, so people can say what they liked. */
@@ -221,7 +237,9 @@ export function describeRecipe(recipe: Recipe): string {
   const extras = [recipe.shadow ? 'a shadow' : null, recipe.icon ? `a ${ICON_LABELS[recipe.icon]}` : null].filter(Boolean)
   const withPart = extras.length ? `with ${extras.join(' and ')}` : null
   const lower = recipe.letterCase === 'lower' ? 'lowercase' : null
-  return [stacked ? 'Stacked block' : 'Wavy', recipe.font, lower, shape, spacing, withPart].filter(Boolean).join(' · ')
+  const letters = recipe.alphabet ? `${ALPHABETS[recipe.alphabet].name} stitch letters` : recipe.font
+  const fontShape = recipe.alphabet ? null : shape
+  return [stacked ? 'Stacked block' : 'Wavy', letters, lower, fontShape, spacing, withPart].filter(Boolean).join(' · ')
 }
 
 function round2(n: number) {
@@ -241,7 +259,8 @@ export function seedWithNewStyle(
     const seed = makeSeed()
     if (!current) return seed
     const next = recipeFor(seed, 0, undefined, choices)
-    const newLook = next.font !== current.font || next.layout !== current.layout
+    const letterform = (r: Recipe) => r.alphabet ?? r.font
+    const newLook = letterform(next) !== letterform(current) || next.layout !== current.layout
     if (newLook && (next.icon === null || next.icon !== current.icon)) return seed
   }
   return makeSeed()
