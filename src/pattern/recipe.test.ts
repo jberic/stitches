@@ -70,7 +70,7 @@ describe('recipeFor', () => {
         expect(r.letterAspect).toBeGreaterThanOrEqual(1.25)
         expect(r.letterAspect).toBeLessThanOrEqual(1.9)
         expect([1, 2]).toContain(r.letterGap)
-        expect([1, 2]).toContain(r.lineGap)
+        expect([1, 2, 3]).toContain(r.lineGap)
         expect(r.threshold).toBeGreaterThanOrEqual(0.38)
         expect(r.threshold).toBeLessThanOrEqual(0.66)
       }
@@ -83,8 +83,35 @@ describe('recipeFor', () => {
   })
 
   it('names the style in plain words', () => {
-    expect(describeRecipe({ ...recipeFor('x'), font: 'Chango', letterAspect: 1.8, letterGap: 1 })).toBe(
+    const plain = { ...recipeFor('x'), layout: 'stacked-block', wave: null, icon: null, shadow: false } as const
+    expect(describeRecipe({ ...plain, font: 'Chango', letterAspect: 1.8, letterGap: 1 })).toBe(
       'Stacked block · Chango · tall letters',
     )
+    expect(describeRecipe({ ...plain, layout: 'wavy', font: 'Shrikhand', icon: 'lemon', shadow: true })).toBe(
+      'Wavy · Shrikhand · with a shadow and a lemon slice',
+    )
+  })
+
+  it('uses both layouts, and gives every wavy recipe a warp', () => {
+    const recipes = Array.from({ length: 60 }, (_, i) => recipeFor(`l${i}`))
+    expect(new Set(recipes.map((r) => r.layout))).toEqual(new Set(['stacked-block', 'wavy']))
+    for (const r of recipes) expect(r.wave !== null).toBe(r.layout === 'wavy')
+  })
+
+  it('keeps the icon and shadow across retries, so a seed keeps its character', () => {
+    for (let s = 0; s < 30; s++) {
+      const first = recipeFor(`c${s}`)
+      for (let attempt = 1; attempt < MAX_ATTEMPTS; attempt++) {
+        expect(recipeFor(`c${s}`, attempt).icon).toBe(first.icon)
+        expect(recipeFor(`c${s}`, attempt).shadow).toBe(first.shadow)
+      }
+    }
+  })
+
+  it('calms the warp after a too-heavy wavy attempt', () => {
+    const wavy = Array.from({ length: 60 }, (_, i) => `w${i}`).find((seed) => recipeFor(seed).layout === 'wavy')!
+    const first = recipeFor(wavy)
+    const next = recipeFor(wavy, 1, { recipe: first, check: result(true, false) })
+    expect(next.wave!.ay).toBeLessThan(first.wave!.ay)
   })
 })

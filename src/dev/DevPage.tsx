@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { DEFAULT_WIDTH, generatePattern, renderRecipe, type GenerateResult } from '../pattern/generate'
 import type { Grid } from '../pattern/cleanup'
-import { MAX_ATTEMPTS, describeRecipe, seedWithNewFont } from '../pattern/recipe'
+import { MAX_ATTEMPTS, describeRecipe, seedWithNewStyle } from '../pattern/recipe'
 import { hashString } from '../pattern/random'
 import { parsePhrase } from '../pattern/text'
 import { TEST_PHRASES } from './phrases'
@@ -37,7 +37,7 @@ async function runPhrase(phrase: string, width: number, salt: string): Promise<R
 
   // "Generate again" from here: does the shown style really change font?
   let n = 0
-  const nextSeed = seedWithNewFont(result.recipe.font, () => seedFor(phrase, `${salt}:next:${n++}`))
+  const nextSeed = seedWithNewStyle(result.recipe, () => seedFor(phrase, `${salt}:next:${n++}`))
   const next = await generatePattern({ lines: parsed.lines, width, seed: nextSeed })
 
   return {
@@ -46,7 +46,7 @@ async function runPhrase(phrase: string, width: number, salt: string): Promise<R
     result,
     raw,
     deterministic: result.pattern.cells.join('') === again.pattern.cells.join(''),
-    newFontOnGenerate: next.recipe.font !== result.recipe.font,
+    newFontOnGenerate: next.recipe.font !== result.recipe.font || next.recipe.layout !== result.recipe.layout,
   }
 }
 
@@ -139,7 +139,7 @@ export function DevPage() {
         <Stat label="Average attempts" value={rows.length ? (attempts / rows.length).toFixed(2) : '–'} />
         <Stat label="Same seed, same pattern" value={`${deterministic} / ${rows.length}`} ok={deterministic === rows.length} />
         <Stat
-          label="Generate again changes font"
+          label="Generate again changes font or layout"
           value={`${changedFont} / ${rows.length}`}
           ok={changedFont >= rows.length * 0.9}
         />

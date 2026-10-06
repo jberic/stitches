@@ -1,3 +1,4 @@
+import { ICON_LABELS, ICON_SETS, type IconName } from '../data/icons'
 import { DISPLAY_FONTS, type DisplayFont } from '../fonts'
 import { between, newSeed, pick, randomFor } from './random'
 import type { LegibilityCheck } from './legibility'
@@ -15,6 +16,22 @@ export interface Recipe {
   lineGap: number
   /** Share of a cell that must be ink for it to become a stitch. */
   threshold: number
+  /** Wavy only: the warp, in stitches. */
+  wave: StitchWave | null
+  /** A motif in the accent thread, or none. */
+  icon: IconName | null
+  /** A tonal drop shadow in the accent thread. */
+  shadow: boolean
+}
+
+/** A warp in stitch units (see pattern/warp.ts for what each part does). */
+export interface StitchWave {
+  ax: number
+  wy: number
+  ay: number
+  wx: number
+  px: number
+  py: number
 }
 
 export const MAX_ATTEMPTS = 5
@@ -42,6 +59,36 @@ const FALLBACK_FONTS: DisplayFont[] = ['Bagel Fat One', 'Chango', 'Rubik Mono On
 
 const THRESHOLD_STEP = 0.07
 const THRESHOLD_LIMITS: [number, number] = [0.38, 0.66]
+/** How much a too-heavy wavy attempt calms the warp. */
+const WAVE_CALM = 0.6
+
+const ALL_ICONS: IconName[] = [...ICON_SETS.nature, ...ICON_SETS.food]
+
+/**
+ * Layout, warp, icon and shadow come from their own random stream, so adding
+ * them didn't change the font and letter shape of seeds made before.
+ */
+function styleFor(seed: string): Pick<Recipe, 'layout' | 'wave' | 'icon' | 'shadow'> {
+  const rng = randomFor('style', seed)
+  const layout = rng() < 0.5 ? 'stacked-block' : 'wavy'
+  // Long, gentle waves: about one bend across the pattern. Shorter ones shear
+  // two-stitch strokes into slivers, because neighbouring columns move apart.
+  const wave: StitchWave = {
+    ax: round2(between(rng, 0.3, 0.8)),
+    wy: round2(between(rng, 36, 64)),
+    ay: round2(between(rng, 0.6, 1.4)),
+    wx: round2(between(rng, 44, 80)),
+    px: round2(between(rng, 0, Math.PI * 2)),
+    py: round2(between(rng, 0, Math.PI * 2)),
+  }
+  const icon = rng() < 0.7 ? pick(rng, ALL_ICONS) : null
+  const shadow = rng() < 0.3
+  return { layout, wave: layout === 'wavy' ? wave : null, icon, shadow }
+}
+
+function calmer(wave: StitchWave | null): StitchWave | null {
+  return wave && { ...wave, ax: round2(wave.ax * WAVE_CALM), ay: round2(wave.ay * WAVE_CALM) }
+}
 
 /**
  * The recipe for a seed and attempt. Attempt 0 is the style a seed is known by.
@@ -55,13 +102,14 @@ export function recipeFor(seed: string, attempt = 0, previous?: PreviousAttempt)
   const rng = randomFor('recipe', seed, 0)
   const font = pick(rng, DISPLAY_FONTS)
   const base: Recipe = {
-    layout: 'stacked-block',
     font,
     letterAspect: round2(between(rng, 1.25, 1.9)),
     letterGap: rng() < 0.75 ? 1 : 2,
     lineGap: rng() < 0.7 ? 1 : 2,
     threshold: round2(between(rng, ...THRESHOLDS[font])),
+    ...styleFor(seed),
   }
+  if (base.layout === 'wavy') base.lineGap += 1
   if (attempt === 0) return base
 
   // Last two chances: two different fallback fonts, so one font's weakness
@@ -71,7 +119,14 @@ export function recipeFor(seed: string, attempt = 0, previous?: PreviousAttempt)
     const fallback = fallbacks[attempt - 3]
     const [low, high] = THRESHOLDS[fallback]
     const threshold = attempt === 3 ? (low + high) / 2 : high + 0.02
-    return { ...base, font: fallback, letterGap: attempt === 3 ? base.letterGap : 1, threshold: round2(threshold) }
+    return {
+      ...base,
+      font: fallback,
+      letterGap: attempt === 3 ? base.letterGap : 1,
+      threshold: round2(threshold),
+      // The very last chance also calms a warp right down.
+      wave: attempt === 3 ? calmer(base.wave) : calmer(calmer(base.wave)),
+    }
   }
 
   const from = previous?.recipe ?? base
@@ -82,6 +137,8 @@ export function recipeFor(seed: string, attempt = 0, previous?: PreviousAttempt)
     ...from,
     letterGap: tooLight ? from.letterGap : 1,
     threshold: round2(Math.min(THRESHOLD_LIMITS[1], Math.max(THRESHOLD_LIMITS[0], threshold))),
+    // A warp that bent letters into each other or filled them in gets calmer.
+    wave: tooLight ? from.wave : calmer(from.wave),
   }
 }
 
@@ -93,24 +150,42 @@ export const WORDMARK_RECIPE: Recipe = {
   letterGap: 1,
   lineGap: 1,
   threshold: 0.5,
+  wave: null,
+  icon: null,
+  shadow: false,
 }
 
 /** Plain-words name for a style, so people can say what they liked. */
 export function describeRecipe(recipe: Recipe): string {
-  const shape = recipe.letterAspect >= 1.7 ? 'tall letters' : recipe.letterAspect <= 1.35 ? 'squat letters' : null
-  const spacing = recipe.letterGap > 1 ? 'airy' : null
-  return ['Stacked block', recipe.font, shape, spacing].filter(Boolean).join(' · ')
+  const stacked = recipe.layout === 'stacked-block'
+  const shape = !stacked
+    ? null
+    : recipe.letterAspect >= 1.7
+      ? 'tall letters'
+      : recipe.letterAspect <= 1.35
+        ? 'squat letters'
+        : null
+  const spacing = stacked && recipe.letterGap > 1 ? 'airy' : null
+  const extras = [recipe.shadow ? 'a shadow' : null, recipe.icon ? `a ${ICON_LABELS[recipe.icon]}` : null].filter(Boolean)
+  const withPart = extras.length ? `with ${extras.join(' and ')}` : null
+  return [stacked ? 'Stacked block' : 'Wavy', recipe.font, shape, spacing, withPart].filter(Boolean).join(' · ')
 }
 
 function round2(n: number) {
   return Math.round(n * 100) / 100
 }
 
-/** A new seed whose style starts from a different font, so "Generate again" always looks different. */
-export function seedWithNewFont(currentFont: string | undefined, makeSeed: () => string = newSeed): string {
-  for (let i = 0; i < 20; i++) {
+/**
+ * A new seed whose style visibly differs from the current one: a different
+ * font or a different layout, and never the same icon twice in a row.
+ */
+export function seedWithNewStyle(current: Recipe | undefined, makeSeed: () => string = newSeed): string {
+  for (let i = 0; i < 30; i++) {
     const seed = makeSeed()
-    if (recipeFor(seed).font !== currentFont) return seed
+    if (!current) return seed
+    const next = recipeFor(seed)
+    const newLook = next.font !== current.font || next.layout !== current.layout
+    if (newLook && (next.icon === null || next.icon !== current.icon)) return seed
   }
   return makeSeed()
 }

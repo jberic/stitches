@@ -1,7 +1,7 @@
 import type { DisplayFont } from '../fonts'
 import type { Recipe } from './recipe'
 
-export type LayoutId = 'stacked-block'
+export type LayoutId = 'stacked-block' | 'wavy'
 
 export interface PatternMeta {
   text: string

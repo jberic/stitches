@@ -1,11 +1,15 @@
+import { iconCells, iconSizes } from '../data/icons'
 import { loadDisplayFont } from '../fonts'
 import { maskFromCanvas } from './canvas'
 import { cleanup, type Grid } from './cleanup'
+import { addShadow, iconSizeFor, placeIconBelow } from './compose'
 import { coverage, stitchesFrom, trimRows, type Mask } from './downsample'
-import { renderStackedBlock } from './layouts/stackedBlock'
+import { renderStackedBlock, type LetterBox } from './layouts/stackedBlock'
+import { renderWavy } from './layouts/wavy'
 import { checkLegibility, type LegibilityCheck } from './legibility'
 import { MAX_ATTEMPTS, WORDMARK_RECIPE, recipeFor, type Recipe } from './recipe'
 import type { Pattern } from './types'
+import { warpMask } from './warp'
 
 export const MIN_WIDTH = 40
 export const MAX_WIDTH = 80
@@ -38,10 +42,29 @@ export interface GenerateResult {
   tooNarrow?: { word: string; suggestedWidth: number | null }
 }
 
-/** Draws, downsamples, tidies and checks one recipe. Deterministic for the same inputs. */
-export async function renderRecipe(lines: string[], width: number, recipe: Recipe, seed = ''): Promise<Rendered> {
-  await loadDisplayFont(recipe.font)
-  const upper = lines.map((line) => line.toLocaleUpperCase())
+/** Draws the lettering for a recipe as a high-resolution mask, with each letter's box. */
+function drawLettering(upper: string[], width: number, recipe: Recipe): { mask: Mask; letters: LetterBox[] } {
+  if (recipe.layout === 'wavy' && recipe.wave) {
+    const wave = recipe.wave
+    const { canvas, letters } = renderWavy(upper, {
+      width,
+      scale: SCALE,
+      font: recipe.font,
+      letterAspect: recipe.letterAspect,
+      letterGap: recipe.letterGap,
+      lineGap: recipe.lineGap,
+      reach: { x: wave.ax, y: wave.ay },
+    })
+    const mask = warpMask(maskFromCanvas(canvas), {
+      ax: wave.ax * SCALE,
+      wy: wave.wy * SCALE,
+      ay: wave.ay * SCALE,
+      wx: wave.wx * SCALE,
+      px: wave.px,
+      py: wave.py,
+    })
+    return { mask, letters }
+  }
   const { canvas, letters } = renderStackedBlock(upper, {
     width,
     scale: SCALE,
@@ -50,12 +73,33 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
     letterGap: recipe.letterGap,
     lineGap: recipe.lineGap,
   })
-  const mask: Mask = maskFromCanvas(canvas)
+  return { mask: maskFromCanvas(canvas), letters }
+}
+
+/**
+ * Adds the accent-thread parts (shadow, then icon) to the finished lettering.
+ * Runs after the legibility check, so it can't hide a problem with the letters.
+ */
+function decorate(lettering: Grid, recipe: Recipe): Grid {
+  let grid = recipe.shadow ? addShadow(lettering) : lettering
+  if (recipe.icon) {
+    const size = iconSizeFor(iconSizes(recipe.icon), grid.width)
+    if (size) grid = placeIconBelow(grid, iconCells(recipe.icon, size), recipe.layout === 'wavy' ? 2 : 1)
+  }
+  return grid
+}
+
+/** Draws, downsamples, tidies and checks one recipe. Deterministic for the same inputs. */
+export async function renderRecipe(lines: string[], width: number, recipe: Recipe, seed = ''): Promise<Rendered> {
+  await loadDisplayFont(recipe.font)
+  const upper = lines.map((line) => line.toLocaleUpperCase())
+  const { mask, letters } = drawLettering(upper, width, recipe)
   const cover = coverage(mask, SCALE)
   const raw: Grid = { width, height: cover.length / width, cells: stitchesFrom(cover, recipe.threshold) }
   const tidy = cleanup(raw, cover)
-  const check = checkLegibility(mask, SCALE, tidy, cover, letters)
-  const { cells, height } = trimRows(tidy.cells, width)
+  const check = checkLegibility(mask, SCALE, tidy, cover, letters, recipe.layout === 'wavy')
+  const trimmed = trimRows(tidy.cells, width)
+  const { cells, height } = decorate({ width, height: trimmed.height, cells: trimmed.cells }, recipe)
 
   return {
     pattern: {

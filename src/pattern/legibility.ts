@@ -20,6 +20,8 @@ export interface LegibilityCheck {
     countersLost: number
     /** Letters stitched as a solid block although the drawing had shape inside the box. */
     solidLetters: number
+    /** Letters stitched in more pieces than they were drawn in. */
+    brokenLetters: number
     /** Per letter: share of the box stitched, and the drawing's average ink in the box. For tuning. */
     letterFill: { fill: number; drawn: number }[]
     shapes: { drawing: number; stitched: number }
@@ -51,6 +53,8 @@ export function checkLegibility(
   grid: Grid,
   cover: Float32Array,
   letters: LetterBox[] = [],
+  /** Wavy letters are meant to touch, so merged marks don't count against them. */
+  allowMerge = false,
 ): LegibilityCheck {
   let inkTotal = 0
   let inkOnStitches = 0
@@ -88,10 +92,16 @@ export function checkLegibility(
         return enclosed[y * grid.width + x] === 1
       }),
   ).length
-  const merged = drawingShapes - stitchedShapes
+  const merged = Math.min(drawingShapes - stitchedShapes, allowMerge ? 0 : Infinity)
   const countersLost = letters.reduce((n, box) => n + (letterLostCounter(sub, ratio, grid, box) ? 1 : 0), 0)
   const letterFill = letters.map((box) => fillOf(grid, cover, box))
   const solidLetters = letterFill.filter((l) => l.fill >= SOLID_FILL && l.drawn < SOLID_DRAWN).length
+  // Per letter, so a merge between two letters can't cancel out a break inside one.
+  const brokenLetters = letters.filter(
+    (box) =>
+      countShapes(crop(grid, box, 1), 1) >
+      countShapes(crop(sub, { x: box.x * ratio, y: box.y * ratio, width: box.width * ratio, height: box.height * ratio }, 1), MIN_SHAPE_SUBCELLS),
+  ).length
 
   const reasons: string[] = []
   let penalty = 0
@@ -117,6 +127,10 @@ export function checkLegibility(
     reasons.push(solidLetters === 1 ? 'A letter turned into a solid block' : `${solidLetters} letters turned into solid blocks`)
     penalty += solidLetters * 3
   }
+  if (brokenLetters > 0) {
+    reasons.push(brokenLetters === 1 ? 'A letter broke into pieces' : `${brokenLetters} letters broke into pieces`)
+    penalty += brokenLetters * 2
+  }
   if (merged > 0) {
     reasons.push(merged === 1 ? 'Two marks ran together' : `${merged} marks ran together`)
     penalty += merged * 3
@@ -130,17 +144,31 @@ export function checkLegibility(
     reasons,
     penalty,
     tooHeavy: holesLost > 0 || countersLost > 0 || solidLetters > 0 || merged > 0 || inkPrecision < MIN_PRECISION,
-    tooLight: merged < 0 || inkKept < MIN_INK_KEPT,
+    tooLight: merged < 0 || brokenLetters > 0 || inkKept < MIN_INK_KEPT,
     metrics: {
       inkKept,
       inkPrecision,
       holes: { drawing: drawingHoles.length, lost: holesLost },
       countersLost,
       solidLetters,
+      brokenLetters,
       letterFill,
       shapes: { drawing: drawingShapes, stitched: stitchedShapes },
     },
   }
+}
+
+/** The part of a grid inside a box (in that grid's own cells), clipped to the grid. */
+function crop(grid: Grid, box: LetterBox, scale: number): Grid {
+  const x0 = Math.max(0, box.x * scale)
+  const y0 = Math.max(0, box.y * scale)
+  const x1 = Math.min(grid.width, (box.x + box.width) * scale)
+  const y1 = Math.min(grid.height, (box.y + box.height) * scale)
+  const width = Math.max(0, x1 - x0)
+  const height = Math.max(0, y1 - y0)
+  const cells = new Uint8Array(width * height)
+  for (let y = 0; y < height; y++) cells.set(grid.cells.subarray((y0 + y) * grid.width + x0, (y0 + y) * grid.width + x0 + width), y * width)
+  return { width, height, cells }
 }
 
 /** How much of a letter's box is stitched, and how much ink the drawing had there. */

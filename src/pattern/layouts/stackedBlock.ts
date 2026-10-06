@@ -34,9 +34,9 @@ export interface StackedBlockResult {
   letters: LetterBox[]
 }
 
-const MEASURE_SIZE = 200
+export const MEASURE_SIZE = 200
 
-interface Glyph {
+export interface Glyph {
   /** Null for a space: it takes up columns but draws nothing. */
   source: HTMLCanvasElement | null
   box: InkBox
@@ -45,14 +45,14 @@ interface Glyph {
 /** A space is about a third of an em in most display faces. */
 const SPACE: Glyph = { source: null, box: { x: 0, y: 0, width: MEASURE_SIZE * 0.32, height: 0 } }
 
-interface Word {
+export interface Word {
   glyphs: Glyph[]
   /** Shared vertical ink extent, so every letter in the word keeps the same baseline. */
   top: number
   bottom: number
 }
 
-function drawGlyph(char: string, font: DisplayFont): Glyph | null {
+export function drawGlyph(char: string, font: DisplayFont): Glyph | null {
   const size = MEASURE_SIZE
   const source = createCanvas(size * 2, size * 2.4)
   const ctx = context2d(source)
@@ -64,7 +64,7 @@ function drawGlyph(char: string, font: DisplayFont): Glyph | null {
   return box ? { source, box } : null
 }
 
-function measureWord(word: string, font: DisplayFont): Word | null {
+export function measureWord(word: string, font: DisplayFont): Word | null {
   const glyphs = [...word]
     .map((char) => (/\s/u.test(char) ? SPACE : drawGlyph(char, font)))
     .filter((g): g is Glyph => g !== null)
