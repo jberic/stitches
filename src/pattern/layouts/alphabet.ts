@@ -1,0 +1,115 @@
+import type { AlphabetSize, AlphabetSizeId, StitchAlphabet } from '../../data/alphabets/alphabet'
+import type { Mask } from '../downsample'
+import type { LetterBox } from './stackedBlock'
+
+export interface AlphabetLayoutOptions {
+  width: number
+  /** Mask pixels per stitch. */
+  scale: number
+  alphabet: StitchAlphabet
+  /** Clear columns between letters, before any whole-number scaling. */
+  letterGap: number
+  /** Empty rows between lines, before scaling. */
+  lineGap: number
+  /** Largest whole-number enlargement allowed when short words leave room. */
+  maxScale?: number
+  /**
+   * Steps whole letters up and down along a sine wave, in stitches, the way a
+   * charted alphabet is set on a curve. Glyphs are never bent.
+   */
+  wave?: { amplitude: number; length: number; phase: number }
+}
+
+export type AlphabetLayoutResult =
+  | { ok: true; mask: Mask; rows: number; letters: LetterBox[]; size: AlphabetSizeId; enlarge: number }
+  | { ok: false; reason: 'missing'; char: string }
+  | { ok: false; reason: 'too-wide' }
+
+interface SetLine {
+  rows: string[]
+  /** Column ranges of each glyph, for the legibility check. */
+  glyphs: { x: number; width: number }[]
+  descends: boolean
+}
+
+function setLine(size: AlphabetSize, line: string, gap: number): SetLine | string {
+  const height = size.capRows + size.descRows
+  const rows = Array.from({ length: height }, () => '')
+  const glyphs: SetLine['glyphs'] = []
+  let x = 0
+  for (const [i, char] of [...line].entries()) {
+    if (i > 0) {
+      rows.forEach((_, y) => (rows[y] += '.'.repeat(gap)))
+      x += gap
+    }
+    if (char === ' ') {
+      rows.forEach((_, y) => (rows[y] += '.'.repeat(size.space)))
+      x += size.space
+      continue
+    }
+    const glyph = size.glyphs.get(char)
+    if (!glyph) return char
+    rows.forEach((_, y) => (rows[y] += glyph.rows[y]))
+    glyphs.push({ x, width: glyph.width })
+    x += glyph.width
+  }
+  const descends = rows.slice(size.capRows).some((row) => row.includes('#'))
+  return { rows: descends ? rows : rows.slice(0, size.capRows), glyphs, descends }
+}
+
+/**
+ * Sets lines of a stitch alphabet on the grid, centred, at the largest size
+ * that fits: the regular size if the longest line fits, else the small one.
+ * Short words may be enlarged by a whole number so they fill the width; the
+ * glyphs themselves are never stretched or redrawn.
+ */
+export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions): AlphabetLayoutResult {
+  const { width, scale, alphabet, letterGap, lineGap, maxScale = 3, wave } = options
+
+  for (const sizeId of ['regular', 'small'] as AlphabetSizeId[]) {
+    const size = alphabet.sizes[sizeId]
+    const set: SetLine[] = []
+    for (const line of lines) {
+      const result = setLine(size, line, letterGap)
+      if (typeof result === 'string') return { ok: false, reason: 'missing', char: result }
+      set.push(result)
+    }
+    const widest = Math.max(...set.map((l) => l.rows[0].length))
+    if (widest > width) continue
+
+    const enlarge = Math.max(1, Math.min(maxScale, Math.floor(width / widest)))
+    const padRows = wave ? Math.ceil(wave.amplitude) : 0
+    // Row offset for a glyph whose centre is at column cx.
+    const lift = (cx: number) =>
+      wave ? Math.round(wave.amplitude * Math.sin((2 * Math.PI * cx) / wave.length + wave.phase)) : 0
+    const textRows = set.reduce((sum, l) => sum + l.rows.length, 0) * enlarge + lineGap * enlarge * (set.length - 1)
+    const rows = textRows + padRows * 2
+    const mask: Mask = { width: width * scale, height: rows * scale, data: new Uint8Array(width * scale * rows * scale) }
+    const letters: LetterBox[] = []
+
+    let top = padRows
+    for (const line of set) {
+      const left = Math.floor((width - line.rows[0].length * enlarge) / 2)
+      for (const glyph of line.glyphs) {
+        const x0 = left + glyph.x * enlarge
+        const gw = glyph.width * enlarge
+        const glyphTop = top + lift(x0 + gw / 2)
+        line.rows.forEach((row, y) => {
+          for (let x = glyph.x; x < glyph.x + glyph.width; x++) {
+            if (row[x] !== '#') continue
+            // Each stitch becomes an enlarge × enlarge block of solid mask pixels.
+            const sx = left + x * enlarge
+            for (let py = (glyphTop + y * enlarge) * scale; py < (glyphTop + (y + 1) * enlarge) * scale; py++) {
+              const offset = py * mask.width
+              mask.data.fill(255, offset + sx * scale, offset + (sx + enlarge) * scale)
+            }
+          }
+        })
+        letters.push({ x: x0, y: glyphTop, width: gw, height: line.rows.length * enlarge })
+      }
+      top += (line.rows.length + lineGap) * enlarge
+    }
+    return { ok: true, mask, rows, letters, size: sizeId, enlarge }
+  }
+  return { ok: false, reason: 'too-wide' }
+}
