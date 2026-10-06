@@ -15,6 +15,8 @@ interface Props {
   pattern: Pattern
   colours: ChartColours
   label: string
+  /** Show only this colour index at full strength (from the legend), or null for all. */
+  highlight?: number | null
 }
 
 /** Smallest cell, in CSS pixels, at which colour symbols are still legible. */
@@ -68,7 +70,7 @@ function cssVar(el: Element, name: string): string {
   return getComputedStyle(el).getPropertyValue(name).trim()
 }
 
-export function PatternChart({ pattern, colours, label }: Props) {
+export function PatternChart({ pattern, colours, label, highlight = null }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [available, setAvailable] = useState(0)
@@ -129,9 +131,12 @@ export function PatternChart({ pattern, colours, label }: Props) {
           if (!index || order[i] > progress) continue
           const px = (x + MARGIN) * cell
           const py = (y + MARGIN) * cell
+          const dimmed = highlight !== null && index !== highlight
+          ctx.globalAlpha = dimmed ? 0.16 : 1
           ctx.fillStyle = inks[index]
           ctx.fillRect(px, py, cell, cell)
-          if (symbols) drawSymbol(ctx, index, px, py, cell, inks[index])
+          ctx.globalAlpha = 1
+          if (symbols && !dimmed) drawSymbol(ctx, index, px, py, cell, inks[index])
         }
       }
 
@@ -190,7 +195,7 @@ export function PatternChart({ pattern, colours, label }: Props) {
     }
     frame = requestAnimationFrame(step)
     return () => cancelAnimationFrame(frame)
-  }, [pattern, colours, available, order])
+  }, [pattern, colours, available, order, highlight])
 
   return (
     <div ref={wrapRef} className="chart">

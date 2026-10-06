@@ -3,8 +3,9 @@ import { paletteById, patternColours } from '../data/palettes'
 import { MAX_WIDTH, MIN_WIDTH, findReadableWidth, generatePattern, type GenerateResult } from '../pattern/generate'
 import { describeRecipe, seedWithNewStyle } from '../pattern/recipe'
 import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
-import { stitchCount } from '../pattern/types'
+import { legendFor } from '../pattern/legend'
 import { readShareState, writeShareState } from '../state/url'
+import { Legend } from './Legend'
 import { PalettePicker } from './PalettePicker'
 import { PatternChart, type ChartColours } from './PatternChart'
 import './Tool.css'
@@ -26,6 +27,9 @@ export function Tool({ inputRef }: Props) {
   }, [paletteId])
   const [result, setResult] = useState<GenerateResult | null>(null)
   const [failed, setFailed] = useState(false)
+  // Legend highlight: hover or focus previews a colour, a click pins it.
+  const [preview, setPreview] = useState<number | null>(null)
+  const [pinned, setPinned] = useState<number | null>(null)
   /** For a hard-to-read result: a width that works, keyed by the result it belongs to. */
   const [readableAt, setReadableAt] = useState<{ for: GenerateResult; width: number | null } | null>(null)
   const request = useRef(0)
@@ -97,6 +101,8 @@ export function Tool({ inputRef }: Props) {
   }, [palette])
 
   const pattern = result?.pattern
+  const legend = useMemo(() => pattern && legendFor(pattern, palette), [pattern, palette])
+  const highlight = preview ?? (legend?.rows.some((r) => r.index === pinned) ? pinned : null)
   const tooNarrow = result?.tooNarrow
   const hardToRead = result && !result.check.ok && !tooNarrow
 
@@ -128,6 +134,7 @@ export function Tool({ inputRef }: Props) {
             <PatternChart
               pattern={pattern}
               colours={chartColours}
+              highlight={highlight}
               label={`Cross-stitch pattern of “${pattern.meta.text}”, ${pattern.width} by ${pattern.height} stitches, ${palette.name.toLowerCase()}.`}
             />
           ) : (
@@ -137,9 +144,12 @@ export function Tool({ inputRef }: Props) {
             <figcaption className="sheet-caption">
               <span>{describeRecipe(pattern.meta.recipe)}</span>
               <span className="mono">
-                {pattern.width} × {pattern.height} · {stitchCount(pattern).toLocaleString('en')} stitches
+                {pattern.width} × {pattern.height} stitches
               </span>
             </figcaption>
+          )}
+          {legend && (
+            <Legend legend={legend} highlight={highlight} pinned={pinned} onPreview={setPreview} onPin={setPinned} />
           )}
         </figure>
       </section>

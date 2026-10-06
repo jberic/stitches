@@ -1,0 +1,48 @@
+import { ICON_LABELS } from '../data/icons'
+import { patternColours, type Palette, type Thread } from '../data/palettes'
+import { ACCENT, LETTERING } from './compose'
+import type { Pattern } from './types'
+
+export interface LegendRow {
+  /** The colour index in the pattern grid. */
+  index: number
+  thread: Thread
+  /** What this thread is used for, in plain words. */
+  use: string
+  stitches: number
+}
+
+export interface Legend {
+  rows: LegendRow[]
+  fabric: { name: string; hex: string }
+  total: number
+}
+
+/** Stitches per colour index, from the grid itself. */
+export function stitchCounts(pattern: Pattern): Map<number, number> {
+  const counts = new Map<number, number>()
+  for (const c of pattern.cells) if (c) counts.set(c, (counts.get(c) ?? 0) + 1)
+  return counts
+}
+
+/** The key for a pattern: one row per thread actually used, plus the fabric. */
+export function legendFor(pattern: Pattern, palette: Palette): Legend {
+  const { lettering, heart } = patternColours(palette)
+  const { icon, shadow } = pattern.meta.recipe
+  const accentUse =
+    icon && shadow ? `${capitalise(ICON_LABELS[icon])} and shadow` : icon ? capitalise(ICON_LABELS[icon]) : 'Shadow'
+  const counts = stitchCounts(pattern)
+  const rows: LegendRow[] = [
+    { index: LETTERING, thread: lettering, use: 'Lettering', stitches: counts.get(LETTERING) ?? 0 },
+    { index: ACCENT, thread: heart, use: accentUse, stitches: counts.get(ACCENT) ?? 0 },
+  ].filter((row) => row.stitches > 0)
+  return {
+    rows,
+    fabric: { name: palette.fabric.name, hex: palette.fabric.hex },
+    total: rows.reduce((sum, row) => sum + row.stitches, 0),
+  }
+}
+
+function capitalise(text: string) {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}

@@ -24,9 +24,3 @@ export interface Pattern {
   cells: Uint8Array
   meta: PatternMeta
 }
-
-export function stitchCount(pattern: Pattern, colourIndex = 1): number {
-  let n = 0
-  for (const c of pattern.cells) if (c === colourIndex) n++
-  return n
-}
