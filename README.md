@@ -39,7 +39,7 @@ Every pattern sits on one fabric, cream #FBF3EC, and uses two threads from one o
 `src/data/threads.json` lists 489 DMC stranded cotton colours as `{ code, name, hex }`.
 
 - Source: [craft-color-codes](https://github.com/makebead/craft-color-codes) by MakeBead, file `data/json/dmc-floss.json` (fetched 2026-10-05). Only `code`, `name` and `hex` were kept. Nothing was typed by hand.
-- Licence: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Credit: "Color data: craft-color-codes by MakeBead (https://makebead.com)".
+- Licence: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Credit: "Color data: craft-color-codes by MakeBead (https://makebead.com)". The site shows this credit in the About panel and on every downloaded image.
 - Provenance (from the source's `SOURCES.md`): cross-checked against floss.maxxmint.com, adrianj/CrossStitchCreator and xstitchify.com.
 
 DMC does not publish screen colours for its threads. Every hex value here is an approximation. Check against your physical thread card.

@@ -7,7 +7,7 @@ Web tool: type a phrase, get a two-colour cross-stitch pattern in a retro letter
 ## Rules
 
 - Everything runs in the browser. No backend.
-- v1 has no PDF or file export and no image upload. Keep the pattern data model (a grid of colour indexes plus metadata) separate from rendering so export can be added later.
+- v1 has one export: Download saves a PNG of the chart and thread key (`src/export/patternImage.ts`). No PDF yet and no image upload. Keep the pattern data model (a grid of colour indexes plus metadata) separate from rendering so a PDF can be added later.
 - Stack: Vite, React, TypeScript, plain canvas or SVG. Keep dependencies few; ask before adding one.
 - Generation is deterministic: the same text and seed always give the same pattern. Use a seeded random generator, never `Math.random()` in the generator.
 - Put the text and seed in the URL so a result can be shared.
@@ -19,8 +19,8 @@ Web tool: type a phrase, get a two-colour cross-stitch pattern in a retro letter
 
 ## Design
 
-- Wordmark: "SAY IT WITH STITCHES" in capitals, drawn as a stitch pattern by the tool's own engine. It is the full-width header and never changes style or position.
-- Page load: the wordmark sews itself in, a short line appears word by word, then drifts away while the tool rises in (pattern from ol.studio; do not copy its fonts, imagery or layout). First keystroke or click skips ahead. Plays once per session. Respect `prefers-reduced-motion`.
+- Wordmark: "SAY IT WITH STITCHES" in capitals, drawn as a stitch pattern by the tool's own engine. It sits small and centred in a slim header, with an About link on the right. No footer: the maker credit and the colour data credit (required by its CC BY 4.0 licence) live in the About panel and on the downloaded image.
+- Page load: the wordmark sews itself in large in the middle of the screen, a short line appears word by word, then the line drifts away and the wordmark glides up into the header while the tool rises in (pattern from ol.studio; do not copy its fonts, imagery or layout). First keystroke or click skips ahead. Plays once per session. Respect `prefers-reduced-motion`.
 - Colours: text #FFCFC5 on background #5F051C (9.8:1). The pattern sheet stays light. Check contrast for any new colour.
 
 - Fraunces for headings, IBM Plex Sans for UI, IBM Plex Mono for codes and counts.
