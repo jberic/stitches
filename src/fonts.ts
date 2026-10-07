@@ -2,6 +2,12 @@ export const DISPLAY_FONTS = ['Chango', 'Shrikhand', 'Bagel Fat One', 'Rubik Mon
 
 export type DisplayFont = (typeof DISPLAY_FONTS)[number]
 
+/**
+ * Fonts the seed can pick for pattern lettering. Chango is left out: shrunk
+ * onto the grid it turned into dense blocks. It still draws the wordmark.
+ */
+export const PATTERN_FONTS: DisplayFont[] = ['Shrikhand', 'Bagel Fat One', 'Rubik Mono One']
+
 /** Fonts that draw lowercase as capitals, so they're left out when lowercase is chosen. */
 export const CAPITALS_ONLY: DisplayFont[] = ['Rubik Mono One']
 

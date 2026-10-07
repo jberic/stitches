@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { hashString, isSeed, mulberry32, newSeed } from './random'
 import type { LegibilityCheck } from './legibility'
-import { ICON_SETS } from '../data/icons'
-import { CAPITALS_ONLY, SCRIPT_FONTS } from '../fonts'
+import { ICON_SETS, iconSizes } from '../data/icons'
+import { CAPITALS_ONLY, PATTERN_FONTS, SCRIPT_FONTS } from '../fonts'
 import { MAX_ATTEMPTS, describeRecipe, recipeFor, textCase } from './recipe'
 
 describe('mulberry32', () => {
@@ -83,9 +83,26 @@ describe('recipeFor', () => {
     }
   })
 
-  it('spreads fonts across seeds', () => {
+  it('spreads the pattern fonts across seeds, and never picks Chango', () => {
     const fonts = new Set(Array.from({ length: 40 }, (_, i) => recipeFor(`f${i}`).font))
-    expect(fonts.size).toBe(4)
+    expect([...fonts].sort()).toEqual([...PATTERN_FONTS].sort())
+  })
+
+  it('offers Slab only for capitals, and gives Sampler a motif row only with a small icon', () => {
+    const mixed = { motif: 'any', letterCase: 'mixed' } as const
+    for (let s = 0; s < 200; s++) {
+      expect(recipeFor(`a${s}`, 0, undefined, mixed).alphabet).not.toBe('slab')
+      const r = recipeFor(`a${s}`, 0, undefined, { motif: 'any', letterCase: 'upper' })
+      if (r.iconRow) expect([r.alphabet, iconSizes(r.icon!).includes(7)]).toEqual(['sampler', true])
+    }
+  })
+
+  it('only picks effects that are in the mix and suit the alphabet', () => {
+    for (let s = 0; s < 200; s++) {
+      const r = recipeFor(`e${s}`, 0, undefined, { motif: 'any', letterCase: 'upper' })
+      expect(['none', 'shadow']).toContain(r.effect)
+      if (r.alphabet === 'sampler' || !r.alphabet) expect(r.effect).toBe('none')
+    }
   })
 
   it('names the style in plain words', () => {
@@ -95,6 +112,9 @@ describe('recipeFor', () => {
     )
     expect(describeRecipe({ ...plain, layout: 'wavy', font: 'Shrikhand', icon: 'lemon', effect: 'shadow' })).toBe(
       'Wavy · Shrikhand · with a shadow and a lemon slice',
+    )
+    expect(describeRecipe({ ...plain, alphabet: 'sampler', letterGap: 1, icon: 'leaf', iconRow: true })).toBe(
+      'Stacked block · Sampler stitch letters · with a row of leaves',
     )
   })
 

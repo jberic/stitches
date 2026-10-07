@@ -17,7 +17,7 @@ All fonts are under the [SIL Open Font License 1.1](https://openfontlicense.org)
 
 | Font           | Use                               | Copyright                                     |
 | -------------- | --------------------------------- | --------------------------------------------- |
-| Chango         | Pattern lettering                 | © 2011 Fontstage. Reserved Font Name "Chango" |
+| Chango         | Wordmark                          | © 2011 Fontstage. Reserved Font Name "Chango" |
 | Shrikhand      | Pattern lettering                 | © 2015 Jonny Pinhorn                          |
 | Bagel Fat One  | Pattern lettering                 | © 2022 The Bagel Fat Project Authors          |
 | Rubik Mono One | Pattern lettering (capitals only) | © 2015 The Rubik Project Authors              |

@@ -1,6 +1,6 @@
 import { ALPHABETS, type AlphabetId } from '../data/alphabets'
-import { ICON_SETS, iconPhrase, type IconName } from '../data/icons'
-import { CAPITALS_ONLY, DISPLAY_FONTS, SCRIPT_FONTS, type DisplayFont } from '../fonts'
+import { ICON_PLURALS, ICON_SETS, iconPhrase, iconSizes, type IconName } from '../data/icons'
+import { CAPITALS_ONLY, PATTERN_FONTS, SCRIPT_FONTS, type DisplayFont } from '../fonts'
 import { between, newSeed, pick, randomFor } from './random'
 import type { Effect } from './compose'
 import type { LegibilityCheck } from './legibility'
@@ -92,7 +92,7 @@ const THRESHOLDS: Record<DisplayFont, [number, number]> = {
 }
 
 /** When the seed's font can't make a phrase readable, try these, sturdiest first. */
-const FALLBACK_FONTS: DisplayFont[] = ['Bagel Fat One', 'Chango', 'Rubik Mono One', 'Shrikhand']
+const FALLBACK_FONTS: DisplayFont[] = ['Bagel Fat One', 'Rubik Mono One', 'Shrikhand']
 
 /**
  * The threshold at which each font rescued the hardest test phrases (long
@@ -124,12 +124,33 @@ export const DEFAULT_CHOICES: Choices = { motif: DEFAULT_MOTIF, letterCase: 'typ
  */
 const ALPHABET_SHARE = 0.67
 
-/** Alphabets the seed can pick. Slab and Sampler join once they are approved in the styles gallery. */
-const IN_MIX: AlphabetId[] = ['block', 'serif']
+/** Alphabets the seed can pick; a capitals-only one only when the phrase is in capitals. */
+const IN_MIX: AlphabetId[] = ['block', 'serif', 'slab', 'sampler']
 
-function alphabetFor(seed: string): AlphabetId | null {
+function alphabetFor(seed: string, letterCase: TextCase): AlphabetId | null {
   const rng = randomFor('alphabet', seed)
-  return rng() < ALPHABET_SHARE ? pick(rng, IN_MIX) : null
+  const offered = IN_MIX.filter((id) => letterCase === 'upper' || ALPHABETS[id].lowercase)
+  return rng() < ALPHABET_SHARE ? pick(rng, offered) : null
+}
+
+/**
+ * Effects the seed can pick. The 3D side and the outline are built (see
+ * compose.ts and the styles gallery) but not offered yet.
+ */
+const EFFECTS_IN_MIX: Effect[] = ['none', 'shadow']
+
+/** The seed's effect, if it suits the alphabet; otherwise none. */
+function effectFor(effect: Effect, alphabet: AlphabetId | null): Effect {
+  if (effect === 'none' || !alphabet || !EFFECTS_IN_MIX.includes(effect)) return 'none'
+  return (ALPHABETS[alphabet].effects as Effect[]).includes(effect) ? effect : 'none'
+}
+
+/** Sampler letters often sit over a row of small motifs, when the icon is drawn small. */
+const ROW_SHARE = 0.6
+
+function iconRowFor(seed: string, alphabet: AlphabetId | null, icon: IconName | null): boolean {
+  if (alphabet !== 'sampler' || !icon || !iconSizes(icon).includes(7)) return false
+  return randomFor('icon-row', seed)() < ROW_SHARE
 }
 
 /**
@@ -147,6 +168,7 @@ function asFontStyle(recipe: Recipe): Recipe {
     layout: 'stacked-block',
     wave: null,
     effect: 'none',
+    iconRow: false,
     letterGap: Math.max(FONT_LETTER_GAP, recipe.letterGap),
     lineGap: Math.max(FONT_LINE_GAP, recipe.lineGap),
   }
@@ -154,7 +176,7 @@ function asFontStyle(recipe: Recipe): Recipe {
 
 /** Fonts that can draw the case: any lowercase rules out capitals-only fonts. */
 function fontsFor(letterCase: TextCase): readonly DisplayFont[] {
-  return letterCase === 'upper' ? DISPLAY_FONTS : DISPLAY_FONTS.filter((f) => !CAPITALS_ONLY.includes(f))
+  return letterCase === 'upper' ? PATTERN_FONTS : PATTERN_FONTS.filter((f) => !CAPITALS_ONLY.includes(f))
 }
 
 /**
@@ -221,8 +243,10 @@ export function recipeFor(
     icon: iconFor(seed, choices.motif),
     iconRow: false,
     letterCase: choices.letterCase,
-    alphabet: alphabetFor(seed),
+    alphabet: alphabetFor(seed, choices.letterCase),
   }
+  base.effect = effectFor(base.effect, base.alphabet)
+  base.iconRow = iconRowFor(seed, base.alphabet, base.icon)
   if (base.layout === 'wavy') base.lineGap += 1
   const first = base.alphabet ? base : asFontStyle(base)
   if (attempt === 0) return first
@@ -244,7 +268,16 @@ export function recipeFor(
   // can't lose a counter. If it can't draw the phrase either, the rule above
   // hands the last attempt to a font.
   if (attempt === 3) {
-    return { ...first, alphabet: 'block', layout: 'stacked-block', wave: null, letterGap: 1, lineGap: Math.max(1, first.lineGap) }
+    return {
+      ...first,
+      alphabet: 'block',
+      layout: 'stacked-block',
+      wave: null,
+      effect: effectFor(base.effect, 'block'),
+      iconRow: false,
+      letterGap: 1,
+      lineGap: Math.max(1, first.lineGap),
+    }
   }
 
   // The last chance is stacked block in a sturdy font at its measured rescue
@@ -310,7 +343,8 @@ export function describeRecipe(recipe: Recipe): string {
         ? 'squat letters'
         : null
   const spacing = stacked && recipe.letterGap > 1 ? 'airy' : null
-  const extras = [EFFECT_PHRASES[recipe.effect], recipe.icon ? iconPhrase(recipe.icon) : null].filter(Boolean)
+  const iconPart = recipe.icon && (recipe.iconRow ? `a row of ${ICON_PLURALS[recipe.icon]}` : iconPhrase(recipe.icon))
+  const extras = [EFFECT_PHRASES[recipe.effect], iconPart || null].filter(Boolean)
   const withPart = extras.length ? `with ${extras.join(' and ')}` : null
   const lower = recipe.letterCase === 'lower' ? 'lowercase' : null
   const letters = recipe.alphabet ? `${ALPHABETS[recipe.alphabet].name} stitch letters` : recipe.font
@@ -322,6 +356,11 @@ function round2(n: number) {
   return Math.round(n * 100) / 100
 }
 
+/** Whether any font attempt on this phrase failed the check. */
+export function fontFailed(attempts: PreviousAttempt[]): boolean {
+  return attempts.some((a) => !a.recipe.alphabet && !a.check.ok)
+}
+
 /**
  * A new seed whose style visibly differs from the current one: a different
  * font or a different layout, and never the same icon twice in a row.
@@ -330,6 +369,8 @@ export function seedWithNewStyle(
   current: Recipe | undefined,
   makeSeed: () => string = newSeed,
   choices: Choices = DEFAULT_CHOICES,
+  /** A font already failed on this phrase: skip seeds that start with a font, they'd likely fall back to Block again. */
+  avoidFonts = false,
 ): string {
   for (let i = 0; i < 30; i++) {
     const seed = makeSeed()
@@ -338,6 +379,7 @@ export function seedWithNewStyle(
     const next = recipeFor(seed, 0, undefined, { motif: choices.motif, letterCase: current.letterCase })
     const letterform = (r: Recipe) => r.alphabet ?? r.font
     const newLook = letterform(next) !== letterform(current) || next.layout !== current.layout || next.effect !== current.effect
+    if (avoidFonts && !next.alphabet) continue
     if (newLook && (next.icon === null || next.icon !== current.icon)) return seed
   }
   return makeSeed()

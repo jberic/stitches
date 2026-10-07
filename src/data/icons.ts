@@ -51,6 +51,16 @@ export const ICON_LABELS: Record<IconName, string> = {
   pear: 'pear',
 }
 
+/** Plural labels for the icons small enough to repeat in a row. */
+export const ICON_PLURALS: Partial<Record<IconName, string>> = {
+  mushroom: 'mushrooms',
+  leaf: 'leaves',
+  tree: 'trees',
+  rainbow: 'rainbows',
+  cherry: 'cherries',
+  egg: 'fried eggs',
+}
+
 /** The label as it reads in a sentence: "a leaf", "an ice cream", "cherries". */
 export function iconPhrase(icon: IconName): string {
   const label = ICON_LABELS[icon]

@@ -1,4 +1,4 @@
-import { ICON_LABELS } from '../data/icons'
+import { ICON_LABELS, ICON_PLURALS } from '../data/icons'
 import { FABRIC, patternColours, type Palette, type Thread } from '../data/palettes'
 import { ACCENT, LETTERING } from './compose'
 import type { Pattern } from './types'
@@ -32,7 +32,8 @@ export function legendFor(pattern: Pattern, palette: Palette): Legend {
   // With an outline the threads swap: the darker one outlines, the accent fills the letters.
   const letteringUse = effect === 'outline' ? 'Outline' : 'Lettering'
   const effectPart = { none: null, shadow: 'shadow', block3d: '3D side', outline: 'lettering' }[effect]
-  const accentParts = [icon ? ICON_LABELS[icon] : null, effectPart].filter(Boolean).join(' and ')
+  const iconLabel = icon && (pattern.meta.recipe.iconRow ? ICON_PLURALS[icon] : ICON_LABELS[icon])
+  const accentParts = [iconLabel || null, effectPart].filter(Boolean).join(' and ')
   const accentUse = capitalise(accentParts || 'Accent')
   const counts = stitchCounts(pattern)
   const rows: LegendRow[] = [

@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { paletteById, patternColours } from '../data/palettes'
 import { MAX_WIDTH, MIN_WIDTH, findReadableWidth, generatePattern, type GenerateResult } from '../pattern/generate'
-import { describeRecipe, seedWithNewStyle, type Choices, type LetterCase, type Motif } from '../pattern/recipe'
+import { describeRecipe, fontFailed, seedWithNewStyle, type Choices, type LetterCase, type Motif } from '../pattern/recipe'
 import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
 import { downloadPatternSheet } from '../export/patternImage'
 import { legendFor } from '../pattern/legend'
@@ -95,7 +95,7 @@ export function Tool({ inputRef }: Props) {
 
   const generateAgain = () => {
     historyMode.current = 'push'
-    setSeed(seedWithNewStyle(result?.recipe, undefined, choices))
+    setSeed(seedWithNewStyle(result?.recipe, undefined, choices, result ? fontFailed(result.attempts) : false))
     // On short screens the button sits below the pattern; bring the new one into view.
     const sheet = sheetRef.current
     if (sheet && sheet.getBoundingClientRect().top < 0) {
