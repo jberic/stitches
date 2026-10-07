@@ -2,14 +2,14 @@ import { useEffect, useRef } from 'react'
 import { renderWordmark } from '../pattern/generate'
 import type { Pattern } from '../pattern/types'
 import { prepareStitches, type StitchDrawer } from './stitchArt'
+import { introWordmarkWidth } from './wordmarkSize'
 
 export const SITE_NAME = 'Say It With Stitches'
 
-/** One line where there is room for it; two on phones so the letters stay readable. */
-const WIDE = { lines: ['Say it with stitches'], width: 120 }
-const NARROW = { lines: ['Say it with', 'stitches'], width: 64 }
-const WIDE_MIN_PX = 640
+const LINES = ['Say it with stitches']
+const STITCHES_WIDE = 120
 const SEW_MS = 1100
+
 
 interface Props {
   /** Sew the stitches in over about a second instead of showing them at once. */
@@ -41,32 +41,24 @@ export function Wordmark({ sew, onReady, finishSignal }: Props) {
     const h1 = h1Ref.current
     const canvas = canvasRef.current
     if (!h1 || !canvas) return
-    const patterns = new Map<string, Promise<Pattern>>()
-    let lastKey = ''
+    const patternReady: Promise<Pattern> = renderWordmark(LINES, STITCHES_WIDE)
+    let lastCell = 0
     let alive = true
 
     const render = async () => {
-      const width = h1.clientWidth
-      if (width === 0) return
-      const layout = width >= WIDE_MIN_PX ? WIDE : NARROW
-      const id = layout.lines.join('/')
-      if (!patterns.has(id)) {
-        patterns.set(
-          id,
-          renderWordmark(layout.lines, layout.width),
-        )
-      }
-      const pattern = await patterns.get(id)!
+      const pattern = await patternReady
       if (!alive) return
-      const cell = width / pattern.width
-      const key = `${id}@${cell}`
-      if (key === lastKey) return
-      lastKey = key
+      const cell = Math.max(h1.clientWidth, introWordmarkWidth()) / pattern.width
+      if (cell === lastCell) return
+      lastCell = cell
 
       const drawer = prepareStitches(canvas, pattern, cell, {
         under: cssColour(h1, '--wordmark-under'),
         over: cssColour(h1, '--wordmark-over'),
       })
+      // Drawn large, shown at whatever size the header gives it.
+      canvas.style.width = '100%'
+      canvas.style.height = 'auto'
       drawerRef.current = drawer
       cancelAnimationFrame(frameRef.current)
 
@@ -87,7 +79,7 @@ export function Wordmark({ sew, onReady, finishSignal }: Props) {
     }
 
     const observer = new ResizeObserver(() => void render())
-    observer.observe(h1)
+    observer.observe(document.documentElement)
     return () => {
       alive = false
       observer.disconnect()

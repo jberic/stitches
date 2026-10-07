@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { About } from './components/About'
 import { Tool } from './components/Tool'
 import { Wordmark } from './components/Wordmark'
+import { introWordmarkWidth } from './components/wordmarkSize'
 import './App.css'
 
 /**
@@ -34,12 +36,72 @@ function rememberIntroPlayed() {
   }
 }
 
+/** Where the intro shows the wordmark: large, a little above the middle of the screen. */
+const INTRO_CENTRE_Y = 0.4
+
+interface Placement {
+  x: number
+  y: number
+  scale: number
+}
+
+/**
+ * The move that takes the header wordmark to its intro place. Measured from
+ * the element as it is now, undoing any move already applied, so it can be
+ * re-measured on resize mid-intro.
+ */
+function introPlacement(el: HTMLElement, current: Placement): Placement & { lineTop: number } {
+  const rect = el.getBoundingClientRect()
+  const width = rect.width / current.scale
+  const height = rect.height / current.scale
+  const centreX = rect.left + rect.width / 2 - current.x
+  const centreY = rect.top + rect.height / 2 - current.y
+  const scale = Math.max(1, introWordmarkWidth() / width)
+  const targetY = window.innerHeight * INTRO_CENTRE_Y
+  return {
+    x: window.innerWidth / 2 - centreX,
+    y: targetY - centreY,
+    scale,
+    lineTop: targetY + (height * scale) / 2 + Math.min(48, window.innerHeight * 0.05),
+  }
+}
+
 export default function App() {
   const [playIntro] = useState(shouldPlayIntro)
   const [phase, setPhase] = useState<Phase>('waiting')
   const [finishSignal, setFinishSignal] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const typedDuringIntro = useRef(false)
+  const markRef = useRef<HTMLDivElement>(null)
+  const placement = useRef<Placement>({ x: 0, y: 0, scale: 1 })
+  const [aboutOpen, setAboutOpen] = useState(false)
+  const aboutRef = useRef<HTMLButtonElement>(null)
+  const closeAbout = useCallback(() => {
+    setAboutOpen(false)
+    // Back to where the person was; Safari doesn't focus a clicked button by itself.
+    aboutRef.current?.focus()
+  }, [])
+
+  // During the intro the header wordmark is moved to the middle of the screen
+  // and scaled up; leaving the intro lets it glide back into the header.
+  useLayoutEffect(() => {
+    const page = markRef.current?.closest<HTMLElement>('.page')
+    if (!playIntro || !page || (phase !== 'waiting' && phase !== 'intro')) return
+    const place = () => {
+      const mark = markRef.current
+      if (!mark) return
+      const next = introPlacement(mark, placement.current)
+      placement.current = next
+      page.style.setProperty('--mark-x', `${next.x}px`)
+      page.style.setProperty('--mark-y', `${next.y}px`)
+      page.style.setProperty('--mark-scale', String(next.scale))
+      page.style.setProperty('--intro-line-top', `${next.lineTop}px`)
+    }
+    window.scrollTo(0, 0)
+    place()
+    window.addEventListener('resize', place)
+    return () => window.removeEventListener('resize', place)
+  }, [playIntro, phase])
 
   const onWordmarkReady = useCallback(() => {
     setPhase((p) => (p === 'waiting' ? (playIntro ? 'intro' : 'done') : p))
@@ -109,27 +171,28 @@ export default function App() {
 
   return (
     <div className="page" data-phase={phase} data-entrance={playIntro ? 'intro' : 'quick'}>
-      <header className="masthead">
-        <Wordmark sew={playIntro} onReady={onWordmarkReady} finishSignal={finishSignal} />
-        <p className="tagline reveal" style={{ '--order': 0 } as React.CSSProperties}>
-          Type a phrase, get a cross-stitch pattern.
-        </p>
+      <header className="site-header">
+        <div ref={markRef} className="site-mark">
+          <Wordmark sew={playIntro} onReady={onWordmarkReady} finishSignal={finishSignal} />
+        </div>
+        <button
+          ref={aboutRef}
+          type="button"
+          className="about-link reveal"
+          style={{ '--order': 0 } as React.CSSProperties}
+          onClick={() => setAboutOpen(true)}
+          aria-haspopup="dialog"
+        >
+          About
+        </button>
       </header>
 
       <main className="reveal" style={{ '--order': 1 } as React.CSSProperties}>
         <Tool inputRef={inputRef} />
       </main>
 
-      <footer className="colophon reveal" style={{ '--order': 2 } as React.CSSProperties}>
-        <p className="colophon-maker">
-          Made by <a href="https://bertino.co">Jennie Bertino</a>
-        </p>
-        {/* The thread data's licence (CC BY 4.0) asks for a visible credit. */}
-        <p className="colophon-credit">
-          Colour data: <a href="https://github.com/makebead/craft-color-codes">craft-color-codes</a> by MakeBead, CC BY
-          4.0
-        </p>
-      </footer>
+      {/* Also holds the colour data credit its licence (CC BY 4.0) asks for. */}
+      <About open={aboutOpen} onClose={closeAbout} />
 
       {playIntro && (phase === 'intro' || phase === 'leaving') && (
         <p className="intro-line" aria-hidden="true">
