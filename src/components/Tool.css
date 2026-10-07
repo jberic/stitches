@@ -289,6 +289,51 @@
   cursor: not-allowed;
 }
 
+.generate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+/* Secondary to Generate again: same shape, outlined. */
+.download-button {
+  display: inline-flex;
+  align-items: center;
+  padding: calc(0.9rem - 1.5px) calc(1.5rem - 1.5px);
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.download-button:hover {
+  border-color: var(--fg);
+  background: rgb(255 207 197 / 0.08);
+}
+
+.download-button:active {
+  transform: scale(0.97);
+}
+
+.download-button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.download-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* Finished size: the answer to "how big will it be?", under the size controls. */
 .finished-size {
   display: flex;

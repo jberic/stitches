@@ -3,6 +3,7 @@ import { paletteById, patternColours } from '../data/palettes'
 import { MAX_WIDTH, MIN_WIDTH, findReadableWidth, generatePattern, type GenerateResult } from '../pattern/generate'
 import { describeRecipe, seedWithNewStyle, type Choices, type LetterCase, type Motif } from '../pattern/recipe'
 import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
+import { downloadPatternSheet } from '../export/patternImage'
 import { legendFor } from '../pattern/legend'
 import { FABRIC_COUNTS, finishedSize, type FabricCount } from '../pattern/size'
 import { addToHistory, encodeCells, entryKey, loadHistory, saveHistory, type HistoryEntry } from '../state/history'
@@ -36,6 +37,7 @@ export function Tool({ inputRef }: Props) {
   }, [paletteId])
   const [result, setResult] = useState<GenerateResult | null>(null)
   const [failed, setFailed] = useState(false)
+  const [download, setDownload] = useState<'idle' | 'busy' | 'failed'>('idle')
   // Legend highlight: hover or focus previews a colour, a click pins it.
   const [preview, setPreview] = useState<number | null>(null)
   const [pinned, setPinned] = useState<number | null>(null)
@@ -46,7 +48,7 @@ export function Tool({ inputRef }: Props) {
   const historyMode = useRef<'replace' | 'push' | 'none'>('replace')
   const widthRef = useRef<HTMLInputElement>(null)
   const sheetRef = useRef<HTMLElement>(null)
-  const ids = { text: useId(), textHint: useId(), width: useId(), status: useId() }
+  const ids = { text: useId(), textHint: useId(), width: useId(), status: useId(), downloadHint: useId() }
 
   const phrase = parsePhrase(text)
   const linesKey = phrase.ok ? phrase.lines.join('\n') : null
@@ -199,6 +201,23 @@ export function Tool({ inputRef }: Props) {
     setLetterCase(entry.state.letterCase)
   }
 
+  const downloadSheet = async () => {
+    if (!pattern || !legend || download === 'busy') return
+    setDownload('busy')
+    try {
+      await downloadPatternSheet({
+        pattern,
+        legend,
+        colours: chartColours,
+        fabricCount,
+        description: describeRecipe(pattern.meta.recipe),
+      })
+      setDownload('idle')
+    } catch {
+      setDownload('failed')
+    }
+  }
+
   const charsLeft = MAX_CHARS - text.trim().length
   const size = pattern && finishedSize(pattern.width, pattern.height, fabricCount)
 
@@ -258,10 +277,24 @@ export function Tool({ inputRef }: Props) {
         </div>
 
         <div className="generate">
-          <button type="button" className="generate-button" onClick={generateAgain} disabled={!phrase.ok}>
-            Generate again
-          </button>
+          <div className="generate-actions">
+            <button type="button" className="generate-button" onClick={generateAgain} disabled={!phrase.ok}>
+              Generate again
+            </button>
+            <button
+              type="button"
+              className="download-button"
+              onClick={downloadSheet}
+              disabled={!pattern || download === 'busy'}
+              aria-describedby={ids.downloadHint}
+            >
+              {download === 'busy' ? 'Preparing…' : 'Download'}
+            </button>
+          </div>
           <p className="hint">Same words, new style.</p>
+          <p id={ids.downloadHint} className="visually-hidden">
+            Saves a PNG image of the chart and thread key.
+          </p>
         </div>
 
         <div className="field">
@@ -346,6 +379,7 @@ export function Tool({ inputRef }: Props) {
         <div id={ids.status} className="status" role="status" aria-live="polite">
           {!phrase.ok && <p className="notice">{PHRASE_MESSAGES[phrase.reason]}</p>}
           {phrase.ok && failed && <p className="notice">Something went wrong drawing that. Try again.</p>}
+          {download === 'failed' && <p className="notice">The download didn't work. Try again.</p>}
           {phrase.ok && hardToRead && (
             <p className="notice">
               This one is hard to read at {width} stitches wide.{' '}
