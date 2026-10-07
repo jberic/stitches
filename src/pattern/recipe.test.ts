@@ -88,13 +88,33 @@ describe('recipeFor', () => {
     expect([...fonts].sort()).toEqual([...PATTERN_FONTS].sort())
   })
 
-  it('offers Slab only for capitals, and gives Sampler a motif row only with a small icon', () => {
+  it('lets Slab set a typed phrase in capitals, and gives Sampler a motif row only with a small icon', () => {
     const mixed = { motif: 'any', letterCase: 'mixed' } as const
+    let slabs = 0
     for (let s = 0; s < 200; s++) {
-      expect(recipeFor(`a${s}`, 0, undefined, mixed).alphabet).not.toBe('slab')
+      const m = recipeFor(`a${s}`, 0, undefined, mixed)
+      if (m.alphabet === 'slab') {
+        slabs++
+        expect([m.letterCase, m.capitalsFrom, describeRecipe(m).includes('set in capitals')]).toEqual(['upper', 'mixed', true])
+      } else expect(m.capitalsFrom).toBeNull()
       const r = recipeFor(`a${s}`, 0, undefined, { motif: 'any', letterCase: 'upper' })
       if (r.iconRow) expect([r.alphabet, iconSizes(r.icon!).includes(7)]).toEqual(['sampler', true])
     }
+    expect(slabs).toBeGreaterThan(10)
+  })
+
+  it('gives a fallback font back the case the phrase was typed in', () => {
+    const mixed = { motif: 'any', letterCase: 'mixed' } as const
+    const seed = Array.from({ length: 200 }, (_, i) => `b${i}`).find(
+      (s) => recipeFor(s, 0, undefined, mixed).alphabet === 'slab',
+    )!
+    const first = recipeFor(seed, 0, undefined, mixed)
+    const font = recipeFor(seed, 1, { recipe: first, check: { ...result(false, false), unsupported: true } }, mixed)
+    expect([font.alphabet, font.letterCase, font.capitalsFrom]).toEqual([null, 'mixed', null])
+    expect([recipeFor(seed, 3, undefined, mixed).letterCase, recipeFor(seed, 4, undefined, mixed).letterCase]).toEqual([
+      'mixed',
+      'mixed',
+    ])
   })
 
   it('only picks effects that are in the mix and suit the alphabet', () => {
@@ -146,7 +166,11 @@ describe('recipeFor', () => {
       for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
         const r = recipeFor(`lc${s}`, attempt, undefined, { motif: 'any', letterCase: 'lower' })
         expect(r.font).not.toBe('Rubik Mono One')
-        expect(r.letterCase).toBe('lower')
+        // Only Slab may set it in capitals, and then it says so.
+        expect(r.capitalsFrom ?? r.letterCase).toBe('lower')
+        if (r.alphabet !== 'slab') expect(r.letterCase).toBe('lower')
+        const forced = recipeFor(`lc${s}`, attempt, undefined, { motif: 'any', letterCase: 'lower', caseForced: true })
+        expect([forced.letterCase, forced.alphabet === 'slab']).toEqual(['lower', false])
       }
     }
   })

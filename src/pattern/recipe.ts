@@ -27,6 +27,11 @@ export interface Recipe {
   /** How the accent thread dresses the letters (see compose.ts). */
   effect: Effect
   letterCase: TextCase
+  /**
+   * Set when a capitals-only alphabet (Slab) sets a phrase in capitals that
+   * wasn't typed that way: the case it had, so a fallback font can restore it.
+   */
+  capitalsFrom: TextCase | null
   /** Letters drawn from a stitch alphabet instead of the font, or null for the font. */
   alphabet: AlphabetId | null
 }
@@ -46,6 +51,8 @@ export interface Choices {
 export interface ResolvedChoices {
   motif: Motif
   letterCase: TextCase
+  /** The person picked Capitals or Lowercase themselves, so no alphabet may change the case. */
+  caseForced?: boolean
 }
 
 /** The case a phrase is stitched in. "As typed" with only capitals (or only lowercase) is just that. */
@@ -58,7 +65,7 @@ export function textCase(lines: string[], choice: LetterCase): TextCase {
 }
 
 export function resolveChoices(lines: string[], choices: Choices): ResolvedChoices {
-  return { motif: choices.motif, letterCase: textCase(lines, choices.letterCase) }
+  return { motif: choices.motif, letterCase: textCase(lines, choices.letterCase), caseForced: choices.letterCase !== 'typed' }
 }
 
 /** A warp in stitch units (see pattern/warp.ts for what each part does). */
@@ -124,12 +131,15 @@ export const DEFAULT_CHOICES: Choices = { motif: DEFAULT_MOTIF, letterCase: 'typ
  */
 const ALPHABET_SHARE = 0.67
 
-/** Alphabets the seed can pick; a capitals-only one only when the phrase is in capitals. */
+/**
+ * Alphabets the seed can pick. A capitals-only one (Slab) sets a phrase typed
+ * in lowercase in capitals, unless the person chose Lowercase themselves.
+ */
 const IN_MIX: AlphabetId[] = ['block', 'serif', 'slab', 'sampler']
 
-function alphabetFor(seed: string, letterCase: TextCase): AlphabetId | null {
+function alphabetFor(seed: string, letterCase: TextCase, caseForced = false): AlphabetId | null {
   const rng = randomFor('alphabet', seed)
-  const offered = IN_MIX.filter((id) => letterCase === 'upper' || ALPHABETS[id].lowercase)
+  const offered = IN_MIX.filter((id) => letterCase === 'upper' || ALPHABETS[id].lowercase || !caseForced)
   return rng() < ALPHABET_SHARE ? pick(rng, offered) : null
 }
 
@@ -161,9 +171,15 @@ function iconRowFor(seed: string, alphabet: AlphabetId | null, icon: IconName | 
 const FONT_LETTER_GAP = 2
 const FONT_LINE_GAP = 2
 
+/** A recipe back in the case the phrase was typed, if an alphabet had set it in capitals. */
+function typedCase(recipe: Recipe): Pick<Recipe, 'letterCase' | 'capitalsFrom'> {
+  return { letterCase: recipe.capitalsFrom ?? recipe.letterCase, capitalsFrom: null }
+}
+
 function asFontStyle(recipe: Recipe): Recipe {
   return {
     ...recipe,
+    ...typedCase(recipe),
     alphabet: null,
     layout: 'stacked-block',
     wave: null,
@@ -243,7 +259,12 @@ export function recipeFor(
     icon: iconFor(seed, choices.motif),
     iconRow: false,
     letterCase: choices.letterCase,
-    alphabet: alphabetFor(seed, choices.letterCase),
+    capitalsFrom: null,
+    alphabet: alphabetFor(seed, choices.letterCase, choices.caseForced),
+  }
+  if (base.alphabet && !ALPHABETS[base.alphabet].lowercase && base.letterCase !== 'upper') {
+    base.capitalsFrom = base.letterCase
+    base.letterCase = 'upper'
   }
   base.effect = effectFor(base.effect, base.alphabet)
   base.iconRow = iconRowFor(seed, base.alphabet, base.icon)
@@ -270,6 +291,7 @@ export function recipeFor(
   if (attempt === 3) {
     return {
       ...first,
+      ...typedCase(first),
       alphabet: 'block',
       layout: 'stacked-block',
       wave: null,
@@ -322,6 +344,7 @@ export const WORDMARK_RECIPE: Recipe = {
   iconRow: false,
   effect: 'none',
   letterCase: 'upper',
+  capitalsFrom: null,
   alphabet: null,
 }
 
@@ -346,7 +369,7 @@ export function describeRecipe(recipe: Recipe): string {
   const iconPart = recipe.icon && (recipe.iconRow ? `a row of ${ICON_PLURALS[recipe.icon]}` : iconPhrase(recipe.icon))
   const extras = [EFFECT_PHRASES[recipe.effect], iconPart || null].filter(Boolean)
   const withPart = extras.length ? `with ${extras.join(' and ')}` : null
-  const lower = recipe.letterCase === 'lower' ? 'lowercase' : null
+  const lower = recipe.capitalsFrom ? 'set in capitals' : recipe.letterCase === 'lower' ? 'lowercase' : null
   const letters = recipe.alphabet ? `${ALPHABETS[recipe.alphabet].name} stitch letters` : recipe.font
   const fontShape = recipe.alphabet ? null : shape
   return [stacked ? 'Stacked block' : 'Wavy', letters, lower, fontShape, spacing, withPart].filter(Boolean).join(' · ')
@@ -376,7 +399,11 @@ export function seedWithNewStyle(
     const seed = makeSeed()
     if (!current) return seed
     // Same phrase, so the same case as the pattern on screen.
-    const next = recipeFor(seed, 0, undefined, { motif: choices.motif, letterCase: current.letterCase })
+    const next = recipeFor(seed, 0, undefined, {
+      motif: choices.motif,
+      letterCase: current.capitalsFrom ?? current.letterCase,
+      caseForced: choices.letterCase !== 'typed',
+    })
     const letterform = (r: Recipe) => r.alphabet ?? r.font
     const newLook = letterform(next) !== letterform(current) || next.layout !== current.layout || next.effect !== current.effect
     if (avoidFonts && !next.alphabet) continue
