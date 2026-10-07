@@ -5,3 +5,4 @@ src/data/threads.json
 src/data/alphabets/block.ts
 src/data/alphabets/serif.ts
 src/data/icons.ts
+package-lock.json
