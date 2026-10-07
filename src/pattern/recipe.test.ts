@@ -89,11 +89,11 @@ describe('recipeFor', () => {
   })
 
   it('names the style in plain words', () => {
-    const plain = { ...recipeFor('x'), layout: 'stacked-block', wave: null, icon: null, shadow: false } as const
+    const plain = { ...recipeFor('x'), layout: 'stacked-block', wave: null, icon: null, effect: 'none', alphabet: null } as const
     expect(describeRecipe({ ...plain, font: 'Chango', letterAspect: 1.8, letterGap: 1 })).toBe(
       'Stacked block · Chango · tall letters',
     )
-    expect(describeRecipe({ ...plain, layout: 'wavy', font: 'Shrikhand', icon: 'lemon', shadow: true })).toBe(
+    expect(describeRecipe({ ...plain, layout: 'wavy', font: 'Shrikhand', icon: 'lemon', effect: 'shadow' })).toBe(
       'Wavy · Shrikhand · with a shadow and a lemon slice',
     )
   })
@@ -131,23 +131,23 @@ describe('recipeFor', () => {
     }
   })
 
-  it('keeps the icon across retries, and the shadow while it stays a stitch alphabet', () => {
+  it('keeps the icon across retries, and the effect while it stays a stitch alphabet', () => {
     for (let s = 0; s < 30; s++) {
       const first = recipeFor(`c${s}`)
       for (let attempt = 1; attempt < MAX_ATTEMPTS; attempt++) {
         const next = recipeFor(`c${s}`, attempt)
         expect(next.icon).toBe(first.icon)
-        if (next.alphabet) expect(next.shadow).toBe(first.shadow)
+        if (next.alphabet) expect(next.effect).toBe(first.effect)
       }
     }
   })
 
-  it('gives display fonts room and no wave or shadow', () => {
+  it('gives display fonts room and no wave or effect', () => {
     for (let s = 0; s < 60; s++) {
       for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
         const r = recipeFor(`g${s}`, attempt)
         if (r.alphabet) continue
-        expect([r.layout, r.wave, r.shadow]).toEqual(['stacked-block', null, false])
+        expect([r.layout, r.wave, r.effect]).toEqual(['stacked-block', null, 'none'])
         expect(r.letterGap).toBeGreaterThanOrEqual(2)
         expect(r.lineGap).toBeGreaterThanOrEqual(2)
       }

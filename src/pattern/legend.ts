@@ -28,12 +28,15 @@ export function stitchCounts(pattern: Pattern): Map<number, number> {
 /** The key for a pattern: one row per thread actually used, plus the fabric. */
 export function legendFor(pattern: Pattern, palette: Palette): Legend {
   const { lettering, accent } = patternColours(palette)
-  const { icon, shadow } = pattern.meta.recipe
-  const accentUse =
-    icon && shadow ? `${capitalise(ICON_LABELS[icon])} and shadow` : icon ? capitalise(ICON_LABELS[icon]) : 'Shadow'
+  const { icon, effect } = pattern.meta.recipe
+  // With an outline the threads swap: the darker one outlines, the accent fills the letters.
+  const letteringUse = effect === 'outline' ? 'Outline' : 'Lettering'
+  const effectPart = { none: null, shadow: 'shadow', block3d: '3D side', outline: 'lettering' }[effect]
+  const accentParts = [icon ? ICON_LABELS[icon] : null, effectPart].filter(Boolean).join(' and ')
+  const accentUse = capitalise(accentParts || 'Accent')
   const counts = stitchCounts(pattern)
   const rows: LegendRow[] = [
-    { index: LETTERING, thread: lettering, use: 'Lettering', stitches: counts.get(LETTERING) ?? 0 },
+    { index: LETTERING, thread: lettering, use: letteringUse, stitches: counts.get(LETTERING) ?? 0 },
     { index: ACCENT, thread: accent, use: accentUse, stitches: counts.get(ACCENT) ?? 0 },
   ].filter((row) => row.stitches > 0)
   return {

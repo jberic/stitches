@@ -9,6 +9,7 @@ import { defineAlphabet } from './alphabet'
 
 export const BLOCK = defineAlphabet({
   name: 'Block',
+  effects: ['shadow', 'block3d', 'outline'],
   regular: {
     capRows: 9,
     descRows: 2,

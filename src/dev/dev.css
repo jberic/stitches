@@ -230,3 +230,13 @@
   font-size: 0.6875rem;
   color: var(--sheet-muted);
 }
+
+/* Styles gallery: one row per style, the phrases side by side. */
+.style-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1.25rem 2rem;
+  padding: 1.25rem;
+  border-radius: 4px;
+}

@@ -34,9 +34,16 @@ export interface AlphabetSize {
   glyphs: Map<string, Glyph>
 }
 
+/** Accent effects (see pattern/compose.ts) that suit an alphabet's letterforms. */
+export type AlphabetEffect = 'shadow' | 'block3d' | 'outline'
+
 export interface StitchAlphabet {
   name: string
   sizes: Record<AlphabetSizeId, AlphabetSize>
+  /** Effects that read well on these letters at the regular size. The small size only takes a shadow. */
+  effects: AlphabetEffect[]
+  /** False for a capitals-only alphabet: it is only offered when the phrase is stitched in capitals. */
+  lowercase: boolean
 }
 
 function buildSize(source: AlphabetSizeSource): AlphabetSize {
@@ -53,8 +60,19 @@ function buildSize(source: AlphabetSizeSource): AlphabetSize {
   return { capRows: source.capRows, descRows: source.descRows, stroke: source.stroke, space: source.space, glyphs }
 }
 
-export function defineAlphabet(source: { name: string; regular: AlphabetSizeSource; small: AlphabetSizeSource }): StitchAlphabet {
-  return { name: source.name, sizes: { regular: buildSize(source.regular), small: buildSize(source.small) } }
+export function defineAlphabet(source: {
+  name: string
+  regular: AlphabetSizeSource
+  small: AlphabetSizeSource
+  effects: AlphabetEffect[]
+  lowercase?: boolean
+}): StitchAlphabet {
+  return {
+    name: source.name,
+    sizes: { regular: buildSize(source.regular), small: buildSize(source.small) },
+    effects: source.effects,
+    lowercase: source.lowercase ?? true,
+  }
 }
 
 /** The characters every alphabet must draw, in both sizes. */

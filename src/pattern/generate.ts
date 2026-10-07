@@ -1,9 +1,10 @@
 import { ALPHABETS } from '../data/alphabets'
+import type { AlphabetSizeId } from '../data/alphabets/alphabet'
 import { iconCells, iconSizes } from '../data/icons'
 import { SCRIPT_FONTS, loadDisplayFont } from '../fonts'
 import { maskFromCanvas } from './canvas'
 import { cleanup, smoothEdges, type Grid } from './cleanup'
-import { addShadow, iconSizeFor, placeIconBelow } from './compose'
+import { EFFECT_REACH, addEffect, type Effect, iconSizeFor, padColumns, placeIconBelow, placeIconRow } from './compose'
 import { coverage, stitchesFrom, trimRows, type Mask } from './downsample'
 import { renderAlphabet } from './layouts/alphabet'
 import { renderStackedBlock, type LetterBox } from './layouts/stackedBlock'
@@ -85,6 +86,8 @@ interface Lettering {
   letters: LetterBox[]
   /** Set when a stitch alphabet can't draw this phrase. */
   unsupported?: string
+  /** The stitch alphabet size used, if any. */
+  size?: AlphabetSizeId
 }
 
 /** Draws the lettering for a recipe as a high-resolution mask, with each letter's box. */
@@ -105,7 +108,7 @@ function drawLettering(upper: string[], width: number, recipe: Recipe): Letterin
       const why = result.reason === 'missing' ? `This alphabet has no "${result.char}"` : 'Too wide for this alphabet'
       return { mask: empty, letters: [], unsupported: why }
     }
-    return { mask: result.mask, letters: result.letters }
+    return { mask: result.mask, letters: result.letters, size: result.size }
   }
   // Fonts keep a margin of fabric at the sides, so the words don't fill the
   // pattern edge to edge.
@@ -134,16 +137,31 @@ function padSides(mask: Mask, pad: number): Mask {
 }
 
 /**
- * Adds the accent-thread parts (shadow, then icon) to the finished lettering.
+ * Adds the accent-thread parts (the effect, then the icon) to the finished lettering.
  * Runs after the legibility check, so it can't hide a problem with the letters.
  */
 function decorate(lettering: Grid, recipe: Recipe): Grid {
-  let grid = recipe.shadow ? addShadow(lettering) : lettering
+  let grid = addEffect(lettering, recipe.effect)
   if (recipe.icon) {
+    const gap = recipe.layout === 'wavy' ? 2 : 1
+    // A row of small motifs, where this icon is drawn small; otherwise one icon.
+    const row = recipe.iconRow && iconSizes(recipe.icon).includes(7) && placeIconRow(grid, iconCells(recipe.icon, 7), gap + 1)
+    if (row) return row
     const size = iconSizeFor(iconSizes(recipe.icon), grid.width)
     if (size) grid = placeIconBelow(grid, iconCells(recipe.icon, size), recipe.layout === 'wavy' ? 2 : 1)
   }
   return grid
+}
+
+/**
+ * The effect actually stitched. A stitch alphabet's one-stitch small size, or
+ * an effect its letters don't suit, takes the shadow instead, which reads on
+ * anything. The pattern records this, so the caption and key stay true.
+ */
+function stitchedEffect(recipe: Recipe, size: AlphabetSizeId | undefined): Effect {
+  if (!recipe.alphabet || recipe.effect === 'none' || recipe.effect === 'shadow') return recipe.effect
+  const suits = (ALPHABETS[recipe.alphabet].effects as Effect[]).includes(recipe.effect)
+  return size === 'regular' && suits ? recipe.effect : 'shadow'
 }
 
 /** Draws, downsamples, tidies and checks one recipe. Deterministic for the same inputs. */
@@ -152,24 +170,30 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
   const cased = lines.map((line) =>
     recipe.letterCase === 'upper' ? line.toLocaleUpperCase() : recipe.letterCase === 'lower' ? line.toLocaleLowerCase() : line,
   )
-  const { mask, letters, unsupported } = drawLettering(cased, width, recipe)
+  // The lettering leaves room at its sides for the effect to reach into.
+  const reach = EFFECT_REACH[recipe.effect]
+  const inner = width - reach.left - reach.right
+  const { mask, letters, unsupported, size } = drawLettering(cased, inner, recipe)
   if (unsupported) return unsupportedResult(lines, cased, width, recipe, seed, unsupported)
   const cover = coverage(mask, SCALE)
-  const raw: Grid = { width, height: cover.length / width, cells: stitchesFrom(cover, recipe.threshold) }
+  const raw: Grid = { width: inner, height: cover.length / inner, cells: stitchesFrom(cover, recipe.threshold) }
   // Stitch alphabets are drawn exactly on the grid, so tidy-up would only do
   // harm (it took the one-stitch dot off a small i). Font edges get evened out.
   const tidy = recipe.alphabet ? raw : smoothEdges(cleanup(raw, cover), cover)
   const legible = checkLegibility(mask, SCALE, tidy, cover, letters, recipe.layout === 'wavy')
   const check = checkScriptSize(legible, letters, recipe)
-  const trimmed = trimRows(tidy.cells, width)
-  const { cells, height } = decorate({ width, height: trimmed.height, cells: trimmed.cells }, recipe)
+  const trimmed = trimRows(tidy.cells, inner)
+  const stitched: Recipe = { ...recipe, effect: stitchedEffect(recipe, size) }
+  const left = EFFECT_REACH[stitched.effect].left
+  const lettering = padColumns({ width: inner, height: trimmed.height, cells: trimmed.cells }, left, width - inner - left)
+  const { cells, height } = decorate(lettering, stitched)
 
   return {
     pattern: {
       width,
       height,
       cells,
-      meta: { text: lines.join(' '), lines: cased, layout: recipe.layout, font: recipe.font, seed, recipe },
+      meta: { text: lines.join(' '), lines: cased, layout: recipe.layout, font: recipe.font, seed, recipe: stitched },
     },
     raw,
     check,
@@ -225,21 +249,22 @@ export async function generatePattern({
   choices?: Choices
 }): Promise<GenerateResult> {
   const attempts: Attempt[] = []
-  let best: { rendered: Rendered; recipe: Recipe } | null = null
+  let best: { rendered: Rendered } | null = null
   const resolved = resolveChoices(lines, choices)
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const recipe = recipeFor(seed, attempt, attempts[attempts.length - 1], resolved)
     const rendered = await renderRecipe(lines, width, recipe, seed)
     attempts.push({ recipe, check: rendered.check })
-    if (!best || rendered.check.penalty < best.rendered.check.penalty) best = { rendered, recipe }
+    if (!best || rendered.check.penalty < best.rendered.check.penalty) best = { rendered }
     if (rendered.check.ok) break
   }
 
-  const { rendered, recipe } = best!
+  const { rendered } = best!
   return {
     pattern: rendered.pattern,
-    recipe,
+    // As stitched, so "Generate again" compares against what is on screen.
+    recipe: rendered.pattern.meta.recipe,
     check: rendered.check,
     attempts,
     tooNarrow: narrowness(lines, width),

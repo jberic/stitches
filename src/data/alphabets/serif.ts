@@ -10,6 +10,8 @@ import { defineAlphabet } from './alphabet'
 
 export const SERIF = defineAlphabet({
   name: 'Serif',
+  // Its one-stitch hairlines smear under a 3D side or an outline.
+  effects: ['shadow'],
   regular: {
     capRows: 9,
     descRows: 2,

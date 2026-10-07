@@ -34,9 +34,15 @@ describe('legendFor', () => {
   })
 
   it('names the accent by what it stitches', () => {
-    const both = pattern([1, 2], { icon: 'lemon', shadow: true })
+    const both = pattern([1, 2], { icon: 'lemon', effect: 'shadow' })
     expect(legendFor(both, paletteById('01')).rows[1].use).toBe('Lemon slice and shadow')
-    expect(legendFor(pattern([1, 2], { shadow: true }), paletteById('01')).rows[1].use).toBe('Shadow')
+    expect(legendFor(pattern([1, 2], { effect: 'shadow' }), paletteById('01')).rows[1].use).toBe('Shadow')
+    expect(legendFor(pattern([1, 2], { effect: 'block3d' }), paletteById('01')).rows[1].use).toBe('3D side')
+  })
+
+  it('swaps the uses for an outline: the lettering thread outlines, the accent fills the letters', () => {
+    const rows = legendFor(pattern([1, 2], { effect: 'outline', icon: 'leaf' }), paletteById('01')).rows
+    expect(rows.map((r) => r.use)).toEqual(['Outline', 'Leaf and lettering'])
   })
 
   it.each(PALETTES)('$id: no two rows share a thread code', (palette) => {
