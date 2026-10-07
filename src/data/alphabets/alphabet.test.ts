@@ -10,12 +10,15 @@ describe.each(cases)('%s %s', (_name, sizeId, alphabet) => {
   const size = alphabet.sizes[sizeId]
   const height = size.capRows + size.descRows
 
+  // A capitals-only alphabet draws everything but the lowercase.
+  const required = alphabet.lowercase ? REQUIRED_CHARACTERS : REQUIRED_CHARACTERS.filter((c) => !/[a-z]/.test(c))
+
   it('draws every required character', () => {
-    const missing = REQUIRED_CHARACTERS.filter((c) => !size.glyphs.has(c))
+    const missing = required.filter((c) => !size.glyphs.has(c))
     expect(missing).toEqual([])
   })
 
-  it.each(REQUIRED_CHARACTERS)('%s is the full height, rectangular, and only stitches or gaps', (char) => {
+  it.each(required)('%s is the full height, rectangular, and only stitches or gaps', (char) => {
     const glyph = size.glyphs.get(char)!
     expect(glyph.rows).toHaveLength(height)
     for (const row of glyph.rows) {
@@ -34,7 +37,7 @@ describe.each(cases)('%s %s', (_name, sizeId, alphabet) => {
 
   it('drops descenders below the baseline and nothing else', () => {
     const descending = new Set(['g', 'j', 'p', 'q', 'y', ','])
-    for (const char of 'abcdefghijklmnopqrstuvwxyz,') {
+    for (const char of alphabet.lowercase ? 'abcdefghijklmnopqrstuvwxyz,' : ',') {
       const below = size.glyphs
         .get(char)!
         .rows.slice(size.capRows)

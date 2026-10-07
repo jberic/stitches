@@ -1,4 +1,4 @@
-import { ALPHABETS, ALPHABET_IDS, type AlphabetId } from '../data/alphabets'
+import { ALPHABETS, type AlphabetId } from '../data/alphabets'
 import { ICON_SETS, iconPhrase, type IconName } from '../data/icons'
 import { CAPITALS_ONLY, DISPLAY_FONTS, SCRIPT_FONTS, type DisplayFont } from '../fonts'
 import { between, newSeed, pick, randomFor } from './random'
@@ -124,9 +124,12 @@ export const DEFAULT_CHOICES: Choices = { motif: DEFAULT_MOTIF, letterCase: 'typ
  */
 const ALPHABET_SHARE = 0.67
 
+/** Alphabets the seed can pick. Slab and Sampler join once they are approved in the styles gallery. */
+const IN_MIX: AlphabetId[] = ['block', 'serif']
+
 function alphabetFor(seed: string): AlphabetId | null {
   const rng = randomFor('alphabet', seed)
-  return rng() < ALPHABET_SHARE ? pick(rng, ALPHABET_IDS) : null
+  return rng() < ALPHABET_SHARE ? pick(rng, IN_MIX) : null
 }
 
 /**

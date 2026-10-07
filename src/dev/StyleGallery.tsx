@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { ALPHABETS } from '../data/alphabets'
 import { FABRIC, PALETTES, paletteById, patternColours } from '../data/palettes'
 import { renderRecipe, type Rendered } from '../pattern/generate'
 import { recipeFor, type Recipe } from '../pattern/recipe'
@@ -23,6 +24,12 @@ const STYLES: { label: string; recipe: Partial<Recipe> }[] = [
   { label: 'Block · outline', recipe: { alphabet: 'block', effect: 'outline' } },
   { label: 'Serif · leaf row', recipe: { alphabet: 'serif', icon: 'leaf', iconRow: true } },
   { label: 'Serif · 3D side', recipe: { alphabet: 'serif', effect: 'block3d' } },
+  { label: 'Slab', recipe: { alphabet: 'slab' } },
+  { label: 'Slab · 3D side', recipe: { alphabet: 'slab', effect: 'block3d' } },
+  { label: 'Slab · outline', recipe: { alphabet: 'slab', effect: 'outline' } },
+  { label: 'Sampler', recipe: { alphabet: 'sampler' } },
+  { label: 'Sampler · leaf row', recipe: { alphabet: 'sampler', icon: 'leaf', iconRow: true } },
+  { label: 'Sampler · cherry row', recipe: { alphabet: 'sampler', icon: 'cherry', iconRow: true } },
   { label: 'Bagel Fat One · outline', recipe: { font: 'Bagel Fat One', threshold: 0.47, effect: 'outline' } },
   { label: 'Shrikhand · outline', recipe: { font: 'Shrikhand', threshold: 0.49, effect: 'outline' } },
 ]
@@ -82,6 +89,8 @@ export function StyleGallery() {
             letterAspect: 1.5,
             ...style.recipe,
           }
+          // A capitals-only alphabet is only ever offered for capitals.
+          if (recipe.alphabet && !ALPHABETS[recipe.alphabet].lowercase) recipe.letterCase = 'upper'
           results.push(await renderRecipe(lines, WIDTH, recipe, 'styles'))
         }
         out.push({ label: style.label, results })

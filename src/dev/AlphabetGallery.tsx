@@ -57,7 +57,7 @@ export function AlphabetGallery() {
                 </span>
               </h2>
               <div className="glyph-grid" style={{ background: FABRIC.hex }}>
-                {REQUIRED_CHARACTERS.map((char) => (
+                {REQUIRED_CHARACTERS.filter((c) => alphabet.lowercase || !/[a-z]/.test(c)).map((char) => (
                   <figure key={char} className="glyph-cell">
                     <Stitched rows={size.glyphs.get(char)!.rows} cell={cell} colour={ink} />
                     <figcaption>{char}</figcaption>
@@ -65,7 +65,7 @@ export function AlphabetGallery() {
                 ))}
               </div>
               <div className="glyph-samples" style={{ background: FABRIC.hex }}>
-                {SAMPLES.map((text) => (
+                {(alphabet.lowercase ? SAMPLES : [...new Set(SAMPLES.map((t) => t.toUpperCase()))]).map((text) => (
                   <figure key={text} className="glyph-cell">
                     <Stitched rows={setText(size, text)} cell={cell} colour={ink} />
                     <figcaption>
