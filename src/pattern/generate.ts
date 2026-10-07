@@ -2,16 +2,14 @@ import { ALPHABETS } from '../data/alphabets'
 import { iconCells, iconSizes } from '../data/icons'
 import { SCRIPT_FONTS, loadDisplayFont } from '../fonts'
 import { maskFromCanvas } from './canvas'
-import { cleanup, type Grid } from './cleanup'
+import { cleanup, smoothEdges, type Grid } from './cleanup'
 import { addShadow, iconSizeFor, placeIconBelow } from './compose'
 import { coverage, stitchesFrom, trimRows, type Mask } from './downsample'
 import { renderAlphabet } from './layouts/alphabet'
 import { renderStackedBlock, type LetterBox } from './layouts/stackedBlock'
-import { renderWavy } from './layouts/wavy'
 import { checkLegibility, type LegibilityCheck } from './legibility'
 import { DEFAULT_CHOICES, MAX_ATTEMPTS, WORDMARK_RECIPE, recipeFor, resolveChoices, type Choices, type Recipe } from './recipe'
 import type { Pattern } from './types'
-import { warpMask } from './warp'
 
 export const MIN_WIDTH = 40
 export const MAX_WIDTH = 100
@@ -21,6 +19,8 @@ export const DEFAULT_WIDTH = 50
 const SCALE = 8
 /** Lowercase letters sit under the cap height, so lines need more rows to keep them readable. */
 const MIN_ROWS = { upper: 11, lower: 15, mixed: 15 }
+/** Empty columns each side of font lettering. */
+const FONT_MARGIN = 0
 
 /**
  * Script lowercase needs room: at 50 stitches, Shrikhand read well at about 9
@@ -87,10 +87,6 @@ interface Lettering {
   unsupported?: string
 }
 
-function toPixels(wave: NonNullable<Recipe['wave']>) {
-  return { ax: wave.ax * SCALE, wy: wave.wy * SCALE, ay: wave.ay * SCALE, wx: wave.wx * SCALE, px: wave.px, py: wave.py }
-}
-
 /** Draws the lettering for a recipe as a high-resolution mask, with each letter's box. */
 function drawLettering(upper: string[], width: number, recipe: Recipe): Lettering {
   if (recipe.alphabet) {
@@ -111,22 +107,11 @@ function drawLettering(upper: string[], width: number, recipe: Recipe): Letterin
     }
     return { mask: result.mask, letters: result.letters }
   }
-  if (recipe.layout === 'wavy' && recipe.wave) {
-    const wave = recipe.wave
-    const { canvas, letters } = renderWavy(upper, {
-      width,
-      scale: SCALE,
-      font: recipe.font,
-      letterAspect: recipe.letterAspect,
-      letterGap: recipe.letterGap,
-      lineGap: recipe.lineGap,
-      reach: { x: wave.ax, y: wave.ay },
-      minCapRows: MIN_ROWS[recipe.letterCase],
-    })
-    return { mask: warpMask(maskFromCanvas(canvas), toPixels(wave)), letters }
-  }
+  // Fonts keep a margin of fabric at the sides, so the words don't fill the
+  // pattern edge to edge.
+  const inner = width - FONT_MARGIN * 2
   const { canvas, letters } = renderStackedBlock(upper, {
-    width,
+    width: inner,
     scale: SCALE,
     font: recipe.font,
     letterAspect: recipe.letterAspect,
@@ -134,7 +119,18 @@ function drawLettering(upper: string[], width: number, recipe: Recipe): Letterin
     lineGap: recipe.lineGap,
     minLineRows: MIN_ROWS[recipe.letterCase],
   })
-  return { mask: maskFromCanvas(canvas), letters }
+  return {
+    mask: padSides(maskFromCanvas(canvas), FONT_MARGIN * SCALE),
+    letters: letters.map((box) => ({ ...box, x: box.x + FONT_MARGIN })),
+  }
+}
+
+/** Adds empty columns of mask pixels on both sides. */
+function padSides(mask: Mask, pad: number): Mask {
+  const width = mask.width + pad * 2
+  const data = new Uint8Array(width * mask.height)
+  for (let y = 0; y < mask.height; y++) data.set(mask.data.subarray(y * mask.width, (y + 1) * mask.width), y * width + pad)
+  return { width, height: mask.height, data }
 }
 
 /**
@@ -160,7 +156,9 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
   if (unsupported) return unsupportedResult(lines, cased, width, recipe, seed, unsupported)
   const cover = coverage(mask, SCALE)
   const raw: Grid = { width, height: cover.length / width, cells: stitchesFrom(cover, recipe.threshold) }
-  const tidy = cleanup(raw, cover)
+  // Stitch alphabets are drawn exactly on the grid, so tidy-up would only do
+  // harm (it took the one-stitch dot off a small i). Font edges get evened out.
+  const tidy = recipe.alphabet ? raw : smoothEdges(cleanup(raw, cover), cover)
   const legible = checkLegibility(mask, SCALE, tidy, cover, letters, recipe.layout === 'wavy')
   const check = checkScriptSize(legible, letters, recipe)
   const trimmed = trimRows(tidy.cells, width)

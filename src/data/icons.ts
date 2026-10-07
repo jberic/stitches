@@ -51,6 +51,13 @@ export const ICON_LABELS: Record<IconName, string> = {
   pear: 'pear',
 }
 
+/** The label as it reads in a sentence: "a leaf", "an ice cream", "cherries". */
+export function iconPhrase(icon: IconName): string {
+  const label = ICON_LABELS[icon]
+  if (icon === 'cherry') return label
+  return /^[aeiou]/.test(label) ? `an ${label}` : `a ${label}`
+}
+
 /** Icons whose shape is mirror-symmetric (tests hold them to it). */
 export const SYMMETRIC: IconName[] = [
   'tree',

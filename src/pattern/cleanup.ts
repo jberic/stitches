@@ -31,6 +31,46 @@ function at(grid: Grid, x: number, y: number): number {
 }
 
 /** Removes stitches with no neighbours at all, including diagonals. */
+/** Drawing coverage at which a notch may be filled, and below which a spur may go. */
+const NOTCH_MIN_COVER = 0.4
+const SPUR_MAX_COVER = 0.85
+
+/**
+ * Evens out the outline of font lettering, so edges read as clean charted
+ * steps: a stitch held by one neighbour or none (a spur) goes, and a gap
+ * with three stitch neighbours (a notch) is filled. The drawing has
+ * the final say: only cells it leaves part-covered can change, so real
+ * counters and gaps stay. Runs until nothing changes, at most a few passes.
+ */
+export function smoothEdges(grid: Grid, cover: Float32Array, passes = 3): Grid {
+  const neighbours = (cells: Uint8Array, x: number, y: number) => {
+    const g = { ...grid, cells }
+    return at(g, x - 1, y) + at(g, x + 1, y) + at(g, x, y - 1) + at(g, x, y + 1)
+  }
+  // One rule at a time, each on the result of the last: done together, the
+  // corners beside a notch look like spurs and go before the notch is filled.
+  const apply = (cells: Uint8Array, rule: (filled: boolean, n: number, i: number) => number | null) => {
+    const next = cells.slice()
+    for (let y = 0; y < grid.height; y++) {
+      for (let x = 0; x < grid.width; x++) {
+        const i = y * grid.width + x
+        const value = rule(cells[i] !== 0, neighbours(cells, x, y), i)
+        if (value !== null) next[i] = value
+      }
+    }
+    return next
+  }
+  let cells = grid.cells
+  for (let pass = 0; pass < passes; pass++) {
+    // Exactly three: a cell closed on all four sides is a counter, left to fillPinholes.
+    const filled = apply(cells, (on, n, i) => (!on && n === 3 && cover[i] >= NOTCH_MIN_COVER ? 1 : null))
+    const next = apply(filled, (on, n, i) => (on && n <= 1 && cover[i] <= SPUR_MAX_COVER ? 0 : null))
+    if (next.every((v, i) => v === cells[i])) break
+    cells = next
+  }
+  return { ...grid, cells }
+}
+
 export function removeStrays(grid: Grid): Uint8Array {
   const out = grid.cells.slice()
   for (let y = 0; y < grid.height; y++) {

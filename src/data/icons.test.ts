@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { countShapes, holes } from '../pattern/legibility'
-import { ICONS, ICON_SETS, SYMMETRIC, iconCells, iconSizes, type IconName } from './icons'
+import { ICONS, ICON_SETS, SYMMETRIC, iconCells, iconPhrase, iconSizes, type IconName } from './icons'
 
 const names = Object.keys(ICONS) as IconName[]
 const all = names.flatMap((name) => iconSizes(name).map((size) => ({ name, size })))
@@ -48,5 +48,13 @@ describe('icons', () => {
 
   it('cherries stay joined to their stems, as one shape', () => {
     for (const size of iconSizes('cherry')) expect(countShapes(iconCells('cherry', size), 1)).toBe(1)
+  })
+})
+
+describe('iconPhrase', () => {
+  it('reads naturally in a caption', () => {
+    expect(iconPhrase('leaf')).toBe('a leaf')
+    expect(iconPhrase('icecream')).toBe('an ice cream')
+    expect(iconPhrase('cherry')).toBe('cherries')
   })
 })

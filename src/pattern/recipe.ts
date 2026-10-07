@@ -1,5 +1,5 @@
 import { ALPHABETS, ALPHABET_IDS, type AlphabetId } from '../data/alphabets'
-import { ICON_LABELS, ICON_SETS, type IconName } from '../data/icons'
+import { ICON_SETS, iconPhrase, type IconName } from '../data/icons'
 import { CAPITALS_ONLY, DISPLAY_FONTS, SCRIPT_FONTS, type DisplayFont } from '../fonts'
 import { between, newSeed, pick, randomFor } from './random'
 import type { LegibilityCheck } from './legibility'
@@ -115,10 +115,35 @@ export const MOTIFS: Motif[] = ['any', 'nature', 'food', 'none']
 export const DEFAULT_MOTIF: Motif = 'any'
 export const DEFAULT_CHOICES: Choices = { motif: DEFAULT_MOTIF, letterCase: 'typed' }
 
-/** Half of all seeds use a stitch alphabet; the rest a display font. Its own stream, like the icon. */
+/**
+ * About two in three seeds use a hand-drawn stitch alphabet, which read most
+ * like a charted sampler; the rest a display font. Its own stream, like the icon.
+ */
+const ALPHABET_SHARE = 0.67
+
 function alphabetFor(seed: string): AlphabetId | null {
   const rng = randomFor('alphabet', seed)
-  return rng() < 0.5 ? pick(rng, ALPHABET_IDS) : null
+  return rng() < ALPHABET_SHARE ? pick(rng, ALPHABET_IDS) : null
+}
+
+/**
+ * Display fonts get room to breathe: at least two clear columns between
+ * letters and two rows between lines, and no wave (bending squeezed heavy
+ * letters into each other) or shadow (a one-stitch shadow read as a rough edge).
+ */
+const FONT_LETTER_GAP = 2
+const FONT_LINE_GAP = 2
+
+function asFontStyle(recipe: Recipe): Recipe {
+  return {
+    ...recipe,
+    alphabet: null,
+    layout: 'stacked-block',
+    wave: null,
+    shadow: false,
+    letterGap: Math.max(FONT_LETTER_GAP, recipe.letterGap),
+    lineGap: Math.max(FONT_LINE_GAP, recipe.lineGap),
+  }
 }
 
 /** Fonts that can draw the case: any lowercase rules out capitals-only fonts. */
@@ -192,11 +217,12 @@ export function recipeFor(
     alphabet: alphabetFor(seed),
   }
   if (base.layout === 'wavy') base.lineGap += 1
-  if (attempt === 0) return base
+  const first = base.alphabet ? base : asFontStyle(base)
+  if (attempt === 0) return first
 
   // The alphabet can't draw this phrase (a missing character, or too wide even
-  // in its small size): keep the style, use the font.
-  if (previous?.check.unsupported) return { ...(previous.recipe ?? base), alphabet: null }
+  // in its small size): keep the icon, use the font.
+  if (previous?.check.unsupported) return asFontStyle(previous.recipe ?? base)
 
   // Script lowercase too small to read: a threshold won't fix that, so keep
   // the style and switch to a font that isn't a script.
@@ -207,32 +233,36 @@ export function recipeFor(
     return { ...from, font: plain, threshold: round2((lo + hi) / 2) }
   }
 
-  // The last two chances are stacked block, which passed every test phrase,
-  // with tight spacing and each font's measured rescue threshold. A wavy seed
-  // first tries its own font, so its style changes as little as possible.
-  if (attempt >= 3) {
+  // Fourth chance: the plain Block alphabet, which is drawn on the grid and so
+  // can't lose a counter. If it can't draw the phrase either, the rule above
+  // hands the last attempt to a font.
+  if (attempt === 3) {
+    return { ...first, alphabet: 'block', layout: 'stacked-block', wave: null, letterGap: 1, lineGap: Math.max(1, first.lineGap) }
+  }
+
+  // The last chance is stacked block in a sturdy font at its measured rescue
+  // threshold. An alphabet seed first tries its own font.
+  if (attempt >= 4) {
     const others = FALLBACK_FONTS.filter((f) => f !== font && fontsFor(choices.letterCase).includes(f))
-    const fonts = base.layout === 'wavy' ? [font, ...others] : others
-    const fallback = fonts[attempt - 3]
+    // An alphabet seed that got here first tries its own font.
+    const fonts = base.alphabet ? [font, ...others] : others
+    const fallback = fonts[attempt - 4]
     return {
-      ...base,
-      layout: 'stacked-block',
-      wave: null,
-      alphabet: null,
+      ...asFontStyle(base),
       font: fallback,
-      letterGap: 1,
-      lineGap: Math.min(2, base.lineGap),
+      letterGap: FONT_LETTER_GAP,
+      lineGap: FONT_LINE_GAP,
       threshold: RESCUE_THRESHOLDS[fallback],
     }
   }
 
-  const from = previous?.recipe ?? base
+  const from = previous?.recipe ?? first
   // With no result to go on, assume the commonest failure: too heavy.
   const tooLight = previous ? previous.check.tooLight && !previous.check.tooHeavy : false
   const threshold = from.threshold + (tooLight ? -THRESHOLD_STEP : THRESHOLD_STEP)
   return {
     ...from,
-    letterGap: tooLight ? from.letterGap : 1,
+    letterGap: tooLight ? from.letterGap : from.alphabet ? 1 : FONT_LETTER_GAP,
     threshold: round2(Math.min(THRESHOLD_LIMITS[1], Math.max(THRESHOLD_LIMITS[0], threshold))),
     // A warp that bent letters into each other or filled them in gets calmer.
     wave: tooLight ? from.wave : calmer(from.wave),
@@ -265,7 +295,7 @@ export function describeRecipe(recipe: Recipe): string {
         ? 'squat letters'
         : null
   const spacing = stacked && recipe.letterGap > 1 ? 'airy' : null
-  const extras = [recipe.shadow ? 'a shadow' : null, recipe.icon ? `a ${ICON_LABELS[recipe.icon]}` : null].filter(Boolean)
+  const extras = [recipe.shadow ? 'a shadow' : null, recipe.icon ? iconPhrase(recipe.icon) : null].filter(Boolean)
   const withPart = extras.length ? `with ${extras.join(' and ')}` : null
   const lower = recipe.letterCase === 'lower' ? 'lowercase' : null
   const letters = recipe.alphabet ? `${ALPHABETS[recipe.alphabet].name} stitch letters` : recipe.font

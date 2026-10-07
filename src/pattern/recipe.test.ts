@@ -57,12 +57,14 @@ describe('recipeFor', () => {
     expect(recipeFor('abcde', 2).font).toBe(font)
   })
 
-  it('switches font on the later retries, except a wavy seed first tries its own font as stacked block', () => {
+  it('falls back to the Block alphabet, then to a font: another one, or an alphabet seed its own', () => {
     for (let s = 0; s < 50; s++) {
       const first = recipeFor(`r${s}`)
-      if (first.layout === 'wavy') expect(recipeFor(`r${s}`, 3).font).toBe(first.font)
-      else expect(recipeFor(`r${s}`, 3).font).not.toBe(first.font)
-      expect(recipeFor(`r${s}`, 4).font).not.toBe(first.font)
+      expect(recipeFor(`r${s}`, 3).alphabet).toBe('block')
+      const last = recipeFor(`r${s}`, 4)
+      expect(last.alphabet).toBeNull()
+      if (first.alphabet) expect(last.font).toBe(first.font)
+      else expect(last.font).not.toBe(first.font)
     }
   })
 
@@ -129,12 +131,25 @@ describe('recipeFor', () => {
     }
   })
 
-  it('keeps the icon and shadow across retries, so a seed keeps its character', () => {
+  it('keeps the icon across retries, and the shadow while it stays a stitch alphabet', () => {
     for (let s = 0; s < 30; s++) {
       const first = recipeFor(`c${s}`)
       for (let attempt = 1; attempt < MAX_ATTEMPTS; attempt++) {
-        expect(recipeFor(`c${s}`, attempt).icon).toBe(first.icon)
-        expect(recipeFor(`c${s}`, attempt).shadow).toBe(first.shadow)
+        const next = recipeFor(`c${s}`, attempt)
+        expect(next.icon).toBe(first.icon)
+        if (next.alphabet) expect(next.shadow).toBe(first.shadow)
+      }
+    }
+  })
+
+  it('gives display fonts room and no wave or shadow', () => {
+    for (let s = 0; s < 60; s++) {
+      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        const r = recipeFor(`g${s}`, attempt)
+        if (r.alphabet) continue
+        expect([r.layout, r.wave, r.shadow]).toEqual(['stacked-block', null, false])
+        expect(r.letterGap).toBeGreaterThanOrEqual(2)
+        expect(r.lineGap).toBeGreaterThanOrEqual(2)
       }
     }
   })
