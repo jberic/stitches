@@ -31,6 +31,7 @@ Web tool: type a phrase, get a two-colour cross-stitch pattern in a retro letter
 ## Working style
 
 - Small commits with clear messages.
+- Run `npm run format` before committing. Hand-drawn bitmaps (alphabets, icons) are excluded in `.prettierignore` so each glyph stays on one line.
 - Before a big step, show a short plan and wait for my go-ahead.
 - Write plain, direct UI copy. No jargon.
 - Tell me when something is a guess (for example, screen colours vs real thread colours).
