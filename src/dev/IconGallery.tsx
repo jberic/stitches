@@ -28,7 +28,10 @@ export function IconGallery() {
     <main className="dev">
       <header>
         <h1>Icons</h1>
-        <p>Dev only. The nature and food sets at every size they come in (7, 11, 15 stitches), stitched in the accent thread of four palettes.</p>
+        <p>
+          Dev only. The nature and food sets at every size they come in (7, 11, 15 stitches), stitched in the accent thread of
+          four palettes.
+        </p>
       </header>
       {PALETTES_SHOWN.map((id) => {
         const palette = paletteById(id)
@@ -36,7 +39,10 @@ export function IconGallery() {
         return (
           <section key={id} className="icon-sheet">
             <h2>
-              {palette.name} <span>accent thread {accent.code} {accent.name}</span>
+              {palette.name}{' '}
+              <span>
+                accent thread {accent.code} {accent.name}
+              </span>
             </h2>
             {(Object.keys(ICON_SETS) as (keyof typeof ICON_SETS)[]).map((set) => (
               <div key={set}>

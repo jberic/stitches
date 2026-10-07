@@ -47,5 +47,5 @@ export function placeIconBelow(grid: Grid, icon: Grid, gap = 1): Grid {
 /** The largest icon size that is no wider than `share` of the pattern. */
 export function iconSizeFor<S extends number>(available: S[], width: number, share = 0.34): S | null {
   const fitting = available.filter((size) => size <= width * share)
-  return fitting.length ? Math.max(...fitting) as S : null
+  return fitting.length ? (Math.max(...fitting) as S) : null
 }

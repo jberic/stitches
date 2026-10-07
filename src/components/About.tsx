@@ -38,8 +38,8 @@ export function About({ open, onClose }: Props) {
           Type a phrase and get a two-colour cross-stitch pattern. Generate again for the same words in a new style.
         </p>
         <p>
-          Everything runs in your browser. Download saves the chart and thread key as an image. Share a pattern by copying
-          the link.
+          Everything runs in your browser. Download saves the chart and thread key as an image. Share a pattern by copying the
+          link.
         </p>
         <dl className="about-credits">
           <div>
@@ -57,8 +57,8 @@ export function About({ open, onClose }: Props) {
           <div>
             <dt>Fonts</dt>
             <dd>
-              Fraunces, IBM Plex Sans and Mono, Chango, Shrikhand, Bagel Fat One and Rubik Mono One, all under the SIL Open
-              Font License
+              Fraunces, IBM Plex Sans and Mono, Chango, Shrikhand, Bagel Fat One and Rubik Mono One, all under the SIL Open Font
+              License
             </dd>
           </div>
         </dl>

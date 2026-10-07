@@ -184,4 +184,3 @@ function Stat({ label, value, ok }: { label: string; value: string; ok?: boolean
     </div>
   )
 }
-

@@ -9,7 +9,12 @@ function grid(rows: string[]): Grid {
   return {
     width: rows[0].length,
     height: rows.length,
-    cells: new Uint8Array(rows.join('').split('').map((c) => (c === '#' ? 1 : 0))),
+    cells: new Uint8Array(
+      rows
+        .join('')
+        .split('')
+        .map((c) => (c === '#' ? 1 : 0)),
+    ),
   }
 }
 

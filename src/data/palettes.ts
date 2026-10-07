@@ -33,16 +33,36 @@ export const FABRIC = { name: 'Cream', hex: '#FBF3EC' }
 export const PALETTES: Palette[] = [
   { id: '01', name: 'Garnet and mustard', lettering: { name: 'Garnet', code: '814' }, accent: { name: 'Mustard', code: '729' } },
   { id: '02', name: 'Garnet and olive', lettering: { name: 'Garnet', code: '814' }, accent: { name: 'Olive', code: '470' } },
-  { id: '03', name: 'Garnet and raspberry', lettering: { name: 'Garnet', code: '814' }, accent: { name: 'Raspberry', code: '3721' } },
+  {
+    id: '03',
+    name: 'Garnet and raspberry',
+    lettering: { name: 'Garnet', code: '814' },
+    accent: { name: 'Raspberry', code: '3721' },
+  },
   { id: '04', name: 'Pine and blush', lettering: { name: 'Pine', code: '890' }, accent: { name: 'Blush', code: '21' } },
   { id: '05', name: 'Garnet and mocha', lettering: { name: 'Garnet', code: '815' }, accent: { name: 'Mocha', code: '3023' } },
   { id: '06', name: 'Plum and sage', lettering: { name: 'Plum', code: '35' }, accent: { name: 'Sage', code: '523' } },
   { id: '07', name: 'Navy and mustard', lettering: { name: 'Navy', code: '939' }, accent: { name: 'Mustard', code: '729' } },
   { id: '08', name: 'Deep teal and blush', lettering: { name: 'Deep teal', code: '311' }, accent: { name: 'Blush', code: '21' } },
-  { id: '09', name: 'Terracotta and straw', lettering: { name: 'Terracotta', code: '355' }, accent: { name: 'Straw', code: '833' } },
-  { id: '10', name: 'Pine and dusty rose', lettering: { name: 'Pine', code: '500' }, accent: { name: 'Dusty rose', code: '223' } },
+  {
+    id: '09',
+    name: 'Terracotta and straw',
+    lettering: { name: 'Terracotta', code: '355' },
+    accent: { name: 'Straw', code: '833' },
+  },
+  {
+    id: '10',
+    name: 'Pine and dusty rose',
+    lettering: { name: 'Pine', code: '500' },
+    accent: { name: 'Dusty rose', code: '223' },
+  },
   { id: '11', name: 'Charcoal and straw', lettering: { name: 'Charcoal', code: '310' }, accent: { name: 'Straw', code: '833' } },
-  { id: '12', name: 'Garnet and antique blue', lettering: { name: 'Garnet', code: '814' }, accent: { name: 'Antique blue', code: '809' } },
+  {
+    id: '12',
+    name: 'Garnet and antique blue',
+    lettering: { name: 'Garnet', code: '814' },
+    accent: { name: 'Antique blue', code: '809' },
+  },
 ]
 
 export const DEFAULT_PALETTE_ID = '01'

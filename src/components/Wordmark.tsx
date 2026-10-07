@@ -10,7 +10,6 @@ const LINES = ['Say it with stitches']
 const STITCHES_WIDE = 120
 const SEW_MS = 1100
 
-
 interface Props {
   /** Sew the stitches in over about a second instead of showing them at once. */
   sew: boolean

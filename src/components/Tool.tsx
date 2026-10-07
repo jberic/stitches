@@ -243,9 +243,7 @@ export function Tool({ inputRef }: Props) {
               </span>
             </figcaption>
           )}
-          {legend && (
-            <Legend legend={legend} highlight={highlight} pinned={pinned} onPreview={setPreview} onPin={setPinned} />
-          )}
+          {legend && <Legend legend={legend} highlight={highlight} pinned={pinned} onPreview={setPreview} onPin={setPinned} />}
         </figure>
         <HistoryStrip entries={history} currentKey={shownKey} onSelect={restore} />
       </section>

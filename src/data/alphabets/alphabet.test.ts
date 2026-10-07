@@ -35,7 +35,10 @@ describe.each(cases)('%s %s', (_name, sizeId, alphabet) => {
   it('drops descenders below the baseline and nothing else', () => {
     const descending = new Set(['g', 'j', 'p', 'q', 'y', ','])
     for (const char of 'abcdefghijklmnopqrstuvwxyz,') {
-      const below = size.glyphs.get(char)!.rows.slice(size.capRows).some((row) => row.includes('#'))
+      const below = size.glyphs
+        .get(char)!
+        .rows.slice(size.capRows)
+        .some((row) => row.includes('#'))
       expect([char, below]).toEqual([char, descending.has(char)])
     }
   })

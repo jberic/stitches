@@ -1,9 +1,7 @@
 export const MAX_WORDS = 4
 export const MAX_CHARS = 30
 
-export type PhraseResult =
-  | { ok: true; lines: string[] }
-  | { ok: false; reason: 'empty' | 'too-many-words' | 'too-long' }
+export type PhraseResult = { ok: true; lines: string[] } | { ok: false; reason: 'empty' | 'too-many-words' | 'too-long' }
 
 /** Words become lines. Whitespace of any kind separates words. */
 export function parsePhrase(input: string): PhraseResult {

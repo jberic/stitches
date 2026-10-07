@@ -37,8 +37,7 @@ export function removeStrays(grid: Grid): Uint8Array {
     for (let x = 0; x < grid.width; x++) {
       if (!at(grid, x, y)) continue
       let neighbours = 0
-      for (let dy = -1; dy <= 1; dy++)
-        for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && at(grid, x + dx, y + dy)) neighbours++
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && at(grid, x + dx, y + dy)) neighbours++
       if (neighbours === 0) out[y * grid.width + x] = 0
     }
   }

@@ -15,15 +15,15 @@ npm run dev
 
 All fonts are under the [SIL Open Font License 1.1](https://openfontlicense.org), self-hosted from `public/fonts/`, with each font's `OFL.txt` next to it. Files come from the [Google Fonts repository](https://github.com/google/fonts). Bagel Fat One is cut down to Latin characters (1.5 MB to 51 KB) with `scripts/subset-fonts.sh`; the others are unmodified. Fonts with a Reserved Font Name (Chango, IBM Plex) must stay unmodified under the OFL.
 
-| Font | Use | Copyright |
-|---|---|---|
-| Chango | Pattern lettering | © 2011 Fontstage. Reserved Font Name "Chango" |
-| Shrikhand | Pattern lettering | © 2015 Jonny Pinhorn |
-| Bagel Fat One | Pattern lettering | © 2022 The Bagel Fat Project Authors |
-| Rubik Mono One | Pattern lettering (capitals only) | © 2015 The Rubik Project Authors |
-| Fraunces | Headings | © 2018 The Fraunces Project Authors |
-| IBM Plex Sans | Interface | © 2017 IBM Corp. Reserved Font Name "Plex" |
-| IBM Plex Mono | Codes and counts | © 2017 IBM Corp. Reserved Font Name "Plex" |
+| Font           | Use                               | Copyright                                     |
+| -------------- | --------------------------------- | --------------------------------------------- |
+| Chango         | Pattern lettering                 | © 2011 Fontstage. Reserved Font Name "Chango" |
+| Shrikhand      | Pattern lettering                 | © 2015 Jonny Pinhorn                          |
+| Bagel Fat One  | Pattern lettering                 | © 2022 The Bagel Fat Project Authors          |
+| Rubik Mono One | Pattern lettering (capitals only) | © 2015 The Rubik Project Authors              |
+| Fraunces       | Headings                          | © 2018 The Fraunces Project Authors           |
+| IBM Plex Sans  | Interface                         | © 2017 IBM Corp. Reserved Font Name "Plex"    |
+| IBM Plex Mono  | Codes and counts                  | © 2017 IBM Corp. Reserved Font Name "Plex"    |
 
 ## Stitch palettes
 

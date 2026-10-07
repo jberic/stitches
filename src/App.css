@@ -123,7 +123,10 @@ main {
   font-family: var(--font-heading);
   font-size: clamp(1.75rem, 4.2vw, 3.25rem);
   font-weight: 500;
-  font-variation-settings: 'opsz' 96, 'SOFT' 100, 'WONK' 0;
+  font-variation-settings:
+    'opsz' 96,
+    'SOFT' 100,
+    'WONK' 0;
   line-height: 1.1;
   letter-spacing: -0.015em;
   text-align: center;

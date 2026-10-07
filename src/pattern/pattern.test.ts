@@ -43,8 +43,7 @@ function maskFrom(rows: string[], scale: number): Mask {
   rows.forEach((row, y) =>
     [...row].forEach((ch, x) => {
       if (ch !== '#') return
-      for (let dy = 0; dy < scale; dy++)
-        for (let dx = 0; dx < scale; dx++) data[(y * scale + dy) * width + x * scale + dx] = 255
+      for (let dy = 0; dy < scale; dy++) for (let dx = 0; dx < scale; dx++) data[(y * scale + dy) * width + x * scale + dx] = 255
     }),
   )
   return { width, height, data }

@@ -154,11 +154,7 @@ function decorate(lettering: Grid, recipe: Recipe): Grid {
 export async function renderRecipe(lines: string[], width: number, recipe: Recipe, seed = ''): Promise<Rendered> {
   await loadDisplayFont(recipe.font)
   const cased = lines.map((line) =>
-    recipe.letterCase === 'upper'
-      ? line.toLocaleUpperCase()
-      : recipe.letterCase === 'lower'
-        ? line.toLocaleLowerCase()
-        : line,
+    recipe.letterCase === 'upper' ? line.toLocaleUpperCase() : recipe.letterCase === 'lower' ? line.toLocaleLowerCase() : line,
   )
   const { mask, letters, unsupported } = drawLettering(cased, width, recipe)
   if (unsupported) return unsupportedResult(lines, cased, width, recipe, seed, unsupported)
@@ -186,7 +182,12 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
 function unsupportedResult(lines: string[], cased: string[], width: number, recipe: Recipe, seed: string, why: string): Rendered {
   const cells = new Uint8Array(width)
   return {
-    pattern: { width, height: 1, cells, meta: { text: lines.join(' '), lines: cased, layout: recipe.layout, font: recipe.font, seed, recipe } },
+    pattern: {
+      width,
+      height: 1,
+      cells,
+      meta: { text: lines.join(' '), lines: cased, layout: recipe.layout, font: recipe.font, seed, recipe },
+    },
     raw: { width, height: 1, cells },
     check: {
       ok: false,

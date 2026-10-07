@@ -53,11 +53,7 @@ function buildSize(source: AlphabetSizeSource): AlphabetSize {
   return { capRows: source.capRows, descRows: source.descRows, stroke: source.stroke, space: source.space, glyphs }
 }
 
-export function defineAlphabet(source: {
-  name: string
-  regular: AlphabetSizeSource
-  small: AlphabetSizeSource
-}): StitchAlphabet {
+export function defineAlphabet(source: { name: string; regular: AlphabetSizeSource; small: AlphabetSizeSource }): StitchAlphabet {
   return { name: source.name, sizes: { regular: buildSize(source.regular), small: buildSize(source.small) } }
 }
 

@@ -48,8 +48,7 @@ export async function renderPatternSheet(sheet: PatternSheet): Promise<HTMLCanva
   const chart = chartSize(pattern, { cell: CELL, gutter: GUTTER })
   const content = Math.max(MIN_CONTENT, chart.width)
   const keyRows = legend.rows.length + 1
-  const height =
-    PAD + 44 + 30 + 36 + chart.height + 48 + 24 + keyRows * ROW + 24 + 28 + 48 + 64 + PAD
+  const height = PAD + 44 + 30 + 36 + chart.height + 48 + 24 + keyRows * ROW + 24 + 28 + 48 + 64 + PAD
 
   const canvas = document.createElement('canvas')
   canvas.width = (content + PAD * 2) * SCALE

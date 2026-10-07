@@ -102,7 +102,10 @@
   font-family: var(--font-heading);
   font-size: clamp(2rem, 3.4vw, 3rem);
   font-weight: 650;
-  font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1;
+  font-variation-settings:
+    'opsz' 144,
+    'SOFT' 100,
+    'WONK' 1;
   line-height: 1.1;
   letter-spacing: -0.02em;
   transition: border-color 160ms ease;

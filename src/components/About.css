@@ -44,7 +44,9 @@
   font-family: var(--font-heading);
   font-size: 1.75rem;
   font-weight: 500;
-  font-variation-settings: 'opsz' 48, 'SOFT' 100;
+  font-variation-settings:
+    'opsz' 48,
+    'SOFT' 100;
 }
 
 .about p {

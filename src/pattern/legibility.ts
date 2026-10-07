@@ -104,7 +104,10 @@ export function checkLegibility(
   const brokenLetters = letters.filter(
     (box) =>
       countShapes(crop(grid, box, 1), 1) >
-      countShapes(crop(sub, { x: box.x * ratio, y: box.y * ratio, width: box.width * ratio, height: box.height * ratio }, 1), MIN_SHAPE_SUBCELLS),
+      countShapes(
+        crop(sub, { x: box.x * ratio, y: box.y * ratio, width: box.width * ratio, height: box.height * ratio }, 1),
+        MIN_SHAPE_SUBCELLS,
+      ),
   ).length
 
   const reasons: string[] = []
@@ -171,7 +174,8 @@ function crop(grid: Grid, box: LetterBox, scale: number): Grid {
   const width = Math.max(0, x1 - x0)
   const height = Math.max(0, y1 - y0)
   const cells = new Uint8Array(width * height)
-  for (let y = 0; y < height; y++) cells.set(grid.cells.subarray((y0 + y) * grid.width + x0, (y0 + y) * grid.width + x0 + width), y * width)
+  for (let y = 0; y < height; y++)
+    cells.set(grid.cells.subarray((y0 + y) * grid.width + x0, (y0 + y) * grid.width + x0 + width), y * width)
   return { width, height, cells }
 }
 

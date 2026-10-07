@@ -65,9 +65,7 @@ export function drawGlyph(char: string, font: DisplayFont): Glyph | null {
 }
 
 export function measureWord(word: string, font: DisplayFont): Word | null {
-  const glyphs = [...word]
-    .map((char) => (/\s/u.test(char) ? SPACE : drawGlyph(char, font)))
-    .filter((g): g is Glyph => g !== null)
+  const glyphs = [...word].map((char) => (/\s/u.test(char) ? SPACE : drawGlyph(char, font))).filter((g): g is Glyph => g !== null)
   const inked = glyphs.filter((g) => g.source)
   if (inked.length === 0) return null
   const top = Math.min(...inked.map((g) => g.box.y))
@@ -99,16 +97,7 @@ export function apportion(total: number, weights: number[]): number[] {
  * its width, with clear columns between, so letters never run together.
  */
 export function renderStackedBlock(lines: string[], options: StackedBlockOptions): StackedBlockResult {
-  const {
-    width,
-    scale,
-    font,
-    lineGap = 1,
-    letterGap = 1,
-    letterAspect = 1.5,
-    minLineRows = 11,
-    maxLineRatio = 0.4,
-  } = options
+  const { width, scale, font, lineGap = 1, letterGap = 1, letterAspect = 1.5, minLineRows = 11, maxLineRatio = 0.4 } = options
   const words = lines.map((line) => measureWord(line, font)).filter((w): w is Word => w !== null)
   const maxRows = Math.max(minLineRows, Math.round(width * maxLineRatio))
   // Lines are sized by cap height, so accents add rows above instead of

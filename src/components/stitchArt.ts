@@ -18,12 +18,7 @@ export interface StitchDrawer {
  * as a loose left-to-right sweep with a little per-stitch irregularity, so
  * drawing them over time looks hand-sewn rather than scanned.
  */
-export function prepareStitches(
-  canvas: HTMLCanvasElement,
-  pattern: Pattern,
-  cell: number,
-  colours: StitchColours,
-): StitchDrawer {
+export function prepareStitches(canvas: HTMLCanvasElement, pattern: Pattern, cell: number, colours: StitchColours): StitchDrawer {
   const dpr = window.devicePixelRatio || 1
   const w = pattern.width * cell
   const h = pattern.height * cell

@@ -80,8 +80,7 @@ export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions):
     const enlarge = Math.max(1, Math.min(maxScale, Math.floor(width / widest)))
     const padRows = wave ? Math.ceil(wave.amplitude) : 0
     // Row offset for a glyph whose centre is at column cx.
-    const lift = (cx: number) =>
-      wave ? Math.round(wave.amplitude * Math.sin((2 * Math.PI * cx) / wave.length + wave.phase)) : 0
+    const lift = (cx: number) => (wave ? Math.round(wave.amplitude * Math.sin((2 * Math.PI * cx) / wave.length + wave.phase)) : 0)
     const textRows = set.reduce((sum, l) => sum + l.rows.length, 0) * enlarge + lineGap * enlarge * (set.length - 1)
     const rows = textRows + padRows * 2
     const mask: Mask = { width: width * scale, height: rows * scale, data: new Uint8Array(width * scale * rows * scale) }

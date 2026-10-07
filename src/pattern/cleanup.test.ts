@@ -3,7 +3,12 @@ import { fillPinholes, removeStrays, thickenStrokes, type Grid } from './cleanup
 
 function grid(rows: string[]): Grid {
   const width = rows[0].length
-  const cells = new Uint8Array(rows.join('').split('').map((c) => (c === '#' ? 1 : 0)))
+  const cells = new Uint8Array(
+    rows
+      .join('')
+      .split('')
+      .map((c) => (c === '#' ? 1 : 0)),
+  )
   return { width, height: rows.length, cells }
 }
 
@@ -15,7 +20,12 @@ function show(g: Grid, cells: Uint8Array): string[] {
 
 function cover(rows: string[]): Float32Array {
   // Digits are tenths of coverage; '.' is 0.
-  return new Float32Array(rows.join('').split('').map((c) => (c === '.' ? 0 : Number(c) / 10)))
+  return new Float32Array(
+    rows
+      .join('')
+      .split('')
+      .map((c) => (c === '.' ? 0 : Number(c) / 10)),
+  )
 }
 
 describe('removeStrays', () => {
