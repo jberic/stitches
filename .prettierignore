@@ -2,7 +2,9 @@ dist
 public/fonts
 src/data/threads.json
 # Hand-drawn stitch bitmaps: one glyph or icon per line reads like the grid.
-src/data/alphabets/block.ts
-src/data/alphabets/serif.ts
+src/data/alphabets/*.ts
+!src/data/alphabets/alphabet.ts
+!src/data/alphabets/alphabet.test.ts
+!src/data/alphabets/index.ts
 src/data/icons.ts
 package-lock.json
