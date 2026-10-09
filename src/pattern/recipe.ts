@@ -1,5 +1,5 @@
 import { ALPHABETS, type AlphabetId } from '../data/alphabets'
-import { ICON_PLURALS, ICON_SETS, iconPhrase, iconSizes, type IconName } from '../data/icons'
+import { ICON_PLURALS, ICON_SETS, iconPhrase, type IconName } from '../data/icons'
 import { CAPITALS_ONLY, PATTERN_FONTS, SCRIPT_FONTS, type DisplayFont } from '../fonts'
 import { between, newSeed, pick, randomFor } from './random'
 import type { Effect } from './compose'
@@ -155,11 +155,11 @@ function effectFor(effect: Effect, alphabet: AlphabetId | null): Effect {
   return (ALPHABETS[alphabet].effects as Effect[]).includes(effect) ? effect : 'none'
 }
 
-/** Sampler letters often sit over a row of small motifs, when the icon is drawn small. */
+/** Sampler letters often sit over a row of small motifs, for the icons allowed in a row. */
 const ROW_SHARE = 0.6
 
 function iconRowFor(seed: string, alphabet: AlphabetId | null, icon: IconName | null): boolean {
-  if (alphabet !== 'sampler' || !icon || !iconSizes(icon).includes(7)) return false
+  if (alphabet !== 'sampler' || !icon || !(icon in ICON_PLURALS)) return false
   return randomFor('icon-row', seed)() < ROW_SHARE
 }
 

@@ -98,7 +98,10 @@ describe('recipeFor', () => {
         expect([m.letterCase, m.capitalsFrom, describeRecipe(m).includes('set in capitals')]).toEqual(['upper', 'mixed', true])
       } else expect(m.capitalsFrom).toBeNull()
       const r = recipeFor(`a${s}`, 0, undefined, { motif: 'any', letterCase: 'upper' })
-      if (r.iconRow) expect([r.alphabet, iconSizes(r.icon!).includes(7)]).toEqual(['sampler', true])
+      if (r.iconRow) {
+        expect([r.alphabet, iconSizes(r.icon!).includes(7)]).toEqual(['sampler', true])
+        expect(['leaf', 'cherry']).not.toContain(r.icon)
+      }
     }
     expect(slabs).toBeGreaterThan(10)
   })
@@ -133,8 +136,8 @@ describe('recipeFor', () => {
     expect(describeRecipe({ ...plain, layout: 'wavy', font: 'Shrikhand', icon: 'lemon', effect: 'shadow' })).toBe(
       'Wavy · Shrikhand · with a shadow and a lemon slice',
     )
-    expect(describeRecipe({ ...plain, alphabet: 'sampler', letterGap: 1, icon: 'leaf', iconRow: true })).toBe(
-      'Stacked block · Sampler stitch letters · with a row of leaves',
+    expect(describeRecipe({ ...plain, alphabet: 'sampler', letterGap: 1, icon: 'mushroom', iconRow: true })).toBe(
+      'Stacked block · Sampler stitch letters · with a row of mushrooms',
     )
   })
 
