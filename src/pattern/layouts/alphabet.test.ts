@@ -42,18 +42,6 @@ describe('renderAlphabet', () => {
   })
 })
 
-describe('renderAlphabet on a wave', () => {
-  it('steps whole letters up and down without changing them', () => {
-    const flat = renderAlphabet(['WAVY'], options)
-    const wavy = renderAlphabet(['WAVY'], { ...options, wave: { amplitude: 2, length: 20, phase: 0 } })
-    if (!flat.ok || !wavy.ok) throw new Error('expected layouts')
-    expect(wavy.rows).toBe(flat.rows + 4)
-    const count = (r: typeof flat) => stitchesFrom(coverage(r.mask, options.scale)).reduce((a, b) => a + b, 0)
-    expect(count(wavy)).toBe(count(flat))
-    expect(new Set(wavy.letters.map((l) => l.y)).size).toBeGreaterThan(1)
-  })
-})
-
 describe('renderAlphabet ornaments', () => {
   it('returns ornament stitches separately, outside the mask', () => {
     const ornamented = {

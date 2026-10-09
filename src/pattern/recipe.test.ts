@@ -76,8 +76,7 @@ describe('recipeFor', () => {
         expect(r.letterAspect).toBeGreaterThanOrEqual(1.25)
         expect(r.letterAspect).toBeLessThanOrEqual(1.9)
         expect([1, 2]).toContain(r.letterGap)
-        expect([1, 2, 3]).toContain(r.lineGap)
-        expect(r.wave !== null).toBe(r.layout === 'wavy')
+        expect([1, 2]).toContain(r.lineGap)
         expect(r.threshold).toBeGreaterThanOrEqual(0.38)
         expect(r.threshold).toBeLessThanOrEqual(0.66)
       }
@@ -130,22 +129,14 @@ describe('recipeFor', () => {
   })
 
   it('names the style in plain words', () => {
-    const plain = { ...recipeFor('x'), layout: 'stacked-block', wave: null, icon: null, effect: 'none', alphabet: null } as const
-    expect(describeRecipe({ ...plain, font: 'Chango', letterAspect: 1.8, letterGap: 1 })).toBe(
-      'Stacked block · Chango · tall letters',
-    )
-    expect(describeRecipe({ ...plain, layout: 'wavy', font: 'Shrikhand', icon: 'lemon', effect: 'shadow' })).toBe(
-      'Wavy · Shrikhand · with a shadow and a lemon slice',
-    )
+    const plain = { ...recipeFor('x'), icon: null, effect: 'none', alphabet: null } as const
+    expect(describeRecipe({ ...plain, font: 'Chango', letterAspect: 1.8, letterGap: 1 })).toBe('Chango · tall letters')
+    expect(
+      describeRecipe({ ...plain, font: 'Shrikhand', icon: 'lemon', effect: 'shadow', letterAspect: 1.5, letterGap: 1 }),
+    ).toBe('Shrikhand · with a shadow and a lemon slice')
     expect(describeRecipe({ ...plain, alphabet: 'sampler', letterGap: 1, icon: 'mushroom', iconRow: true })).toBe(
-      'Stacked block · Sampler stitch letters · with a row of mushrooms',
+      'Sampler stitch letters · with a row of mushrooms',
     )
-  })
-
-  it('uses both layouts, and gives every wavy recipe a warp', () => {
-    const recipes = Array.from({ length: 60 }, (_, i) => recipeFor(`l${i}`))
-    expect(new Set(recipes.map((r) => r.layout))).toEqual(new Set(['stacked-block', 'wavy']))
-    for (const r of recipes) expect(r.wave !== null).toBe(r.layout === 'wavy')
   })
 
   it('follows the motif choice', () => {
@@ -193,30 +184,16 @@ describe('recipeFor', () => {
     }
   })
 
-  it('gives display fonts room and no wave or effect', () => {
+  it('gives display fonts room and no effect', () => {
     for (let s = 0; s < 60; s++) {
       for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
         const r = recipeFor(`g${s}`, attempt)
         if (r.alphabet) continue
-        expect([r.layout, r.wave, r.effect]).toEqual(['stacked-block', null, 'none'])
+        expect(r.effect).toBe('none')
         expect(r.letterGap).toBeGreaterThanOrEqual(2)
         expect(r.lineGap).toBeGreaterThanOrEqual(2)
       }
     }
-  })
-
-  it('falls back to stacked block for the last two attempts', () => {
-    for (let s = 0; s < 30; s++) {
-      expect(recipeFor(`f${s}`, 3).layout).toBe('stacked-block')
-      expect(recipeFor(`f${s}`, 4).layout).toBe('stacked-block')
-    }
-  })
-
-  it('calms the warp after a too-heavy wavy attempt', () => {
-    const wavy = Array.from({ length: 60 }, (_, i) => `w${i}`).find((seed) => recipeFor(seed).layout === 'wavy')!
-    const first = recipeFor(wavy)
-    const next = recipeFor(wavy, 1, { recipe: first, check: result(true, false) })
-    expect(next.wave!.ay).toBeLessThan(first.wave!.ay)
   })
 })
 

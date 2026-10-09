@@ -95,15 +95,12 @@ interface Lettering {
 /** Draws the lettering for a recipe as a high-resolution mask, with each letter's box. */
 function drawLettering(upper: string[], width: number, recipe: Recipe): Lettering {
   if (recipe.alphabet) {
-    const wave = recipe.layout === 'wavy' ? recipe.wave : null
     const result = renderAlphabet(upper, {
       width,
       scale: SCALE,
       alphabet: ALPHABETS[recipe.alphabet],
       letterGap: recipe.letterGap,
-      lineGap: recipe.lineGap + 1 + (wave ? 1 : 0),
-      // Gentle steps: at most two rows up or down, over roughly a word.
-      wave: wave ? { amplitude: Math.min(2, wave.ay), length: Math.max(24, wave.wx), phase: wave.py } : undefined,
+      lineGap: recipe.lineGap + 1,
     })
     if (!result.ok) {
       const empty: Mask = { width: width * SCALE, height: SCALE, data: new Uint8Array(width * SCALE * SCALE) }
@@ -145,12 +142,12 @@ function padSides(mask: Mask, pad: number): Mask {
 function decorate(lettering: Grid, recipe: Recipe): Grid {
   let grid = addEffect(lettering, recipe.effect)
   if (recipe.icon) {
-    const gap = recipe.layout === 'wavy' ? 2 : 1
+    const gap = 1
     // A row of small motifs, where this icon is drawn small; otherwise one icon.
     const row = recipe.iconRow && iconSizes(recipe.icon).includes(7) && placeIconRow(grid, iconCells(recipe.icon, 7), gap + 1)
     if (row) return row
     const size = iconSizeFor(iconSizes(recipe.icon), grid.width)
-    if (size) grid = placeIconBelow(grid, iconCells(recipe.icon, size), recipe.layout === 'wavy' ? 2 : 1)
+    if (size) grid = placeIconBelow(grid, iconCells(recipe.icon, size), gap)
   }
   return grid
 }
@@ -182,7 +179,7 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
   // Stitch alphabets are drawn exactly on the grid, so tidy-up would only do
   // harm (it took the one-stitch dot off a small i). Font edges get evened out.
   const tidy = recipe.alphabet ? raw : smoothEdges(cleanup(raw, cover), cover)
-  const legible = checkLegibility(mask, SCALE, tidy, cover, letters, recipe.layout === 'wavy')
+  const legible = checkLegibility(mask, SCALE, tidy, cover, letters)
   const check = checkScriptSize(legible, letters, recipe)
   // Ornaments join after the check: they decorate the letters, they don't make them readable.
   const withOrnaments = tidy.cells.slice()
@@ -198,7 +195,7 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
       width,
       height,
       cells,
-      meta: { text: lines.join(' '), lines: cased, layout: recipe.layout, font: recipe.font, seed, recipe: stitched },
+      meta: { text: lines.join(' '), lines: cased, font: recipe.font, seed, recipe: stitched },
     },
     raw,
     check,
@@ -213,7 +210,7 @@ function unsupportedResult(lines: string[], cased: string[], width: number, reci
       width,
       height: 1,
       cells,
-      meta: { text: lines.join(' '), lines: cased, layout: recipe.layout, font: recipe.font, seed, recipe },
+      meta: { text: lines.join(' '), lines: cased, font: recipe.font, seed, recipe },
     },
     raw: { width, height: 1, cells },
     check: {

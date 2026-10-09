@@ -78,8 +78,6 @@ export function StyleGallery() {
           const base = recipeFor('styles', 0, undefined, { motif: 'none', letterCase: 'mixed' })
           const recipe: Recipe = {
             ...base,
-            layout: 'stacked-block',
-            wave: null,
             alphabet: null,
             effect: 'none',
             icon: null,

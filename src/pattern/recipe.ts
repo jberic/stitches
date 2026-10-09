@@ -4,11 +4,9 @@ import { CAPITALS_ONLY, PATTERN_FONTS, SCRIPT_FONTS, type DisplayFont } from '..
 import { between, newSeed, pick, randomFor } from './random'
 import type { Effect } from './compose'
 import type { LegibilityCheck } from './legibility'
-import type { LayoutId } from './types'
 
 /** Everything that decides how a phrase looks. Derived from the seed, never stored. */
 export interface Recipe {
-  layout: LayoutId
   font: DisplayFont
   /** Letter height as a multiple of letter width. */
   letterAspect: number
@@ -18,8 +16,6 @@ export interface Recipe {
   lineGap: number
   /** Share of a cell that must be ink for it to become a stitch. */
   threshold: number
-  /** Wavy only: the warp, in stitches. */
-  wave: StitchWave | null
   /** A motif in the accent thread, or none. */
   icon: IconName | null
   /** Show the icon small and repeated in a row, instead of once. Only icons drawn at 7 stitches. */
@@ -68,16 +64,6 @@ export function resolveChoices(lines: string[], choices: Choices): ResolvedChoic
   return { motif: choices.motif, letterCase: textCase(lines, choices.letterCase), caseForced: choices.letterCase !== 'typed' }
 }
 
-/** A warp in stitch units (see pattern/warp.ts for what each part does). */
-export interface StitchWave {
-  ax: number
-  wy: number
-  ay: number
-  wx: number
-  px: number
-  py: number
-}
-
 export const MAX_ATTEMPTS = 5
 
 /** What a retry knows about the attempt before it. */
@@ -114,8 +100,6 @@ const RESCUE_THRESHOLDS: Record<DisplayFont, number> = {
 
 const THRESHOLD_STEP = 0.07
 const THRESHOLD_LIMITS: [number, number] = [0.38, 0.66]
-/** How much a too-heavy wavy attempt calms the warp. */
-const WAVE_CALM = 0.6
 
 const ALL_ICONS: IconName[] = [...ICON_SETS.nature, ...ICON_SETS.food]
 
@@ -186,8 +170,6 @@ function asFontStyle(recipe: Recipe): Recipe {
     ...recipe,
     ...typedCase(recipe),
     alphabet: null,
-    layout: 'stacked-block',
-    wave: null,
     effect: 'none',
     iconRow: false,
     letterGap: Math.max(FONT_LETTER_GAP, recipe.letterGap),
@@ -202,7 +184,7 @@ function fontsFor(letterCase: TextCase): readonly DisplayFont[] {
 
 /**
  * The icon for a seed, from its own random stream: changing the motif only
- * ever changes the icon, never the font, layout or effect.
+ * ever changes the icon, never the font or effect.
  */
 function iconFor(seed: string, motif: Motif): IconName | null {
   const rng = randomFor('icon', seed)
@@ -211,29 +193,9 @@ function iconFor(seed: string, motif: Motif): IconName | null {
   return pick(rng, ICON_SETS[motif] as readonly IconName[])
 }
 
-/**
- * Layout, warp, icon and effect come from their own random stream, so adding
- * them didn't change the font and letter shape of seeds made before.
- */
-function styleFor(seed: string): Pick<Recipe, 'layout' | 'wave' | 'effect'> {
-  const rng = randomFor('style', seed)
-  const layout = rng() < 0.5 ? 'stacked-block' : 'wavy'
-  // Long, gentle waves: about one bend across the pattern. Shorter ones shear
-  // two-stitch strokes into slivers, because neighbouring columns move apart.
-  const wave: StitchWave = {
-    ax: round2(between(rng, 0.3, 0.8)),
-    wy: round2(between(rng, 36, 64)),
-    ay: round2(between(rng, 0.6, 1.4)),
-    wx: round2(between(rng, 44, 80)),
-    px: round2(between(rng, 0, Math.PI * 2)),
-    py: round2(between(rng, 0, Math.PI * 2)),
-  }
-  const effect: Effect = rng() < 0.3 ? 'shadow' : 'none'
-  return { layout, wave: layout === 'wavy' ? wave : null, effect }
-}
-
-function calmer(wave: StitchWave | null): StitchWave | null {
-  return wave && { ...wave, ax: round2(wave.ax * WAVE_CALM), ay: round2(wave.ay * WAVE_CALM) }
+/** The effect comes from its own random stream, like the icon. */
+function effectDraw(seed: string): Effect {
+  return randomFor('style', seed)() < 0.3 ? 'shadow' : 'none'
 }
 
 /**
@@ -260,7 +222,7 @@ export function recipeFor(
     letterGap: rng() < 0.75 ? 1 : 2,
     lineGap: rng() < 0.7 ? 1 : 2,
     threshold: round2(between(rng, ...THRESHOLDS[font])),
-    ...styleFor(seed),
+    effect: effectDraw(seed),
     icon: iconFor(seed, choices.motif),
     iconRow: false,
     letterCase: choices.letterCase,
@@ -277,7 +239,6 @@ export function recipeFor(
   if (base.alphabet && ALPHABETS[base.alphabet].ornamented) base.icon = null
   base.effect = effectFor(base.effect, base.alphabet)
   base.iconRow = iconRowFor(seed, base.alphabet, base.icon)
-  if (base.layout === 'wavy') base.lineGap += 1
   const first = base.alphabet ? base : asFontStyle(base)
   if (attempt === 0) return first
 
@@ -303,8 +264,6 @@ export function recipeFor(
       ...typedCase(first),
       icon: seedIcon,
       alphabet: 'block',
-      layout: 'stacked-block',
-      wave: null,
       effect: effectFor(base.effect, 'block'),
       iconRow: false,
       letterGap: 1,
@@ -337,20 +296,16 @@ export function recipeFor(
     ...from,
     letterGap: tooLight ? from.letterGap : from.alphabet ? 1 : FONT_LETTER_GAP,
     threshold: round2(Math.min(THRESHOLD_LIMITS[1], Math.max(THRESHOLD_LIMITS[0], threshold))),
-    // A warp that bent letters into each other or filled them in gets calmer.
-    wave: tooLight ? from.wave : calmer(from.wave),
   }
 }
 
 /** The fixed look of the site's own wordmark. */
 export const WORDMARK_RECIPE: Recipe = {
-  layout: 'stacked-block',
   font: 'Chango',
   letterAspect: 1.5,
   letterGap: 1,
   lineGap: 1,
   threshold: 0.5,
-  wave: null,
   icon: null,
   iconRow: false,
   effect: 'none',
@@ -368,22 +323,15 @@ const EFFECT_PHRASES: Record<Effect, string | null> = {
 
 /** Plain-words name for a style, so people can say what they liked. */
 export function describeRecipe(recipe: Recipe): string {
-  const stacked = recipe.layout === 'stacked-block'
-  const shape = !stacked
-    ? null
-    : recipe.letterAspect >= 1.7
-      ? 'tall letters'
-      : recipe.letterAspect <= 1.35
-        ? 'squat letters'
-        : null
-  const spacing = stacked && recipe.letterGap > 1 ? 'airy' : null
+  const shape = recipe.letterAspect >= 1.7 ? 'tall letters' : recipe.letterAspect <= 1.35 ? 'squat letters' : null
+  const spacing = recipe.letterGap > 1 ? 'airy' : null
   const iconPart = recipe.icon && (recipe.iconRow ? `a row of ${ICON_PLURALS[recipe.icon]}` : iconPhrase(recipe.icon))
   const extras = [EFFECT_PHRASES[recipe.effect], iconPart || null].filter(Boolean)
   const withPart = extras.length ? `with ${extras.join(' and ')}` : null
   const lower = recipe.capitalsFrom ? 'set in capitals' : recipe.letterCase === 'lower' ? 'lowercase' : null
   const letters = recipe.alphabet ? `${ALPHABETS[recipe.alphabet].name} stitch letters` : recipe.font
   const fontShape = recipe.alphabet ? null : shape
-  return [stacked ? 'Stacked block' : 'Wavy', letters, lower, fontShape, spacing, withPart].filter(Boolean).join(' · ')
+  return [letters, lower, fontShape, spacing, withPart].filter(Boolean).join(' · ')
 }
 
 function round2(n: number) {
@@ -397,7 +345,7 @@ export function fontFailed(attempts: PreviousAttempt[]): boolean {
 
 /**
  * A new seed whose style visibly differs from the current one: a different
- * font or a different layout, and never the same icon twice in a row.
+ * font, alphabet or effect, and never the same icon twice in a row.
  */
 export function seedWithNewStyle(
   current: Recipe | undefined,
@@ -416,7 +364,7 @@ export function seedWithNewStyle(
       caseForced: choices.letterCase !== 'typed',
     })
     const letterform = (r: Recipe) => r.alphabet ?? r.font
-    const newLook = letterform(next) !== letterform(current) || next.layout !== current.layout || next.effect !== current.effect
+    const newLook = letterform(next) !== letterform(current) || next.effect !== current.effect
     if (avoidFonts && !next.alphabet) continue
     if (newLook && (next.icon === null || next.icon !== current.icon)) return seed
   }

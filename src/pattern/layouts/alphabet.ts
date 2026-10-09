@@ -13,11 +13,6 @@ export interface AlphabetLayoutOptions {
   lineGap: number
   /** Largest whole-number enlargement allowed when short words leave room. */
   maxScale?: number
-  /**
-   * Steps whole letters up and down along a sine wave, in stitches, the way a
-   * charted alphabet is set on a curve. Glyphs are never bent.
-   */
-  wave?: { amplitude: number; length: number; phase: number }
 }
 
 export type AlphabetLayoutResult =
@@ -73,7 +68,7 @@ function setLine(size: AlphabetSize, line: string, gap: number): SetLine | strin
  * glyphs themselves are never stretched or redrawn.
  */
 export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions): AlphabetLayoutResult {
-  const { width, scale, alphabet, letterGap, lineGap, maxScale = 3, wave } = options
+  const { width, scale, alphabet, letterGap, lineGap, maxScale = 3 } = options
 
   for (const sizeId of ['regular', 'small'] as AlphabetSizeId[]) {
     const size = alphabet.sizes[sizeId]
@@ -87,22 +82,19 @@ export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions):
     if (widest > width) continue
 
     const enlarge = Math.max(1, Math.min(maxScale, Math.floor(width / widest)))
-    const padRows = wave ? Math.ceil(wave.amplitude) : 0
-    // Row offset for a glyph whose centre is at column cx.
-    const lift = (cx: number) => (wave ? Math.round(wave.amplitude * Math.sin((2 * Math.PI * cx) / wave.length + wave.phase)) : 0)
     const textRows = set.reduce((sum, l) => sum + l.rows.length, 0) * enlarge + lineGap * enlarge * (set.length - 1)
-    const rows = textRows + padRows * 2
+    const rows = textRows
     const mask: Mask = { width: width * scale, height: rows * scale, data: new Uint8Array(width * scale * rows * scale) }
     const letters: LetterBox[] = []
     const accent = new Uint8Array(width * rows)
 
-    let top = padRows
+    let top = 0
     for (const line of set) {
       const left = Math.floor((width - line.rows[0].length * enlarge) / 2)
       for (const glyph of line.glyphs) {
         const x0 = left + glyph.x * enlarge
         const gw = glyph.width * enlarge
-        const glyphTop = top + lift(x0 + gw / 2)
+        const glyphTop = top
         line.rows.forEach((row, y) => {
           for (let x = glyph.x; x < glyph.x + glyph.width; x++) {
             if (row[x] === '+') {

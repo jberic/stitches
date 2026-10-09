@@ -53,7 +53,6 @@ async function runPhrase(phrase: string, width: number, salt: string): Promise<R
     deterministic: result.pattern.cells.join('') === again.pattern.cells.join(''),
     newFontOnGenerate:
       (next.recipe.alphabet ?? next.recipe.font) !== (result.recipe.alphabet ?? result.recipe.font) ||
-      next.recipe.layout !== result.recipe.layout ||
       next.recipe.effect !== result.recipe.effect,
   }
 }
@@ -147,7 +146,7 @@ export function DevPage() {
         <Stat label="Average attempts" value={rows.length ? (attempts / rows.length).toFixed(2) : '–'} />
         <Stat label="Same seed, same pattern" value={`${deterministic} / ${rows.length}`} ok={deterministic === rows.length} />
         <Stat
-          label="Generate again changes letters, layout or effect"
+          label="Generate again changes letters or effect"
           value={`${changedFont} / ${rows.length}`}
           ok={changedFont >= rows.length * 0.9}
         />

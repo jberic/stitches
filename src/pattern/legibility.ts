@@ -57,8 +57,6 @@ export function checkLegibility(
   grid: Grid,
   cover: Float32Array,
   letters: LetterBox[] = [],
-  /** Wavy letters are meant to touch, so merged marks don't count against them. */
-  allowMerge = false,
 ): LegibilityCheck {
   let inkTotal = 0
   let inkOnStitches = 0
@@ -96,7 +94,7 @@ export function checkLegibility(
         return enclosed[y * grid.width + x] === 1
       }),
   ).length
-  const merged = Math.min(drawingShapes - stitchedShapes, allowMerge ? 0 : Infinity)
+  const merged = drawingShapes - stitchedShapes
   const countersLost = letters.reduce((n, box) => n + (letterLostCounter(sub, ratio, grid, box) ? 1 : 0), 0)
   const letterFill = letters.map((box) => fillOf(grid, cover, box))
   const solidLetters = letterFill.filter((l) => l.fill >= SOLID_FILL && l.drawn < SOLID_DRAWN).length
