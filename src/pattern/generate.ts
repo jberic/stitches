@@ -107,7 +107,22 @@ function unsupportedLettering(width: number, why: string): Lettering {
  * The whole block is centred.
  */
 function drawInitial(lines: string[], width: number, recipe: Recipe): Lettering {
-  const initial = ALPHABETS[recipe.alphabet!].sizes.regular
+  // The large initial beside words in any Sampler size; if that's too wide, the
+  // small initial beside small words, so it still stands taller than the text.
+  const large = drawInitialAt(lines, width, recipe, 'regular', ['regular', 'small'])
+  if (!large.unsupported) return large
+  const small = drawInitialAt(lines, width, recipe, 'small', ['small'])
+  return small.unsupported ? large : small
+}
+
+function drawInitialAt(
+  lines: string[],
+  width: number,
+  recipe: Recipe,
+  initialSize: AlphabetSizeId,
+  bodySizes: AlphabetSizeId[],
+): Lettering {
+  const initial = ALPHABETS[recipe.alphabet!].sizes[initialSize]
   const char = lines[0].charAt(0).toLocaleUpperCase()
   const glyph = initial.glyphs.get(char)
   if (!glyph) return unsupportedLettering(width, `This initial has no "${char}"`)
@@ -124,6 +139,7 @@ function drawInitial(lines: string[], width: number, recipe: Recipe): Lettering 
         lineGap: recipe.lineGap + 1,
         maxScale: 1,
         align: 'left',
+        sizes: bodySizes,
       })
     : null
   if (body && !body.ok)
@@ -160,7 +176,7 @@ function drawInitial(lines: string[], width: number, recipe: Recipe): Lettering 
     }
     letters.push(...body.letters.map((box) => ({ ...box, x: box.x + bx })))
   }
-  return { mask, letters, size: 'regular', accent }
+  return { mask, letters, size: initialSize, accent }
 }
 
 function drawLettering(upper: string[], width: number, recipe: Recipe): Lettering {

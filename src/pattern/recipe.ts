@@ -132,6 +132,9 @@ const IN_MIX: AlphabetId[] = [
   'gothic',
   'deco',
   'swash',
+  'tuscan',
+  'folk',
+  'botanical',
 ]
 
 /** Alphabets with a small size that fit most phrases: the first stand-ins when another can't draw one. */

@@ -15,6 +15,8 @@ export interface AlphabetLayoutOptions {
   maxScale?: number
   /** Centre each line (the default), or start every line at the left edge. */
   align?: 'center' | 'left'
+  /** Sizes to try, largest first. Defaults to regular, then small. */
+  sizes?: AlphabetSizeId[]
 }
 
 export type AlphabetLayoutResult =
@@ -72,10 +74,10 @@ function setLine(size: AlphabetSize, line: string, gap: number): SetLine | strin
  * glyphs themselves are never stretched or redrawn.
  */
 export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions): AlphabetLayoutResult {
-  const { width, scale, alphabet, lineGap, maxScale = 3, align = 'center' } = options
+  const { width, scale, alphabet, lineGap, maxScale = 3, align = 'center', sizes = ['regular', 'small'] } = options
   const letterGap = Math.max(options.letterGap, alphabet.minLetterGap ?? 0)
 
-  for (const sizeId of ['regular', 'small'] as AlphabetSizeId[]) {
+  for (const sizeId of sizes) {
     const size = alphabet.sizes[sizeId]
     const set: SetLine[] = []
     for (const line of lines) {
