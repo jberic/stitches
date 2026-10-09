@@ -11,7 +11,12 @@ describe.each(cases)('%s %s', (_name, sizeId, alphabet) => {
   const height = size.capRows + size.descRows
 
   // A capitals-only alphabet draws everything but the lowercase.
-  const required = alphabet.lowercase ? REQUIRED_CHARACTERS : REQUIRED_CHARACTERS.filter((c) => !/[a-z]/.test(c))
+  // A capitals-only alphabet draws everything but the lowercase; an initial alphabet only A–Z.
+  const required = alphabet.initial
+    ? [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
+    : alphabet.lowercase
+      ? REQUIRED_CHARACTERS
+      : REQUIRED_CHARACTERS.filter((c) => !/[a-z]/.test(c))
 
   it('draws every required character', () => {
     const missing = required.filter((c) => !size.glyphs.has(c))
@@ -37,7 +42,7 @@ describe.each(cases)('%s %s', (_name, sizeId, alphabet) => {
 
   it('drops descenders below the baseline and nothing else', () => {
     const descending = new Set(['g', 'j', 'p', 'q', 'y', ','])
-    for (const char of alphabet.lowercase ? 'abcdefghijklmnopqrstuvwxyz,' : ',') {
+    for (const char of alphabet.initial ? '' : alphabet.lowercase ? 'abcdefghijklmnopqrstuvwxyz,' : ',') {
       const below = size.glyphs
         .get(char)!
         .rows.slice(size.capRows)

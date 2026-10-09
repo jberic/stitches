@@ -329,7 +329,12 @@ export function describeRecipe(recipe: Recipe): string {
   const extras = [EFFECT_PHRASES[recipe.effect], iconPart || null].filter(Boolean)
   const withPart = extras.length ? `with ${extras.join(' and ')}` : null
   const lower = recipe.capitalsFrom ? 'set in capitals' : recipe.letterCase === 'lower' ? 'lowercase' : null
-  const letters = recipe.alphabet ? `${ALPHABETS[recipe.alphabet].name} stitch letters` : recipe.font
+  const chosen = recipe.alphabet && ALPHABETS[recipe.alphabet]
+  const letters = chosen
+    ? chosen.initial
+      ? `${chosen.name} initial with Sampler letters`
+      : `${chosen.name} stitch letters`
+    : recipe.font
   const fontShape = recipe.alphabet ? null : shape
   return [letters, lower, fontShape, spacing, withPart].filter(Boolean).join(' · ')
 }

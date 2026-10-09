@@ -36,6 +36,9 @@ const STYLES: { label: string; recipe: Partial<Recipe> }[] = [
   { label: 'Gothic', recipe: { alphabet: 'gothic' } },
   { label: 'Art Deco', recipe: { alphabet: 'deco' } },
   { label: 'Swash', recipe: { alphabet: 'swash' } },
+  { label: 'Tuscan initial', recipe: { alphabet: 'tuscan' } },
+  { label: 'Folk initial', recipe: { alphabet: 'folk' } },
+  { label: 'Botanical initial', recipe: { alphabet: 'botanical' } },
   { label: 'Bagel Fat One · outline', recipe: { font: 'Bagel Fat One', threshold: 0.47, effect: 'outline' } },
   { label: 'Shrikhand · outline', recipe: { font: 'Shrikhand', threshold: 0.49, effect: 'outline' } },
 ]

@@ -13,6 +13,8 @@ export interface AlphabetLayoutOptions {
   lineGap: number
   /** Largest whole-number enlargement allowed when short words leave room. */
   maxScale?: number
+  /** Centre each line (the default), or start every line at the left edge. */
+  align?: 'center' | 'left'
 }
 
 export type AlphabetLayoutResult =
@@ -25,6 +27,8 @@ export type AlphabetLayoutResult =
       enlarge: number
       /** Ornament stitches ('+' in a glyph), one cell per stitch, width × rows. Not in the mask. */
       accent: Uint8Array
+      /** Width of the widest line, in stitches. */
+      contentWidth: number
     }
   | { ok: false; reason: 'missing'; char: string }
   | { ok: false; reason: 'too-wide' }
@@ -68,7 +72,7 @@ function setLine(size: AlphabetSize, line: string, gap: number): SetLine | strin
  * glyphs themselves are never stretched or redrawn.
  */
 export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions): AlphabetLayoutResult {
-  const { width, scale, alphabet, lineGap, maxScale = 3 } = options
+  const { width, scale, alphabet, lineGap, maxScale = 3, align = 'center' } = options
   const letterGap = Math.max(options.letterGap, alphabet.minLetterGap ?? 0)
 
   for (const sizeId of ['regular', 'small'] as AlphabetSizeId[]) {
@@ -91,7 +95,7 @@ export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions):
 
     let top = 0
     for (const line of set) {
-      const left = Math.floor((width - line.rows[0].length * enlarge) / 2)
+      const left = align === 'left' ? 0 : Math.floor((width - line.rows[0].length * enlarge) / 2)
       for (const glyph of line.glyphs) {
         const x0 = left + glyph.x * enlarge
         const gw = glyph.width * enlarge
@@ -121,7 +125,7 @@ export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions):
       }
       top += (line.rows.length + lineGap) * enlarge
     }
-    return { ok: true, mask, rows, letters, size: sizeId, enlarge, accent }
+    return { ok: true, mask, rows, letters, size: sizeId, enlarge, accent, contentWidth: widest * enlarge }
   }
   return { ok: false, reason: 'too-wide' }
 }

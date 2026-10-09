@@ -93,7 +93,78 @@ interface Lettering {
 }
 
 /** Draws the lettering for a recipe as a high-resolution mask, with each letter's box. */
+/** Clear columns between a drop-cap initial and the words beside it. */
+const INITIAL_GAP = 2
+
+function unsupportedLettering(width: number, why: string): Lettering {
+  const empty: Mask = { width: width * SCALE, height: SCALE, data: new Uint8Array(width * SCALE * SCALE) }
+  return { mask: empty, letters: [], unsupported: why }
+}
+
+/**
+ * A drop cap: the phrase's first letter drawn large from an initial alphabet,
+ * and the rest set beside it in Sampler, left-aligned, in the case it was typed.
+ * The whole block is centred.
+ */
+function drawInitial(lines: string[], width: number, recipe: Recipe): Lettering {
+  const initial = ALPHABETS[recipe.alphabet!].sizes.regular
+  const char = lines[0].charAt(0).toLocaleUpperCase()
+  const glyph = initial.glyphs.get(char)
+  if (!glyph) return unsupportedLettering(width, `This initial has no "${char}"`)
+  const capRows = glyph.rows.slice(0, initial.capRows)
+  const rest = [lines[0].slice(1), ...lines.slice(1)]
+  if (rest[0] === '' && rest.length > 1) rest.shift()
+  const hasBody = rest.some((line) => line !== '')
+  const body = hasBody
+    ? renderAlphabet(rest, {
+        width: width - glyph.width - INITIAL_GAP,
+        scale: SCALE,
+        alphabet: ALPHABETS.sampler,
+        letterGap: recipe.letterGap,
+        lineGap: recipe.lineGap + 1,
+        maxScale: 1,
+        align: 'left',
+      })
+    : null
+  if (body && !body.ok)
+    return unsupportedLettering(
+      width,
+      body.reason === 'missing' ? `Sampler has no "${body.char}"` : 'Too wide beside the initial',
+    )
+
+  const contentWidth = glyph.width + (body?.ok ? INITIAL_GAP + body.contentWidth : 0)
+  const x0 = Math.floor((width - contentWidth) / 2)
+  const rows = Math.max(capRows.length, body?.ok ? body.rows : 0)
+  const mask: Mask = { width: width * SCALE, height: rows * SCALE, data: new Uint8Array(width * SCALE * rows * SCALE) }
+  const accent = new Uint8Array(width * rows)
+  capRows.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      if (row[x] === '+') accent[y * width + x0 + x] = 1
+      if (row[x] !== '#') continue
+      for (let py = y * SCALE; py < (y + 1) * SCALE; py++)
+        mask.data.fill(255, py * mask.width + (x0 + x) * SCALE, py * mask.width + (x0 + x + 1) * SCALE)
+    }
+  })
+  const letters: LetterBox[] = [{ x: x0, y: 0, width: glyph.width, height: capRows.length }]
+  if (body?.ok) {
+    const bx = x0 + glyph.width + INITIAL_GAP
+    const bodyWidth = body.mask.width / SCALE
+    // Only the columns the words use: the body was laid out in all the space beside the initial.
+    const used = body.contentWidth
+    for (let py = 0; py < body.mask.height; py++) {
+      const from = py * body.mask.width
+      mask.data.set(body.mask.data.subarray(from, from + used * SCALE), py * mask.width + bx * SCALE)
+    }
+    for (let y = 0; y < body.rows; y++) {
+      for (let x = 0; x < used; x++) if (body.accent[y * bodyWidth + x]) accent[y * width + bx + x] = 1
+    }
+    letters.push(...body.letters.map((box) => ({ ...box, x: box.x + bx })))
+  }
+  return { mask, letters, size: 'regular', accent }
+}
+
 function drawLettering(upper: string[], width: number, recipe: Recipe): Lettering {
+  if (recipe.alphabet && ALPHABETS[recipe.alphabet].initial) return drawInitial(upper, width, recipe)
   if (recipe.alphabet) {
     const result = renderAlphabet(upper, {
       width,
@@ -103,9 +174,10 @@ function drawLettering(upper: string[], width: number, recipe: Recipe): Letterin
       lineGap: recipe.lineGap + 1,
     })
     if (!result.ok) {
-      const empty: Mask = { width: width * SCALE, height: SCALE, data: new Uint8Array(width * SCALE * SCALE) }
-      const why = result.reason === 'missing' ? `This alphabet has no "${result.char}"` : 'Too wide for this alphabet'
-      return { mask: empty, letters: [], unsupported: why }
+      return unsupportedLettering(
+        width,
+        result.reason === 'missing' ? `This alphabet has no "${result.char}"` : 'Too wide for this alphabet',
+      )
     }
     return { mask: result.mask, letters: result.letters, size: result.size, accent: result.accent }
   }

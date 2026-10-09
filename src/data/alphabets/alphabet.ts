@@ -54,6 +54,11 @@ export interface StitchAlphabet {
   maxEnlarge?: number
   /** Fewest clear columns between letters, for letterforms that run together when set tight. */
   minLetterGap?: number
+  /**
+   * A drop-cap alphabet: it draws only the phrase's first letter, large, and
+   * the rest is set beside it in Sampler. Capitals A–Z only.
+   */
+  initial?: boolean
 }
 
 function buildSize(source: AlphabetSizeSource): AlphabetSize {
@@ -80,6 +85,7 @@ export function defineAlphabet(source: {
   ornament?: string
   maxEnlarge?: number
   minLetterGap?: number
+  initial?: boolean
 }): StitchAlphabet {
   return {
     name: source.name,
@@ -90,6 +96,7 @@ export function defineAlphabet(source: {
     ornament: source.ornament,
     maxEnlarge: source.maxEnlarge,
     minLetterGap: source.minLetterGap,
+    initial: source.initial,
   }
 }
 
