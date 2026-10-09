@@ -141,13 +141,26 @@ const IN_MIX: AlphabetId[] = [
   'tuscan',
   'folk',
   'botanical',
+  'typewriter',
+  'stencil',
+  'hollow',
+  'balloon',
+  'western',
+  'assisi',
+  'cursive',
 ]
 
 /** Alphabets with a small size that fit most phrases: the first stand-ins when another can't draw one. */
-const COMPACT_ALPHABETS: AlphabetId[] = ['marking', 'serif', 'sampler', 'block']
+const COMPACT_ALPHABETS: AlphabetId[] = ['marking', 'serif', 'sampler', 'block', 'typewriter']
 
 /** The same letters without decoration, for when a Nature or Food icon was asked for. */
-const PLAIN_VERSION: Partial<Record<AlphabetId, AlphabetId>> = { sprig: 'sampler', daisy: 'sampler', checker: 'slab' }
+const PLAIN_VERSION: Partial<Record<AlphabetId, AlphabetId>> = {
+  sprig: 'sampler',
+  daisy: 'sampler',
+  checker: 'slab',
+  hollow: 'slab',
+  assisi: 'block',
+}
 
 function alphabetFor(seed: string, letterCase: TextCase, caseForced = false, motif: Motif = DEFAULT_MOTIF): AlphabetId | null {
   const rng = randomFor('alphabet', seed)

@@ -103,7 +103,8 @@ describe('recipeFor', () => {
         expect(['leaf', 'cherry']).not.toContain(r.icon)
       }
     }
-    expect(slabs).toBeGreaterThan(10)
+    // One of 22 alphabets, so a handful in 200 seeds.
+    expect(slabs).toBeGreaterThan(2)
   })
 
   it('gives a fallback font back the case the phrase was typed in', () => {
@@ -115,7 +116,7 @@ describe('recipeFor', () => {
     const unsupported = { ...result(false, false), unsupported: true }
     // First a compact alphabet, in the typed case unless it is capitals-only (and then it says so).
     const compact = recipeFor(seed, 1, { recipe: first, check: unsupported }, mixed)
-    expect(['marking', 'serif', 'sampler', 'block']).toContain(compact.alphabet)
+    expect(['marking', 'serif', 'sampler', 'block', 'typewriter']).toContain(compact.alphabet)
     expect(compact.capitalsFrom ?? compact.letterCase).toBe('mixed')
     // If that can't draw it either, a font in the typed case.
     const font = recipeFor(seed, 2, { recipe: compact, check: unsupported }, mixed)
@@ -160,7 +161,9 @@ describe('recipeFor', () => {
       const { icon: _b, iconRow: _d, ...food } = recipeFor(`m${s}`, 0, undefined, { motif: 'food', letterCase: 'upper' })
       // Ornamented capitals come plain when a food icon is wanted; nothing else moves.
       if (any.alphabet && ALPHABETS[any.alphabet].ornamented)
-        expect(food.alphabet).toBe(any.alphabet === 'checker' ? 'slab' : 'sampler')
+        expect(food.alphabet).toBe(
+          ({ checker: 'slab', hollow: 'slab', assisi: 'block' } as Record<string, string>)[any.alphabet] ?? 'sampler',
+        )
       expect({ ...food, alphabet: null }).toEqual({ ...any, alphabet: null })
     }
   })
