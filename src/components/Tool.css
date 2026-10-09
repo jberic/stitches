@@ -25,9 +25,11 @@
   padding: clamp(0.75rem, 2.5vw, 2.5rem);
   border-radius: 2px;
   color: var(--sheet-ink);
+  /* The sheet and the page are close in colour (1.05:1), so a hairline and a soft shadow lift it. */
+  border: 1px solid var(--hairline);
   box-shadow:
-    0 2px 6px -2px rgb(20 0 6 / 0.35),
-    0 32px 64px -32px rgb(20 0 6 / 0.7);
+    0 1px 3px -1px rgb(var(--shadow) / 0.12),
+    0 28px 56px -32px rgb(var(--shadow) / 0.28);
 }
 
 .chart {
@@ -52,7 +54,7 @@
   gap: 0.25rem 1rem;
   margin-top: clamp(0.75rem, 2vw, 1.75rem);
   padding-top: 0.75rem;
-  border-top: 1px solid rgb(95 5 28 / 0.12);
+  border-top: 1px solid rgb(var(--shadow) / 0.12);
   font-size: 0.8125rem;
   color: var(--sheet-muted);
 }
@@ -262,8 +264,9 @@
   padding: 0.9rem 1.5rem;
   border: 0;
   border-radius: 999px;
-  background: var(--fg);
-  color: var(--bg);
+  /* Cream on rust is 6.1:1. */
+  background: var(--accent);
+  color: var(--sheet);
   font-family: var(--font-ui);
   font-size: 1rem;
   font-weight: 600;
@@ -275,7 +278,7 @@
 }
 
 .generate-button:hover {
-  background: var(--focus);
+  background: var(--accent-strong);
 }
 
 .generate-button:active {
@@ -320,7 +323,7 @@
 
 .download-button:hover {
   border-color: var(--fg);
-  background: rgb(255 207 197 / 0.08);
+  background: rgb(var(--shadow) / 0.05);
 }
 
 .download-button:active {

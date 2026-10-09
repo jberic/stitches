@@ -19,9 +19,10 @@ Web tool: type a phrase, get a two-colour cross-stitch pattern in a retro letter
 
 ## Design
 
-- Wordmark: "SAY IT WITH STITCHES" in capitals, drawn as a stitch pattern by the tool's own engine. It sits small and centred in a slim header, with an About link on the right. No footer: the maker credit and the colour data credit (required by its CC BY 4.0 licence) live in the About panel and on the downloaded image.
-- Page load: the wordmark sews itself in large in the middle of the screen, a short line appears word by word, then the line drifts away and the wordmark glides up into the header while the tool rises in (pattern from ol.studio; do not copy its fonts, imagery or layout). First keystroke or click skips ahead. Plays once per session. Respect `prefers-reduced-motion`.
-- Colours: text #FFCFC5 on background #5F051C (9.8:1). The pattern sheet stays light. Check contrast for any new colour.
+- Header (from Figma, "Warm craft editorial"): the rust stitch mark on the left, About on the right, and a running-stitch rule underneath. Assets in `src/assets/`. No footer: the maker credit and the colour data credit (required by its CC BY 4.0 licence) live in the About panel and on the downloaded image.
+- Wordmark: "SAY IT WITH STITCHES" in capitals, drawn as a stitch pattern by the tool's own engine, in rust. It appears only in the page-load intro.
+- Page load: the wordmark sews itself in large in the middle of the screen, a short line appears word by word, then both drift away while the tool rises in (pattern from ol.studio; do not copy its fonts, imagery or layout). First keystroke or click skips ahead. Plays once per session. Respect `prefers-reduced-motion`.
+- Colours: text #392D28 on background #F3EEE4 (11.5:1); rust #93452E (5.8:1) for the primary button, focus and the wordmark. Tokens in `src/index.css`. The pattern sheet stays light, with a hairline border. Check contrast for any new colour.
 
 - Fraunces for headings, IBM Plex Sans for UI, IBM Plex Mono for codes and counts.
 - Every colour has a distinct symbol that works in black and white.

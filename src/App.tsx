@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import stitchMark from './assets/stitch-mark.svg'
 import { About } from './components/About'
 import { Tool } from './components/Tool'
-import { Wordmark } from './components/Wordmark'
-import { introWordmarkWidth } from './components/wordmarkSize'
+import { SITE_NAME, Wordmark } from './components/Wordmark'
 import './App.css'
 
 /**
  * waiting: nothing shown until the wordmark is drawn, so nothing jumps.
- * intro:   the wordmark sews itself in and a short line appears word by word.
+ * intro:   the wordmark sews itself in, large in the middle of the screen,
+ *          and a short line appears word by word.
  * leaving: the line drifts away and the tool rises into place.
  * done:    the page as normal.
  */
@@ -36,44 +37,13 @@ function rememberIntroPlayed() {
   }
 }
 
-/** Where the intro shows the wordmark: large, a little above the middle of the screen. */
-const INTRO_CENTRE_Y = 0.4
-
-interface Placement {
-  x: number
-  y: number
-  scale: number
-}
-
-/**
- * The move that takes the header wordmark to its intro place. Measured from
- * the element as it is now, undoing any move already applied, so it can be
- * re-measured on resize mid-intro.
- */
-function introPlacement(el: HTMLElement, current: Placement): Placement & { lineTop: number } {
-  const rect = el.getBoundingClientRect()
-  const width = rect.width / current.scale
-  const height = rect.height / current.scale
-  const centreX = rect.left + rect.width / 2 - current.x
-  const centreY = rect.top + rect.height / 2 - current.y
-  const scale = Math.max(1, introWordmarkWidth() / width)
-  const targetY = window.innerHeight * INTRO_CENTRE_Y
-  return {
-    x: window.innerWidth / 2 - centreX,
-    y: targetY - centreY,
-    scale,
-    lineTop: targetY + (height * scale) / 2 + Math.min(48, window.innerHeight * 0.05),
-  }
-}
-
 export default function App() {
   const [playIntro] = useState(shouldPlayIntro)
-  const [phase, setPhase] = useState<Phase>('waiting')
+  // Without the intro there is no wordmark to wait for.
+  const [phase, setPhase] = useState<Phase>(() => (playIntro ? 'waiting' : 'done'))
   const [finishSignal, setFinishSignal] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const typedDuringIntro = useRef(false)
-  const markRef = useRef<HTMLDivElement>(null)
-  const placement = useRef<Placement>({ x: 0, y: 0, scale: 1 })
   const [aboutOpen, setAboutOpen] = useState(false)
   const aboutRef = useRef<HTMLButtonElement>(null)
   const closeAbout = useCallback(() => {
@@ -82,30 +52,9 @@ export default function App() {
     aboutRef.current?.focus()
   }, [])
 
-  // During the intro the header wordmark is moved to the middle of the screen
-  // and scaled up; leaving the intro lets it glide back into the header.
-  useLayoutEffect(() => {
-    const page = markRef.current?.closest<HTMLElement>('.page')
-    if (!playIntro || !page || (phase !== 'waiting' && phase !== 'intro')) return
-    const place = () => {
-      const mark = markRef.current
-      if (!mark) return
-      const next = introPlacement(mark, placement.current)
-      placement.current = next
-      page.style.setProperty('--mark-x', `${next.x}px`)
-      page.style.setProperty('--mark-y', `${next.y}px`)
-      page.style.setProperty('--mark-scale', String(next.scale))
-      page.style.setProperty('--intro-line-top', `${next.lineTop}px`)
-    }
-    window.scrollTo(0, 0)
-    place()
-    window.addEventListener('resize', place)
-    return () => window.removeEventListener('resize', place)
-  }, [playIntro, phase])
-
   const onWordmarkReady = useCallback(() => {
-    setPhase((p) => (p === 'waiting' ? (playIntro ? 'intro' : 'done') : p))
-  }, [playIntro])
+    setPhase((p) => (p === 'waiting' ? 'intro' : p))
+  }, [])
 
   const leave = useCallback(() => {
     setPhase((p) => (p === 'intro' ? 'leaving' : p))
@@ -171,20 +120,16 @@ export default function App() {
 
   return (
     <div className="page" data-phase={phase} data-entrance={playIntro ? 'intro' : 'quick'}>
-      <header className="site-header">
-        <div ref={markRef} className="site-mark">
-          <Wordmark sew={playIntro} onReady={onWordmarkReady} finishSignal={finishSignal} />
+      <header className="site-header reveal" style={{ '--order': 0 } as React.CSSProperties}>
+        <div className="site-nav">
+          <h1 className="site-mark">
+            <img src={stitchMark} alt={SITE_NAME} width="32.4" height="32.4" />
+          </h1>
+          <button ref={aboutRef} type="button" className="about-link" onClick={() => setAboutOpen(true)} aria-haspopup="dialog">
+            About
+          </button>
         </div>
-        <button
-          ref={aboutRef}
-          type="button"
-          className="about-link reveal"
-          style={{ '--order': 0 } as React.CSSProperties}
-          onClick={() => setAboutOpen(true)}
-          aria-haspopup="dialog"
-        >
-          About
-        </button>
+        <div className="running-stitch" aria-hidden="true" />
       </header>
 
       <main className="reveal" style={{ '--order': 1 } as React.CSSProperties}>
@@ -194,14 +139,20 @@ export default function App() {
       {/* Also holds the colour data credit its licence (CC BY 4.0) asks for. */}
       <About open={aboutOpen} onClose={closeAbout} />
 
-      {playIntro && (phase === 'intro' || phase === 'leaving') && (
-        <p className="intro-line" aria-hidden="true">
-          {INTRO_LINE.split(' ').map((word, i) => (
-            <span key={i} style={{ '--i': i } as React.CSSProperties}>
-              {word}{' '}
-            </span>
-          ))}
-        </p>
+      {/* The wordmark only appears here: sewn in large, then gone with the line. */}
+      {playIntro && phase !== 'done' && (
+        <div className="intro" aria-hidden="true">
+          <div className="intro-mark">
+            <Wordmark sew onReady={onWordmarkReady} finishSignal={finishSignal} />
+          </div>
+          <p className="intro-line">
+            {INTRO_LINE.split(' ').map((word, i) => (
+              <span key={i} style={{ '--i': i } as React.CSSProperties}>
+                {word}{' '}
+              </span>
+            ))}
+          </p>
+        </div>
       )}
     </div>
   )

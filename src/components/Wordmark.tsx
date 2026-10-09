@@ -23,9 +23,9 @@ function cssColour(el: Element, name: string) {
   return getComputedStyle(el).getPropertyValue(name).trim()
 }
 
-/** The site's heading, drawn as a stitch pattern by the same engine as the tool. */
+/** The site's name, drawn as a stitch pattern by the same engine as the tool. Shown in the intro. */
 export function Wordmark({ sew, onReady, finishSignal }: Props) {
-  const h1Ref = useRef<HTMLHeadingElement>(null)
+  const h1Ref = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const drawerRef = useRef<StitchDrawer | null>(null)
   const sewRef = useRef(sew)
@@ -93,10 +93,10 @@ export function Wordmark({ sew, onReady, finishSignal }: Props) {
     if (drawer) drawer.drawUpTo(drawer.total)
   }, [finishSignal])
 
+  // Decorative: the page's heading is the stitch mark in the header.
   return (
-    <h1 ref={h1Ref} className="wordmark">
-      <span className="visually-hidden">{SITE_NAME}</span>
+    <div ref={h1Ref} className="wordmark">
       <canvas ref={canvasRef} className="wordmark-canvas" aria-hidden="true" />
-    </h1>
+    </div>
   )
 }

@@ -9,7 +9,7 @@
   min-height: 100dvh;
   max-width: 90rem;
   margin: 0 auto;
-  padding: 0 clamp(1rem, 3vw, 2.5rem);
+  padding: 0 clamp(1rem, 4vw, 3.5rem);
 }
 
 /* Nothing shows until the wordmark is drawn, so the layout never jumps. */
@@ -19,54 +19,37 @@
 
 .site-header {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  gap: 28px;
+  padding-top: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.site-nav {
+  display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: clamp(1.25rem, 2.5vw, 2rem) 0;
+  justify-content: space-between;
+  height: 32px;
 }
 
-/* The stitched wordmark, small and centred. During the intro it's moved
-   to the middle of the screen and scaled up (see App.tsx), then glides back. */
+/* The stitch mark: a 30-stitch box, with the drawing reaching 4% past it on every side. */
 .site-mark {
-  grid-column: 2;
-  width: clamp(12.5rem, 30vw, 26rem);
-  transform-origin: 50% 50%;
-  transition: transform 1250ms var(--ease-settle);
-}
-
-.page[data-phase='waiting'] .site-mark,
-.page[data-phase='intro'] .site-mark {
   position: relative;
-  z-index: 3;
-  transform: translate(var(--mark-x, 0), var(--mark-y, 0)) scale(var(--mark-scale, 1));
-  transition: none;
-}
-
-.page[data-entrance='quick'] .site-mark {
-  transform: none;
-}
-
-.wordmark {
-  --wordmark-under: #ffcfc5;
-  --wordmark-over: #ffe4dd;
-
+  width: 30px;
+  height: 30px;
   margin: 0;
-  line-height: 0;
 }
 
-.wordmark-canvas {
+.site-mark img {
+  position: absolute;
+  inset: -4%;
   display: block;
-  width: 100%;
 }
 
 .about-link {
-  grid-column: 3;
-  justify-self: end;
   padding: 0.5rem 0;
   border: 0;
   background: none;
   color: var(--fg);
-  font: 500 0.9375rem var(--font-ui);
+  font: 400 0.875rem var(--font-ui);
   text-decoration: underline;
   text-decoration-color: transparent;
   text-underline-offset: 0.3em;
@@ -82,6 +65,25 @@
   outline: 3px solid var(--focus);
   outline-offset: 3px;
   border-radius: 2px;
+}
+
+/* A running stitch across the page: the drawn rule repeats, so it never stretches its dashes. */
+.running-stitch {
+  height: 1px;
+  background: url('./assets/running-stitch-rule.png') repeat-x left center / 1328px 1px;
+}
+
+.wordmark {
+  --wordmark-under: var(--accent);
+  --wordmark-over: #a4523a;
+
+  margin: 0;
+  line-height: 0;
+}
+
+.wordmark-canvas {
+  display: block;
+  width: 100%;
 }
 
 /* Room between the header and the tool. */
@@ -112,14 +114,36 @@ main {
   transition: none;
 }
 
-/* The intro line: appears word by word, then drifts down and away. */
-.intro-line {
+/* The intro: the wordmark sews itself in large in the middle of the screen,
+   a line appears word by word below it, then both drift up and away. */
+.intro {
   position: fixed;
-  inset: var(--intro-line-top, 60%) 0 auto;
+  inset: 0;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.5rem, 5vh, 3rem);
+  padding: 0 1rem 6vh;
+  pointer-events: none;
+  transition:
+    transform 800ms var(--ease-away),
+    opacity 700ms var(--ease-away);
+}
+
+.page[data-phase='leaving'] .intro {
+  transform: translateY(-1.75rem);
+  opacity: 0;
+}
+
+.intro-mark {
+  width: min(calc(100vw - 2rem), 1100px);
+}
+
+.intro-line {
   max-width: 20ch;
-  margin: 0 auto;
-  padding: 0 1rem;
+  margin: 0;
   font-family: var(--font-heading);
   font-size: clamp(1.75rem, 4.2vw, 3.25rem);
   font-weight: 500;
@@ -131,10 +155,6 @@ main {
   letter-spacing: -0.015em;
   text-align: center;
   color: var(--fg);
-  pointer-events: none;
-  transition:
-    transform 700ms var(--ease-away),
-    opacity 600ms var(--ease-away);
 }
 
 .intro-line span {
@@ -156,9 +176,4 @@ main {
     transform: none;
     filter: blur(0);
   }
-}
-
-.page[data-phase='leaving'] .intro-line {
-  transform: translateY(1.75rem);
-  opacity: 0;
 }
