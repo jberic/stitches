@@ -1,7 +1,7 @@
 import { DEFAULT_PALETTE_ID, PALETTES } from '../data/palettes'
 import { DEFAULT_WIDTH, MAX_WIDTH, MIN_WIDTH } from '../pattern/generate'
 import { isSeed } from '../pattern/random'
-import { DEFAULT_MOTIF, MOTIFS, type LetterCase, type Motif } from '../pattern/recipe'
+import type { LetterCase } from '../pattern/recipe'
 import { DEFAULT_FABRIC_COUNT, isFabricCount, type FabricCount } from '../pattern/size'
 import { MAX_CHARS } from '../pattern/text'
 
@@ -12,7 +12,6 @@ export interface ShareState {
   width: number
   palette: string
   fabric: FabricCount
-  motif: Motif
   letterCase: LetterCase
 }
 
@@ -22,7 +21,6 @@ export const DEFAULT_STATE: ShareState = {
   width: DEFAULT_WIDTH,
   palette: DEFAULT_PALETTE_ID,
   fabric: DEFAULT_FABRIC_COUNT,
-  motif: DEFAULT_MOTIF,
   letterCase: 'typed',
 }
 
@@ -34,7 +32,6 @@ export function readShareState(search: string): ShareState {
   const width = Number(params.get('w'))
   const palette = params.get('p')
   const fabric = Number(params.get('f'))
-  const motif = params.get('m') as Motif | null
   const letterCase = params.get('c')
   return {
     text: text && text.trim() && text.length <= MAX_CHARS * 2 ? text : DEFAULT_STATE.text,
@@ -42,7 +39,6 @@ export function readShareState(search: string): ShareState {
     width: Number.isInteger(width) && width >= MIN_WIDTH && width <= MAX_WIDTH ? width : DEFAULT_STATE.width,
     palette: PALETTES.some((p) => p.id === palette) ? palette! : DEFAULT_STATE.palette,
     fabric: isFabricCount(fabric) ? fabric : DEFAULT_STATE.fabric,
-    motif: motif && MOTIFS.includes(motif) ? motif : DEFAULT_STATE.motif,
     letterCase: letterCase === 'upper' || letterCase === 'lower' ? letterCase : DEFAULT_STATE.letterCase,
   }
 }
@@ -54,7 +50,6 @@ export function shareSearch(state: ShareState): string {
     w: String(state.width),
     p: state.palette,
     f: String(state.fabric),
-    m: state.motif,
     c: state.letterCase,
   })
   return `?${params.toString().replace(/\+/g, '%20')}`

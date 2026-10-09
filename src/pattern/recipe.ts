@@ -106,7 +106,13 @@ const ALL_ICONS: IconName[] = [...ICON_SETS.nature, ...ICON_SETS.food]
 /** What kind of icon a pattern may have. "any" lets the seed decide, including none. */
 export type Motif = 'any' | 'nature' | 'food' | 'none'
 export const MOTIFS: Motif[] = ['any', 'nature', 'food', 'none']
-export const DEFAULT_MOTIF: Motif = 'any'
+/**
+ * Motifs (icons under the words, motif rows) are saved for v2: the drawings,
+ * placement and recipe logic all still work, but v1 never asks for one, so
+ * every pattern is letters only. Set this back to 'any' and restore the
+ * Motif control in Tool.tsx and the 'm' link parameter to bring them back.
+ */
+export const DEFAULT_MOTIF: Motif = 'none'
 export const DEFAULT_CHOICES: Choices = { motif: DEFAULT_MOTIF, letterCase: 'typed' }
 
 /**

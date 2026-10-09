@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { paletteById, patternColours } from '../data/palettes'
 import { MAX_WIDTH, MIN_WIDTH, findReadableWidth, generatePattern, type GenerateResult } from '../pattern/generate'
-import { describeRecipe, fontFailed, seedWithNewStyle, type Choices, type LetterCase, type Motif } from '../pattern/recipe'
+import { DEFAULT_MOTIF, describeRecipe, fontFailed, seedWithNewStyle, type Choices, type LetterCase } from '../pattern/recipe'
 import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
 import { downloadPatternSheet } from '../export/patternImage'
 import { legendFor } from '../pattern/legend'
@@ -26,9 +26,9 @@ export function Tool({ inputRef }: Props) {
   const [seed, setSeed] = useState(initial.seed)
   const [paletteId, setPaletteId] = useState(initial.palette)
   const [fabricCount, setFabricCount] = useState<FabricCount>(initial.fabric)
-  const [motif, setMotif] = useState<Motif>(initial.motif)
   const [letterCase, setLetterCase] = useState<LetterCase>(initial.letterCase)
-  const choices = useMemo<Choices>(() => ({ motif, letterCase }), [motif, letterCase])
+  // Motifs are saved for v2 (see DEFAULT_MOTIF): v1 patterns are letters only.
+  const choices = useMemo<Choices>(() => ({ motif: DEFAULT_MOTIF, letterCase }), [letterCase])
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory())
   // Read by the link writer without re-running generation when only the palette changes.
   const paletteRef = useRef(paletteId)
@@ -86,7 +86,6 @@ export function Tool({ inputRef }: Props) {
       setSeed(state.seed)
       setPaletteId(state.palette)
       setFabricCount(state.fabric)
-      setMotif(state.motif)
       setLetterCase(state.letterCase)
     }
     window.addEventListener('popstate', onPop)
@@ -188,7 +187,6 @@ export function Tool({ inputRef }: Props) {
       entry.state.text !== shownState?.text ||
       entry.state.seed !== shownState?.seed ||
       entry.state.width !== shownState?.width ||
-      entry.state.motif !== shownState?.motif ||
       entry.state.letterCase !== shownState?.letterCase
     // Only a regeneration consumes this; set it otherwise and the next edit wouldn't update the link.
     if (regenerates) historyMode.current = 'none'
@@ -197,7 +195,6 @@ export function Tool({ inputRef }: Props) {
     setSeed(entry.state.seed)
     setPaletteId(entry.state.palette)
     setFabricCount(entry.state.fabric)
-    setMotif(entry.state.motif)
     setLetterCase(entry.state.letterCase)
   }
 
@@ -298,20 +295,6 @@ export function Tool({ inputRef }: Props) {
         <div className="field">
           <PalettePicker value={palette.id} onChange={choosePalette} />
           <p className="hint">Screen colours are approximate. Check against your physical thread card.</p>
-        </div>
-
-        <div className="field">
-          <Segmented
-            legend="Motif"
-            options={[
-              { value: 'any', label: 'Any' },
-              { value: 'nature', label: 'Nature' },
-              { value: 'food', label: 'Food' },
-              { value: 'none', label: 'None' },
-            ]}
-            value={motif}
-            onChange={(next: Motif) => setMotif(next)}
-          />
         </div>
 
         <div className="field">
