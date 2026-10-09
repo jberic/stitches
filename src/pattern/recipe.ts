@@ -119,7 +119,26 @@ const ALPHABET_SHARE = 0.67
  * Alphabets the seed can pick. A capitals-only one (Slab) sets a phrase typed
  * in lowercase in capitals, unless the person chose Lowercase themselves.
  */
-const IN_MIX: AlphabetId[] = ['block', 'serif', 'slab', 'sampler', 'sprig', 'daisy']
+const IN_MIX: AlphabetId[] = [
+  'block',
+  'serif',
+  'slab',
+  'sampler',
+  'sprig',
+  'daisy',
+  'marking',
+  'beaded',
+  'checker',
+  'gothic',
+  'deco',
+  'swash',
+]
+
+/** Alphabets with a small size that fit most phrases: the first stand-ins when another can't draw one. */
+const COMPACT_ALPHABETS: AlphabetId[] = ['marking', 'serif', 'sampler', 'block']
+
+/** The same letters without decoration, for when a Nature or Food icon was asked for. */
+const PLAIN_VERSION: Partial<Record<AlphabetId, AlphabetId>> = { sprig: 'sampler', daisy: 'sampler', checker: 'slab' }
 
 function alphabetFor(seed: string, letterCase: TextCase, caseForced = false, motif: Motif = DEFAULT_MOTIF): AlphabetId | null {
   const rng = randomFor('alphabet', seed)
@@ -127,9 +146,9 @@ function alphabetFor(seed: string, letterCase: TextCase, caseForced = false, mot
   if (rng() >= ALPHABET_SHARE) return null
   const id = pick(rng, offered)
   // Ornamented letters replace the icon, so when a Nature or Food icon was asked
-  // for, the same capitals come plain (Sampler). The pick itself never moves,
+  // for, the same capitals come plain. The pick itself never moves,
   // so changing the motif changes nothing else.
-  return ALPHABETS[id].ornamented && motif !== 'any' && motif !== 'none' ? 'sampler' : id
+  return ALPHABETS[id].ornamented && motif !== 'any' && motif !== 'none' ? (PLAIN_VERSION[id] ?? 'sampler') : id
 }
 
 /**
@@ -237,14 +256,39 @@ export function recipeFor(
   // fallback style gets the seed's icon back.
   const seedIcon = base.icon
   if (base.alphabet && ALPHABETS[base.alphabet].ornamented) base.icon = null
-  base.effect = effectFor(base.effect, base.alphabet)
+  // A seed that picked ornamented letters keeps no effect even when they come
+  // plain for an icon, so changing the motif changes only the icon.
+  const pickedOrnamented = ALPHABETS[alphabetFor(seed, choices.letterCase, choices.caseForced) ?? 'block'].ornamented
+  base.effect = pickedOrnamented ? 'none' : effectFor(base.effect, base.alphabet)
   base.iconRow = iconRowFor(seed, base.alphabet, base.icon)
   const first = base.alphabet ? base : asFontStyle(base)
   if (attempt === 0) return first
 
   // The alphabet can't draw this phrase (a missing character, or too wide even
-  // in its small size): keep the icon, use the font.
-  if (previous?.check.unsupported) return { ...asFontStyle(previous.recipe ?? base), icon: seedIcon }
+  // in its small size). First try a compact alphabet with a small size, picked
+  // by the seed; if that fails too, use the font. Either way the icon comes back.
+  if (previous?.check.unsupported) {
+    const from = previous.recipe ?? base
+    if (from.alphabet && !COMPACT_ALPHABETS.includes(from.alphabet)) {
+      const options = COMPACT_ALPHABETS.filter(
+        (id) => choices.letterCase === 'upper' || ALPHABETS[id].lowercase || !choices.caseForced,
+      )
+      const compact = pick(randomFor('compact', seed), options)
+      const typed = typedCase(from)
+      const capitals = !ALPHABETS[compact].lowercase && typed.letterCase !== 'upper'
+      return {
+        ...from,
+        ...typed,
+        ...(capitals ? { letterCase: 'upper' as const, capitalsFrom: typed.letterCase } : {}),
+        alphabet: compact,
+        icon: seedIcon,
+        iconRow: false,
+        effect: effectFor(effectDraw(seed), compact),
+        letterGap: 1,
+      }
+    }
+    return { ...asFontStyle(from), icon: seedIcon }
+  }
 
   // Script lowercase too small to read: a threshold won't fix that, so keep
   // the style and switch to a font that isn't a script.

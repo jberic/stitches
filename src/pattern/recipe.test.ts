@@ -112,7 +112,13 @@ describe('recipeFor', () => {
       (s) => recipeFor(s, 0, undefined, mixed).alphabet === 'slab',
     )!
     const first = recipeFor(seed, 0, undefined, mixed)
-    const font = recipeFor(seed, 1, { recipe: first, check: { ...result(false, false), unsupported: true } }, mixed)
+    const unsupported = { ...result(false, false), unsupported: true }
+    // First a compact alphabet, in the typed case unless it is capitals-only (and then it says so).
+    const compact = recipeFor(seed, 1, { recipe: first, check: unsupported }, mixed)
+    expect(['marking', 'serif', 'sampler', 'block']).toContain(compact.alphabet)
+    expect(compact.capitalsFrom ?? compact.letterCase).toBe('mixed')
+    // If that can't draw it either, a font in the typed case.
+    const font = recipeFor(seed, 2, { recipe: compact, check: unsupported }, mixed)
     expect([font.alphabet, font.letterCase, font.capitalsFrom]).toEqual([null, 'mixed', null])
     expect([recipeFor(seed, 3, undefined, mixed).letterCase, recipeFor(seed, 4, undefined, mixed).letterCase]).toEqual([
       'mixed',
@@ -153,7 +159,8 @@ describe('recipeFor', () => {
       const { icon: _a, iconRow: _c, ...any } = recipeFor(`m${s}`, 0, undefined, { motif: 'any', letterCase: 'upper' })
       const { icon: _b, iconRow: _d, ...food } = recipeFor(`m${s}`, 0, undefined, { motif: 'food', letterCase: 'upper' })
       // Ornamented capitals come plain when a food icon is wanted; nothing else moves.
-      if (any.alphabet && ALPHABETS[any.alphabet].ornamented) expect(food.alphabet).toBe('sampler')
+      if (any.alphabet && ALPHABETS[any.alphabet].ornamented)
+        expect(food.alphabet).toBe(any.alphabet === 'checker' ? 'slab' : 'sampler')
       expect({ ...food, alphabet: null }).toEqual({ ...any, alphabet: null })
     }
   })
