@@ -135,12 +135,17 @@ const ALPHABET_SHARE = 0.67
  * Alphabets the seed can pick. A capitals-only one (Slab) sets a phrase typed
  * in lowercase in capitals, unless the person chose Lowercase themselves.
  */
-const IN_MIX: AlphabetId[] = ['block', 'serif', 'slab', 'sampler']
+const IN_MIX: AlphabetId[] = ['block', 'serif', 'slab', 'sampler', 'sprig', 'daisy']
 
-function alphabetFor(seed: string, letterCase: TextCase, caseForced = false): AlphabetId | null {
+function alphabetFor(seed: string, letterCase: TextCase, caseForced = false, motif: Motif = DEFAULT_MOTIF): AlphabetId | null {
   const rng = randomFor('alphabet', seed)
   const offered = IN_MIX.filter((id) => letterCase === 'upper' || ALPHABETS[id].lowercase || !caseForced)
-  return rng() < ALPHABET_SHARE ? pick(rng, offered) : null
+  if (rng() >= ALPHABET_SHARE) return null
+  const id = pick(rng, offered)
+  // Ornamented letters replace the icon, so when a Nature or Food icon was asked
+  // for, the same capitals come plain (Sampler). The pick itself never moves,
+  // so changing the motif changes nothing else.
+  return ALPHABETS[id].ornamented && motif !== 'any' && motif !== 'none' ? 'sampler' : id
 }
 
 /**
@@ -260,12 +265,16 @@ export function recipeFor(
     iconRow: false,
     letterCase: choices.letterCase,
     capitalsFrom: null,
-    alphabet: alphabetFor(seed, choices.letterCase, choices.caseForced),
+    alphabet: alphabetFor(seed, choices.letterCase, choices.caseForced, choices.motif),
   }
   if (base.alphabet && !ALPHABETS[base.alphabet].lowercase && base.letterCase !== 'upper') {
     base.capitalsFrom = base.letterCase
     base.letterCase = 'upper'
   }
+  // Ornamented letters carry their own decoration: no icon, no effect. A
+  // fallback style gets the seed's icon back.
+  const seedIcon = base.icon
+  if (base.alphabet && ALPHABETS[base.alphabet].ornamented) base.icon = null
   base.effect = effectFor(base.effect, base.alphabet)
   base.iconRow = iconRowFor(seed, base.alphabet, base.icon)
   if (base.layout === 'wavy') base.lineGap += 1
@@ -274,7 +283,7 @@ export function recipeFor(
 
   // The alphabet can't draw this phrase (a missing character, or too wide even
   // in its small size): keep the icon, use the font.
-  if (previous?.check.unsupported) return asFontStyle(previous.recipe ?? base)
+  if (previous?.check.unsupported) return { ...asFontStyle(previous.recipe ?? base), icon: seedIcon }
 
   // Script lowercase too small to read: a threshold won't fix that, so keep
   // the style and switch to a font that isn't a script.
@@ -292,6 +301,7 @@ export function recipeFor(
     return {
       ...first,
       ...typedCase(first),
+      icon: seedIcon,
       alphabet: 'block',
       layout: 'stacked-block',
       wave: null,
@@ -311,6 +321,7 @@ export function recipeFor(
     const fallback = fonts[attempt - 4]
     return {
       ...asFontStyle(base),
+      icon: seedIcon,
       font: fallback,
       letterGap: FONT_LETTER_GAP,
       lineGap: FONT_LINE_GAP,

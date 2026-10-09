@@ -48,6 +48,8 @@ export interface StitchAlphabet {
   lowercase: boolean
   /** Its letters carry their own decoration in the accent thread, so a pattern gets no icon or effect. */
   ornamented: boolean
+  /** What the ornament stitches are, for the thread key ("Leaves"). */
+  ornament?: string
 }
 
 function buildSize(source: AlphabetSizeSource): AlphabetSize {
@@ -71,6 +73,7 @@ export function defineAlphabet(source: {
   effects: AlphabetEffect[]
   lowercase?: boolean
   ornamented?: boolean
+  ornament?: string
 }): StitchAlphabet {
   return {
     name: source.name,
@@ -78,6 +81,7 @@ export function defineAlphabet(source: {
     effects: source.effects,
     lowercase: source.lowercase ?? true,
     ornamented: source.ornamented ?? false,
+    ornament: source.ornament,
   }
 }
 

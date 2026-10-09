@@ -1,3 +1,4 @@
+import { ALPHABETS } from '../data/alphabets'
 import { ICON_LABELS, ICON_PLURALS } from '../data/icons'
 import { FABRIC, patternColours, type Palette, type Thread } from '../data/palettes'
 import { ACCENT, LETTERING } from './compose'
@@ -33,7 +34,9 @@ export function legendFor(pattern: Pattern, palette: Palette): Legend {
   const letteringUse = effect === 'outline' ? 'Outline' : 'Lettering'
   const effectPart = { none: null, shadow: 'shadow', block3d: '3D side', outline: 'lettering' }[effect]
   const iconLabel = icon && (pattern.meta.recipe.iconRow ? ICON_PLURALS[icon] : ICON_LABELS[icon])
-  const accentParts = [iconLabel || null, effectPart].filter(Boolean).join(' and ')
+  const { alphabet } = pattern.meta.recipe
+  const ornament = alphabet ? ALPHABETS[alphabet].ornament : undefined
+  const accentParts = [ornament ?? null, iconLabel || null, effectPart].filter(Boolean).join(' and ')
   const accentUse = capitalise(accentParts || 'Accent')
   const counts = stitchCounts(pattern)
   const rows: LegendRow[] = [

@@ -12,6 +12,7 @@ export const DAISY = defineAlphabet({
   effects: [],
   lowercase: false,
   ornamented: true,
+  ornament: 'Daisy petals',
   regular: {
     capRows: 10,
     descRows: 3,

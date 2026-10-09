@@ -12,6 +12,7 @@ export const SPRIG = defineAlphabet({
   effects: [],
   lowercase: false,
   ornamented: true,
+  ornament: 'Leaves',
   regular: {
     capRows: 10,
     descRows: 3,

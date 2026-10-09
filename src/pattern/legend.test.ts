@@ -40,6 +40,11 @@ describe('legendFor', () => {
     expect(legendFor(pattern([1, 2], { effect: 'block3d' }), paletteById('01')).rows[1].use).toBe('3D side')
   })
 
+  it("names an ornamented alphabet's decoration", () => {
+    expect(legendFor(pattern([1, 2], { alphabet: 'sprig' }), paletteById('01')).rows[1].use).toBe('Leaves')
+    expect(legendFor(pattern([1, 2], { alphabet: 'daisy' }), paletteById('01')).rows[1].use).toBe('Daisy petals')
+  })
+
   it('swaps the uses for an outline: the lettering thread outlines, the accent fills the letters', () => {
     const rows = legendFor(pattern([1, 2], { effect: 'outline', icon: 'leaf' }), paletteById('01')).rows
     expect(rows.map((r) => r.use)).toEqual(['Outline', 'Leaf and lettering'])
