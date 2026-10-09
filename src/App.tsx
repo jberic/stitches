@@ -16,6 +16,8 @@ type Phase = 'waiting' | 'intro' | 'leaving' | 'done'
 
 const PLAYED_KEY = 'say-it-with-stitches:intro-played'
 const INTRO_LINE = 'Type a phrase. Get a cross-stitch pattern.'
+const TAGLINE = 'Type a phrase, get a cross-stitch pattern.'
+const noop = () => {}
 const HOLD_MS = 2600
 const LEAVE_MS = 1300
 
@@ -135,6 +137,13 @@ export default function App() {
       <main className="reveal" style={{ '--order': 1 } as React.CSSProperties}>
         <Tool inputRef={inputRef} />
       </main>
+
+      <footer className="site-footer reveal" style={{ '--order': 2 } as React.CSSProperties}>
+        <div className="site-footer-inner">
+          <Wordmark sew={false} onReady={noop} finishSignal={0} />
+          <p className="site-footer-tagline">{TAGLINE}</p>
+        </div>
+      </footer>
 
       {/* Also holds the colour data credit its licence (CC BY 4.0) asks for. */}
       <About open={aboutOpen} onClose={closeAbout} />
