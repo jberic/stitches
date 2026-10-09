@@ -43,6 +43,9 @@ const STYLES: { label: string; recipe: Partial<Recipe> }[] = [
   { label: 'Stencil', recipe: { alphabet: 'stencil' } },
   { label: 'Hollow', recipe: { alphabet: 'hollow' } },
   { label: 'Balloon', recipe: { alphabet: 'balloon' } },
+  { label: 'Western', recipe: { alphabet: 'western' } },
+  { label: 'Assisi', recipe: { alphabet: 'assisi' } },
+  { label: 'Cursive', recipe: { alphabet: 'cursive' } },
   { label: 'Bagel Fat One · outline', recipe: { font: 'Bagel Fat One', threshold: 0.47, effect: 'outline' } },
   { label: 'Shrikhand · outline', recipe: { font: 'Shrikhand', threshold: 0.49, effect: 'outline' } },
 ]

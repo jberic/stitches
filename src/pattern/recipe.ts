@@ -372,6 +372,8 @@ const EFFECT_PHRASES: Record<Effect, string | null> = {
   shadow: 'a shadow',
   block3d: 'a 3D side',
   outline: 'an outline',
+  // The alphabet's name says it: "Assisi stitch letters".
+  assisi: null,
 }
 
 /** Plain-words name for a style, so people can say what they liked. */

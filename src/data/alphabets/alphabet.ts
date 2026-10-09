@@ -59,6 +59,10 @@ export interface StitchAlphabet {
    * the rest is set beside it in Sampler. Capitals A–Z only.
    */
   initial?: boolean
+  /** Assisi work: the letters are left bare on a stitched panel (see compose.ts). */
+  reversed?: boolean
+  /** Lowercase letters join: one stitch apart, bridged by a stitch on the baseline. */
+  joined?: boolean
 }
 
 function buildSize(source: AlphabetSizeSource): AlphabetSize {
@@ -86,6 +90,8 @@ export function defineAlphabet(source: {
   maxEnlarge?: number
   minLetterGap?: number
   initial?: boolean
+  reversed?: boolean
+  joined?: boolean
 }): StitchAlphabet {
   return {
     name: source.name,
@@ -97,6 +103,8 @@ export function defineAlphabet(source: {
     maxEnlarge: source.maxEnlarge,
     minLetterGap: source.minLetterGap,
     initial: source.initial,
+    reversed: source.reversed,
+    joined: source.joined,
   }
 }
 

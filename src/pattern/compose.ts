@@ -19,8 +19,8 @@ export const ACCENT = 2
  *   which reads best on light fabric (the lettering thread is the darker one
  *   in every palette).
  */
-export type Effect = 'none' | 'shadow' | 'block3d' | 'outline'
-export const EFFECTS: Effect[] = ['none', 'shadow', 'block3d', 'outline']
+export type Effect = 'none' | 'shadow' | 'block3d' | 'outline' | 'assisi'
+export const EFFECTS: Effect[] = ['none', 'shadow', 'block3d', 'outline', 'assisi']
 
 /** Stitches an effect reaches beyond the letters, so the lettering can leave room for it. */
 export const EFFECT_REACH: Record<Effect, { left: number; right: number; bottom: number; top: number }> = {
@@ -28,6 +28,8 @@ export const EFFECT_REACH: Record<Effect, { left: number; right: number; bottom:
   shadow: { left: 0, right: 2, bottom: 2, top: 0 },
   block3d: { left: 3, right: 0, bottom: 3, top: 0 },
   outline: { left: 1, right: 1, bottom: 1, top: 1 },
+  // Two stitches of background around the words, then a one-stitch frame.
+  assisi: { left: 3, right: 3, bottom: 3, top: 3 },
 }
 
 /** Applies an effect. The grid must already have the effect's reach free at its sides. */
@@ -35,6 +37,7 @@ export function addEffect(grid: Grid, effect: Effect): Grid {
   if (effect === 'shadow') return extrude(grid, 1, 2)
   if (effect === 'block3d') return extrude(grid, -1, 3)
   if (effect === 'outline') return outline(grid)
+  if (effect === 'assisi') return assisi(grid)
   return grid
 }
 
@@ -78,6 +81,48 @@ export function outline(grid: Grid): Grid {
           if (out.cells[target] === 0) out.cells[target] = LETTERING
         }
       }
+    }
+  }
+  return out
+}
+
+/**
+ * Assisi work, reversed: the letters stay bare fabric, outlined in the
+ * lettering thread, on a panel stitched in the accent thread, inside a
+ * one-stitch frame in the lettering thread. The panel hugs the words with
+ * two stitches to spare; the grid must have three free columns each side.
+ */
+export function assisi(grid: Grid): Grid {
+  const out = withRows(grid, 3, 3)
+  const { width, height } = out
+  const letters = out.cells.slice()
+  let minX = width
+  let maxX = -1
+  for (let i = 0; i < letters.length; i++) {
+    if (!letters[i]) continue
+    minX = Math.min(minX, i % width)
+    maxX = Math.max(maxX, i % width)
+  }
+  if (maxX < 0) return out
+  const left = Math.max(0, minX - 3)
+  const right = Math.min(width - 1, maxX + 3)
+  const near = (x: number, y: number) => {
+    for (let oy = -1; oy <= 1; oy++) {
+      for (let ox = -1; ox <= 1; ox++) {
+        const tx = x + ox
+        const ty = y + oy
+        if (tx >= 0 && ty >= 0 && tx < width && ty < height && letters[ty * width + tx]) return true
+      }
+    }
+    return false
+  }
+  for (let y = 0; y < height; y++) {
+    for (let x = left; x <= right; x++) {
+      const i = y * width + x
+      const frame = y === 0 || y === height - 1 || x === left || x === right
+      if (letters[i]) out.cells[i] = 0
+      else if (frame || near(x, y)) out.cells[i] = LETTERING
+      else out.cells[i] = ACCENT
     }
   }
   return out

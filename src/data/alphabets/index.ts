@@ -1,9 +1,11 @@
 import type { StitchAlphabet } from './alphabet'
+import { ASSISI } from './assisi'
 import { BALLOON } from './balloon'
 import { BEADED } from './beaded'
 import { BLOCK } from './block'
 import { BOTANICAL } from './botanical'
 import { CHECKER } from './checker'
+import { CURSIVE } from './cursive'
 import { DAISY } from './daisy'
 import { DECO } from './deco'
 import { FOLK } from './folk'
@@ -18,6 +20,7 @@ import { STENCIL } from './stencil'
 import { SWASH } from './swash'
 import { TUSCAN } from './tuscan'
 import { TYPEWRITER } from './typewriter'
+import { WESTERN } from './western'
 
 /** The stitch alphabets on offer. Add new ones here. */
 export const ALPHABETS = {
@@ -40,6 +43,9 @@ export const ALPHABETS = {
   stencil: STENCIL,
   hollow: HOLLOW,
   balloon: BALLOON,
+  western: WESTERN,
+  assisi: ASSISI,
+  cursive: CURSIVE,
 } satisfies Record<string, StitchAlphabet>
 
 export type AlphabetId = keyof typeof ALPHABETS

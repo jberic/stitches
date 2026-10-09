@@ -246,7 +246,8 @@ function decorate(lettering: Grid, recipe: Recipe): Grid {
  * anything. The pattern records this, so the caption and key stay true.
  */
 function stitchedEffect(recipe: Recipe, size: AlphabetSizeId | undefined): Effect {
-  if (!recipe.alphabet || recipe.effect === 'none' || recipe.effect === 'shadow') return recipe.effect
+  if (!recipe.alphabet || recipe.effect === 'none' || recipe.effect === 'shadow' || recipe.effect === 'assisi')
+    return recipe.effect
   const suits = (ALPHABETS[recipe.alphabet].effects as Effect[]).includes(recipe.effect)
   return size === 'regular' && suits ? recipe.effect : 'shadow'
 }
@@ -258,7 +259,9 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
     recipe.letterCase === 'upper' ? line.toLocaleUpperCase() : recipe.letterCase === 'lower' ? line.toLocaleLowerCase() : line,
   )
   // The lettering leaves room at its sides for the effect to reach into.
-  const reach = EFFECT_REACH[recipe.effect]
+  // Assisi alphabets always end in the Assisi panel, so plan its room from the start.
+  const planned: Recipe = recipe.alphabet && ALPHABETS[recipe.alphabet].reversed ? { ...recipe, effect: 'assisi' } : recipe
+  const reach = EFFECT_REACH[planned.effect]
   const inner = width - reach.left - reach.right
   const { mask, letters, unsupported, size, accent } = drawLettering(cased, inner, recipe)
   if (unsupported) return unsupportedResult(lines, cased, width, recipe, seed, unsupported)
@@ -273,7 +276,7 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
   const withOrnaments = tidy.cells.slice()
   if (accent) accent.forEach((on, i) => on && !withOrnaments[i] && (withOrnaments[i] = ACCENT))
   const trimmed = trimRows(withOrnaments, inner)
-  const stitched: Recipe = { ...recipe, effect: stitchedEffect(recipe, size) }
+  const stitched: Recipe = { ...recipe, effect: stitchedEffect(planned, size) }
   const left = EFFECT_REACH[stitched.effect].left
   const lettering = padColumns({ width: inner, height: trimmed.height, cells: trimmed.cells }, left, width - inner - left)
   const { cells, height } = decorate(lettering, stitched)

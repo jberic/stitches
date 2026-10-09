@@ -42,14 +42,20 @@ interface SetLine {
   descends: boolean
 }
 
-function setLine(size: AlphabetSize, line: string, gap: number): SetLine | string {
+/**
+ * Sets one line of glyphs. With `joined`, two lowercase letters in a row are
+ * bridged by a stitch on the baseline in the gap between them, like a pen
+ * stroke carrying on.
+ */
+function setLine(size: AlphabetSize, line: string, gap: number, joined = false): SetLine | string {
   const height = size.capRows + size.descRows
   const rows = Array.from({ length: height }, () => '')
   const glyphs: SetLine['glyphs'] = []
   let x = 0
   for (const [i, char] of [...line].entries()) {
     if (i > 0) {
-      rows.forEach((_, y) => (rows[y] += '.'.repeat(gap)))
+      const bridge = joined && /[a-z]/.test(char) && /[a-z]/.test(line[i - 1])
+      rows.forEach((_, y) => (rows[y] += (bridge && y === size.capRows - 1 ? '#' : '.').repeat(gap)))
       x += gap
     }
     if (char === ' ') {
@@ -75,13 +81,14 @@ function setLine(size: AlphabetSize, line: string, gap: number): SetLine | strin
  */
 export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions): AlphabetLayoutResult {
   const { width, scale, alphabet, lineGap, maxScale = 3, align = 'center', sizes = ['regular', 'small'] } = options
-  const letterGap = Math.max(options.letterGap, alphabet.minLetterGap ?? 0)
+  // Joined letters sit one stitch apart, bridged on the baseline; others keep at least the alphabet's minimum gap.
+  const letterGap = alphabet.joined ? 1 : Math.max(options.letterGap, alphabet.minLetterGap ?? 0)
 
   for (const sizeId of sizes) {
     const size = alphabet.sizes[sizeId]
     const set: SetLine[] = []
     for (const line of lines) {
-      const result = setLine(size, line, letterGap)
+      const result = setLine(size, line, letterGap, alphabet.joined)
       if (typeof result === 'string') return { ok: false, reason: 'missing', char: result }
       set.push(result)
     }
