@@ -26,6 +26,14 @@ describe('renderAlphabet', () => {
     expect(result.ok && result.enlarge).toBe(1)
   })
 
+  it("keeps the alphabet's minimum letter gap", () => {
+    const tight = renderAlphabet(['II'], { ...options, maxScale: 1 })
+    const spaced = renderAlphabet(['II'], { ...options, maxScale: 1, alphabet: { ...BLOCK, minLetterGap: 3 } })
+    if (!tight.ok || !spaced.ok) throw new Error('expected layouts')
+    const gap = (r: typeof tight & { ok: true }) => r.letters[1].x - (r.letters[0].x + r.letters[0].width)
+    expect([gap(tight), gap(spaced)]).toEqual([1, 3])
+  })
+
   it('reports a character it has no glyph for, and words too wide for either size', () => {
     expect(renderAlphabet(['CAFÉ'], options)).toEqual({ ok: false, reason: 'missing', char: 'É' })
     expect(renderAlphabet(['ABCDEFGHIJKLMNOP'], { ...options, width: 40 })).toEqual({ ok: false, reason: 'too-wide' })

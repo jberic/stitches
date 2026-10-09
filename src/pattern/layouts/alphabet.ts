@@ -68,7 +68,8 @@ function setLine(size: AlphabetSize, line: string, gap: number): SetLine | strin
  * glyphs themselves are never stretched or redrawn.
  */
 export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions): AlphabetLayoutResult {
-  const { width, scale, alphabet, letterGap, lineGap, maxScale = 3 } = options
+  const { width, scale, alphabet, lineGap, maxScale = 3 } = options
+  const letterGap = Math.max(options.letterGap, alphabet.minLetterGap ?? 0)
 
   for (const sizeId of ['regular', 'small'] as AlphabetSizeId[]) {
     const size = alphabet.sizes[sizeId]

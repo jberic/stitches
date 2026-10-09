@@ -52,6 +52,8 @@ export interface StitchAlphabet {
   ornament?: string
   /** Largest whole-number enlargement for short words. 1 keeps a fine alphabet fine. */
   maxEnlarge?: number
+  /** Fewest clear columns between letters, for letterforms that run together when set tight. */
+  minLetterGap?: number
 }
 
 function buildSize(source: AlphabetSizeSource): AlphabetSize {
@@ -77,6 +79,7 @@ export function defineAlphabet(source: {
   ornamented?: boolean
   ornament?: string
   maxEnlarge?: number
+  minLetterGap?: number
 }): StitchAlphabet {
   return {
     name: source.name,
@@ -86,6 +89,7 @@ export function defineAlphabet(source: {
     ornamented: source.ornamented ?? false,
     ornament: source.ornament,
     maxEnlarge: source.maxEnlarge,
+    minLetterGap: source.minLetterGap,
   }
 }
 
