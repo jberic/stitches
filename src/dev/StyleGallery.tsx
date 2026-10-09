@@ -30,6 +30,9 @@ const STYLES: { label: string; recipe: Partial<Recipe> }[] = [
   { label: 'Sampler · mushroom row', recipe: { alphabet: 'sampler', icon: 'mushroom', iconRow: true } },
   { label: 'Sprig', recipe: { alphabet: 'sprig' } },
   { label: 'Daisy', recipe: { alphabet: 'daisy' } },
+  { label: 'Marking', recipe: { alphabet: 'marking' } },
+  { label: 'Beaded', recipe: { alphabet: 'beaded' } },
+  { label: 'Checker', recipe: { alphabet: 'checker' } },
   { label: 'Bagel Fat One · outline', recipe: { font: 'Bagel Fat One', threshold: 0.47, effect: 'outline' } },
   { label: 'Shrikhand · outline', recipe: { font: 'Shrikhand', threshold: 0.49, effect: 'outline' } },
 ]

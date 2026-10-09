@@ -21,6 +21,11 @@ describe('renderAlphabet', () => {
     expect(result.ok && result.enlarge).toBe(3)
   })
 
+  it("never enlarges past the alphabet's own limit", () => {
+    const result = renderAlphabet(['HI'], { ...options, alphabet: { ...BLOCK, maxEnlarge: 1 } })
+    expect(result.ok && result.enlarge).toBe(1)
+  })
+
   it('reports a character it has no glyph for, and words too wide for either size', () => {
     expect(renderAlphabet(['CAFÉ'], options)).toEqual({ ok: false, reason: 'missing', char: 'É' })
     expect(renderAlphabet(['ABCDEFGHIJKLMNOP'], { ...options, width: 40 })).toEqual({ ok: false, reason: 'too-wide' })

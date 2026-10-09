@@ -81,7 +81,7 @@ export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions):
     const widest = Math.max(...set.map((l) => l.rows[0].length))
     if (widest > width) continue
 
-    const enlarge = Math.max(1, Math.min(maxScale, Math.floor(width / widest)))
+    const enlarge = Math.max(1, Math.min(maxScale, alphabet.maxEnlarge ?? maxScale, Math.floor(width / widest)))
     const textRows = set.reduce((sum, l) => sum + l.rows.length, 0) * enlarge + lineGap * enlarge * (set.length - 1)
     const rows = textRows
     const mask: Mask = { width: width * scale, height: rows * scale, data: new Uint8Array(width * scale * rows * scale) }

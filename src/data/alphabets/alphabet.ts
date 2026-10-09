@@ -50,6 +50,8 @@ export interface StitchAlphabet {
   ornamented: boolean
   /** What the ornament stitches are, for the thread key ("Leaves"). */
   ornament?: string
+  /** Largest whole-number enlargement for short words. 1 keeps a fine alphabet fine. */
+  maxEnlarge?: number
 }
 
 function buildSize(source: AlphabetSizeSource): AlphabetSize {
@@ -74,6 +76,7 @@ export function defineAlphabet(source: {
   lowercase?: boolean
   ornamented?: boolean
   ornament?: string
+  maxEnlarge?: number
 }): StitchAlphabet {
   return {
     name: source.name,
@@ -82,6 +85,7 @@ export function defineAlphabet(source: {
     lowercase: source.lowercase ?? true,
     ornamented: source.ornamented ?? false,
     ornament: source.ornament,
+    maxEnlarge: source.maxEnlarge,
   }
 }
 
