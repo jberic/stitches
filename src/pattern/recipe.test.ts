@@ -2,7 +2,7 @@ import { ALPHABETS } from '../data/alphabets'
 import { describe, expect, it } from 'vitest'
 import { hashString, isSeed, mulberry32, newSeed } from './random'
 import type { LegibilityCheck } from './legibility'
-import { ICON_SETS, iconSizes } from '../data/icons'
+import { ICON_SETS } from '../data/icons'
 import { CAPITALS_ONLY, PATTERN_FONTS, SCRIPT_FONTS } from '../fonts'
 import { MAX_ATTEMPTS, describeRecipe, recipeFor, textCase } from './recipe'
 
@@ -88,7 +88,7 @@ describe('recipeFor', () => {
     expect([...fonts].sort()).toEqual([...PATTERN_FONTS].sort())
   })
 
-  it('lets Slab set a typed phrase in capitals, and gives Sampler a motif row only with a small icon', () => {
+  it('lets Slab set a typed phrase in capitals', () => {
     const mixed = { motif: 'any', letterCase: 'mixed' } as const
     let slabs = 0
     for (let s = 0; s < 200; s++) {
@@ -97,11 +97,6 @@ describe('recipeFor', () => {
         if (m.alphabet === 'slab') slabs++
         expect([m.letterCase, m.capitalsFrom, describeRecipe(m).includes('set in capitals')]).toEqual(['upper', 'mixed', true])
       } else expect(m.capitalsFrom).toBeNull()
-      const r = recipeFor(`a${s}`, 0, undefined, { motif: 'any', letterCase: 'upper' })
-      if (r.iconRow) {
-        expect([r.alphabet, iconSizes(r.icon!).includes(7)]).toEqual(['sampler', true])
-        expect(['leaf', 'cherry']).not.toContain(r.icon)
-      }
     }
     // One of 22 alphabets, so a handful in 200 seeds.
     expect(slabs).toBeGreaterThan(2)
@@ -141,9 +136,6 @@ describe('recipeFor', () => {
     expect(
       describeRecipe({ ...plain, font: 'Shrikhand', icon: 'lemon', effect: 'shadow', letterAspect: 1.5, letterGap: 1 }),
     ).toBe('Shrikhand · with a shadow and a lemon slice')
-    expect(describeRecipe({ ...plain, alphabet: 'sampler', letterGap: 1, icon: 'mushroom', iconRow: true })).toBe(
-      'Sampler stitch letters · with a row of mushrooms',
-    )
   })
 
   it('follows the motif choice', () => {
@@ -157,8 +149,8 @@ describe('recipeFor', () => {
 
   it('changes only the icon when the motif changes', () => {
     for (let s = 0; s < 40; s++) {
-      const { icon: _a, iconRow: _c, ...any } = recipeFor(`m${s}`, 0, undefined, { motif: 'any', letterCase: 'upper' })
-      const { icon: _b, iconRow: _d, ...food } = recipeFor(`m${s}`, 0, undefined, { motif: 'food', letterCase: 'upper' })
+      const { icon: _a, ...any } = recipeFor(`m${s}`, 0, undefined, { motif: 'any', letterCase: 'upper' })
+      const { icon: _b, ...food } = recipeFor(`m${s}`, 0, undefined, { motif: 'food', letterCase: 'upper' })
       // Ornamented capitals come plain when a food icon is wanted; nothing else moves.
       if (any.alphabet && ALPHABETS[any.alphabet].ornamented)
         expect(food.alphabet).toBe(
@@ -242,7 +234,7 @@ describe('ornamented alphabets', () => {
       const r = recipeFor(`o${s}`, 0, undefined, { motif: 'any', letterCase: 'upper' })
       if (r.alphabet === 'sprig' || r.alphabet === 'daisy') {
         seen++
-        expect([r.icon, r.iconRow, r.effect]).toEqual([null, false, 'none'])
+        expect([r.icon, r.effect]).toEqual([null, 'none'])
         const nature = recipeFor(`o${s}`, 0, undefined, { motif: 'nature', letterCase: 'upper' })
         expect(nature.alphabet).toBe('sampler')
         expect(nature.icon).not.toBeNull()

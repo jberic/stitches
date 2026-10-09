@@ -161,40 +161,6 @@ export function placeIconBelow(grid: Grid, icon: Grid, gap = 1): Grid {
   return { width, height, cells }
 }
 
-/** Clear columns between motifs in a row. */
-const ROW_GAP = 3
-const ROW_MAX = 5
-
-/**
- * A row of small motifs under the lettering, like a sampler border: as many
- * as fit (an odd number, up to five, at least three), centred. Every other
- * one is mirrored, so leaves and the like read as a vine rather than a stamp.
- * Returns null when three don't fit.
- */
-export function placeIconRow(grid: Grid, icon: Grid, gap = 1): Grid | null {
-  const fits = Math.floor((grid.width + ROW_GAP) / (icon.width + ROW_GAP))
-  const count = Math.min(ROW_MAX, fits % 2 ? fits : fits - 1)
-  if (count < 3) return null
-  const rowWidth = count * icon.width + (count - 1) * ROW_GAP
-  const width = grid.width
-  const height = grid.height + gap + icon.height
-  const cells = new Uint8Array(width * height)
-  cells.set(grid.cells)
-  const top = grid.height + gap
-  let left = Math.floor((width - rowWidth) / 2)
-  for (let k = 0; k < count; k++) {
-    const mirror = k % 2 === 1
-    for (let y = 0; y < icon.height; y++) {
-      for (let x = 0; x < icon.width; x++) {
-        const sx = mirror ? icon.width - 1 - x : x
-        if (icon.cells[y * icon.width + sx]) cells[(top + y) * width + left + x] = ACCENT
-      }
-    }
-    left += icon.width + ROW_GAP
-  }
-  return { width, height, cells }
-}
-
 /** The largest icon size that is no wider than `share` of the pattern. */
 export function iconSizeFor<S extends number>(available: S[], width: number, share = 0.34): S | null {
   const fitting = available.filter((size) => size <= width * share)

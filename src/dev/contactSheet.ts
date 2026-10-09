@@ -16,7 +16,6 @@ export async function contactSheet(specs: SheetSpec[], cell = 6, cols = 3) {
       ...base,
       effect: 'none',
       icon: null,
-      iconRow: false,
       letterGap: 1,
       lineGap: 2,
       capitalsFrom: null,

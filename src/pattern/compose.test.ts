@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Grid } from './cleanup'
-import { EFFECTS, EFFECT_REACH, addEffect, iconSizeFor, padColumns, placeIconBelow, placeIconRow } from './compose'
+import { EFFECTS, EFFECT_REACH, addEffect, iconSizeFor, padColumns, placeIconBelow } from './compose'
 
 const grid = (rows: string[]): Grid => ({
   width: rows[0].length,
@@ -65,18 +65,5 @@ describe('iconSizeFor', () => {
     expect(iconSizeFor([7, 11, 15], 50)).toBe(15)
     expect(iconSizeFor([7, 11, 15], 40)).toBe(11)
     expect(iconSizeFor([15], 40)).toBe(null)
-  })
-})
-
-describe('placeIconRow', () => {
-  const leaf = grid(['#.', '##'])
-
-  it('centres an odd number of motifs, mirroring every other one', () => {
-    const row = placeIconRow(grid(['...............']), leaf, 0)!
-    expect(show(row).slice(1)).toEqual(['.+.....+...+...', '.++...++...++..'])
-  })
-
-  it('gives up when three do not fit', () => {
-    expect(placeIconRow(grid(['......']), leaf)).toBeNull()
   })
 })

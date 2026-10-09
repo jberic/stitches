@@ -51,17 +51,6 @@ export const ICON_LABELS: Record<IconName, string> = {
   pear: 'pear',
 }
 
-/**
- * The icons that may repeat in a motif row, with their plural labels. Each is
- * drawn at 7 stitches. Leaf and cherry rows were left out: they read as noise.
- */
-export const ICON_PLURALS: Partial<Record<IconName, string>> = {
-  mushroom: 'mushrooms',
-  tree: 'trees',
-  rainbow: 'rainbows',
-  egg: 'fried eggs',
-}
-
 /** The label as it reads in a sentence: "a leaf", "an ice cream", "cherries". */
 export function iconPhrase(icon: IconName): string {
   const label = ICON_LABELS[icon]

@@ -4,7 +4,7 @@ import { iconCells, iconSizes } from '../data/icons'
 import { SCRIPT_FONTS, loadDisplayFont } from '../fonts'
 import { maskFromCanvas } from './canvas'
 import { cleanup, smoothEdges, type Grid } from './cleanup'
-import { ACCENT, EFFECT_REACH, addEffect, type Effect, iconSizeFor, padColumns, placeIconBelow, placeIconRow } from './compose'
+import { ACCENT, EFFECT_REACH, addEffect, type Effect, iconSizeFor, padColumns, placeIconBelow } from './compose'
 import { coverage, stitchesFrom, trimRows, type Mask } from './downsample'
 import { renderAlphabet } from './layouts/alphabet'
 import { renderStackedBlock, type LetterBox } from './layouts/stackedBlock'
@@ -231,9 +231,6 @@ function decorate(lettering: Grid, recipe: Recipe): Grid {
   let grid = addEffect(lettering, recipe.effect)
   if (recipe.icon) {
     const gap = 1
-    // A row of small motifs, where this icon is drawn small; otherwise one icon.
-    const row = recipe.iconRow && iconSizes(recipe.icon).includes(7) && placeIconRow(grid, iconCells(recipe.icon, 7), gap + 1)
-    if (row) return row
     const size = iconSizeFor(iconSizes(recipe.icon), grid.width)
     if (size) grid = placeIconBelow(grid, iconCells(recipe.icon, size), gap)
   }

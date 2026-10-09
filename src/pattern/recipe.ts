@@ -1,5 +1,5 @@
 import { ALPHABETS, type AlphabetId } from '../data/alphabets'
-import { ICON_PLURALS, ICON_SETS, iconPhrase, type IconName } from '../data/icons'
+import { ICON_SETS, iconPhrase, type IconName } from '../data/icons'
 import { CAPITALS_ONLY, PATTERN_FONTS, SCRIPT_FONTS, type DisplayFont } from '../fonts'
 import { between, newSeed, pick, randomFor } from './random'
 import type { Effect } from './compose'
@@ -18,8 +18,6 @@ export interface Recipe {
   threshold: number
   /** A motif in the accent thread, or none. */
   icon: IconName | null
-  /** Show the icon small and repeated in a row, instead of once. Only icons drawn at 7 stitches. */
-  iconRow: boolean
   /** How the accent thread dresses the letters (see compose.ts). */
   effect: Effect
   letterCase: TextCase
@@ -185,14 +183,6 @@ function effectFor(effect: Effect, alphabet: AlphabetId | null): Effect {
   return (ALPHABETS[alphabet].effects as Effect[]).includes(effect) ? effect : 'none'
 }
 
-/** Sampler letters often sit over a row of small motifs, for the icons allowed in a row. */
-const ROW_SHARE = 0.6
-
-function iconRowFor(seed: string, alphabet: AlphabetId | null, icon: IconName | null): boolean {
-  if (alphabet !== 'sampler' || !icon || !(icon in ICON_PLURALS)) return false
-  return randomFor('icon-row', seed)() < ROW_SHARE
-}
-
 /**
  * Display fonts get room to breathe: at least two clear columns between
  * letters and two rows between lines, and no wave (bending squeezed heavy
@@ -212,7 +202,6 @@ function asFontStyle(recipe: Recipe): Recipe {
     ...typedCase(recipe),
     alphabet: null,
     effect: 'none',
-    iconRow: false,
     letterGap: Math.max(FONT_LETTER_GAP, recipe.letterGap),
     lineGap: Math.max(FONT_LINE_GAP, recipe.lineGap),
   }
@@ -265,7 +254,6 @@ export function recipeFor(
     threshold: round2(between(rng, ...THRESHOLDS[font])),
     effect: effectDraw(seed),
     icon: iconFor(seed, choices.motif),
-    iconRow: false,
     letterCase: choices.letterCase,
     capitalsFrom: null,
     alphabet: alphabetFor(seed, choices.letterCase, choices.caseForced, choices.motif),
@@ -282,7 +270,6 @@ export function recipeFor(
   // plain for an icon, so changing the motif changes only the icon.
   const pickedOrnamented = ALPHABETS[alphabetFor(seed, choices.letterCase, choices.caseForced) ?? 'block'].ornamented
   base.effect = pickedOrnamented ? 'none' : effectFor(base.effect, base.alphabet)
-  base.iconRow = iconRowFor(seed, base.alphabet, base.icon)
   const first = base.alphabet ? base : asFontStyle(base)
   if (attempt === 0) return first
 
@@ -304,7 +291,6 @@ export function recipeFor(
         ...(capitals ? { letterCase: 'upper' as const, capitalsFrom: typed.letterCase } : {}),
         alphabet: compact,
         icon: seedIcon,
-        iconRow: false,
         effect: effectFor(effectDraw(seed), compact),
         letterGap: 1,
       }
@@ -331,7 +317,6 @@ export function recipeFor(
       icon: seedIcon,
       alphabet: 'block',
       effect: effectFor(base.effect, 'block'),
-      iconRow: false,
       letterGap: 1,
       lineGap: Math.max(1, first.lineGap),
     }
@@ -373,7 +358,6 @@ export const WORDMARK_RECIPE: Recipe = {
   lineGap: 1,
   threshold: 0.5,
   icon: null,
-  iconRow: false,
   effect: 'none',
   letterCase: 'upper',
   capitalsFrom: null,
@@ -393,7 +377,7 @@ const EFFECT_PHRASES: Record<Effect, string | null> = {
 export function describeRecipe(recipe: Recipe): string {
   const shape = recipe.letterAspect >= 1.7 ? 'tall letters' : recipe.letterAspect <= 1.35 ? 'squat letters' : null
   const spacing = recipe.letterGap > 1 ? 'airy' : null
-  const iconPart = recipe.icon && (recipe.iconRow ? `a row of ${ICON_PLURALS[recipe.icon]}` : iconPhrase(recipe.icon))
+  const iconPart = recipe.icon && iconPhrase(recipe.icon)
   const extras = [EFFECT_PHRASES[recipe.effect], iconPart || null].filter(Boolean)
   const withPart = extras.length ? `with ${extras.join(' and ')}` : null
   const lower = recipe.capitalsFrom ? 'set in capitals' : recipe.letterCase === 'lower' ? 'lowercase' : null
