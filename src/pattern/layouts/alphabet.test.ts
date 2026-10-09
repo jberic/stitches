@@ -53,3 +53,40 @@ describe('renderAlphabet on a wave', () => {
     expect(new Set(wavy.letters.map((l) => l.y)).size).toBeGreaterThan(1)
   })
 })
+
+describe('renderAlphabet ornaments', () => {
+  it('returns ornament stitches separately, outside the mask', () => {
+    const ornamented = {
+      ...BLOCK,
+      ornamented: true,
+      sizes: {
+        ...BLOCK.sizes,
+        regular: {
+          ...BLOCK.sizes.regular,
+          glyphs: new Map([
+            [
+              'I',
+              {
+                width: 3,
+                rows: [
+                  '##+',
+                  ...BLOCK.sizes.regular.glyphs
+                    .get('I')!
+                    .rows.slice(1)
+                    .map((r) => r + '.'),
+                ],
+              },
+            ],
+          ]),
+        },
+      },
+    }
+    const result = renderAlphabet(['I'], { ...options, width: 10, maxScale: 1, alphabet: ornamented })
+    if (!result.ok) throw new Error('expected a layout')
+    const cells = stitchesFrom(coverage(result.mask, options.scale))
+    // "I" is 3 wide with its ornament: columns 3-5. The ornament is column 5 of the top row.
+    expect([...result.accent.subarray(0, 10)]).toEqual([0, 0, 0, 0, 0, 1, 0, 0, 0, 0])
+    expect(cells[5]).toBe(0)
+    expect(result.accent.reduce((a, b) => a + b, 0)).toBe(1)
+  })
+})

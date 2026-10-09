@@ -4,7 +4,7 @@ import { iconCells, iconSizes } from '../data/icons'
 import { SCRIPT_FONTS, loadDisplayFont } from '../fonts'
 import { maskFromCanvas } from './canvas'
 import { cleanup, smoothEdges, type Grid } from './cleanup'
-import { EFFECT_REACH, addEffect, type Effect, iconSizeFor, padColumns, placeIconBelow, placeIconRow } from './compose'
+import { ACCENT, EFFECT_REACH, addEffect, type Effect, iconSizeFor, padColumns, placeIconBelow, placeIconRow } from './compose'
 import { coverage, stitchesFrom, trimRows, type Mask } from './downsample'
 import { renderAlphabet } from './layouts/alphabet'
 import { renderStackedBlock, type LetterBox } from './layouts/stackedBlock'
@@ -88,6 +88,8 @@ interface Lettering {
   unsupported?: string
   /** The stitch alphabet size used, if any. */
   size?: AlphabetSizeId
+  /** An ornamented alphabet's decoration, one cell per stitch. */
+  accent?: Uint8Array
 }
 
 /** Draws the lettering for a recipe as a high-resolution mask, with each letter's box. */
@@ -108,7 +110,7 @@ function drawLettering(upper: string[], width: number, recipe: Recipe): Letterin
       const why = result.reason === 'missing' ? `This alphabet has no "${result.char}"` : 'Too wide for this alphabet'
       return { mask: empty, letters: [], unsupported: why }
     }
-    return { mask: result.mask, letters: result.letters, size: result.size }
+    return { mask: result.mask, letters: result.letters, size: result.size, accent: result.accent }
   }
   // Fonts keep a margin of fabric at the sides, so the words don't fill the
   // pattern edge to edge.
@@ -173,7 +175,7 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
   // The lettering leaves room at its sides for the effect to reach into.
   const reach = EFFECT_REACH[recipe.effect]
   const inner = width - reach.left - reach.right
-  const { mask, letters, unsupported, size } = drawLettering(cased, inner, recipe)
+  const { mask, letters, unsupported, size, accent } = drawLettering(cased, inner, recipe)
   if (unsupported) return unsupportedResult(lines, cased, width, recipe, seed, unsupported)
   const cover = coverage(mask, SCALE)
   const raw: Grid = { width: inner, height: cover.length / inner, cells: stitchesFrom(cover, recipe.threshold) }
@@ -182,7 +184,10 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
   const tidy = recipe.alphabet ? raw : smoothEdges(cleanup(raw, cover), cover)
   const legible = checkLegibility(mask, SCALE, tidy, cover, letters, recipe.layout === 'wavy')
   const check = checkScriptSize(legible, letters, recipe)
-  const trimmed = trimRows(tidy.cells, inner)
+  // Ornaments join after the check: they decorate the letters, they don't make them readable.
+  const withOrnaments = tidy.cells.slice()
+  if (accent) accent.forEach((on, i) => on && !withOrnaments[i] && (withOrnaments[i] = ACCENT))
+  const trimmed = trimRows(withOrnaments, inner)
   const stitched: Recipe = { ...recipe, effect: stitchedEffect(recipe, size) }
   const left = EFFECT_REACH[stitched.effect].left
   const lettering = padColumns({ width: inner, height: trimmed.height, cells: trimmed.cells }, left, width - inner - left)

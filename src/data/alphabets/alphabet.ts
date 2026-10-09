@@ -1,6 +1,8 @@
 /**
  * Stitch alphabets: letters drawn directly on the grid ('#' = stitch), each
  * in two sizes. Glyphs keep their drawn shape; they are never stretched.
+ * An ornamented alphabet also marks its decoration ('+'), stitched in the
+ * accent thread and left out of the legibility check.
  */
 
 export type AlphabetSizeId = 'regular' | 'small'
@@ -42,8 +44,10 @@ export interface StitchAlphabet {
   sizes: Record<AlphabetSizeId, AlphabetSize>
   /** Effects that read well on these letters at the regular size. The small size only takes a shadow. */
   effects: AlphabetEffect[]
-  /** False for a capitals-only alphabet: it is only offered when the phrase is stitched in capitals. */
+  /** False for a capitals-only alphabet: it sets any phrase in capitals, and says so. */
   lowercase: boolean
+  /** Its letters carry their own decoration in the accent thread, so a pattern gets no icon or effect. */
+  ornamented: boolean
 }
 
 function buildSize(source: AlphabetSizeSource): AlphabetSize {
@@ -66,12 +70,14 @@ export function defineAlphabet(source: {
   small: AlphabetSizeSource
   effects: AlphabetEffect[]
   lowercase?: boolean
+  ornamented?: boolean
 }): StitchAlphabet {
   return {
     name: source.name,
     sizes: { regular: buildSize(source.regular), small: buildSize(source.small) },
     effects: source.effects,
     lowercase: source.lowercase ?? true,
+    ornamented: source.ornamented ?? false,
   }
 }
 

@@ -21,7 +21,16 @@ export interface AlphabetLayoutOptions {
 }
 
 export type AlphabetLayoutResult =
-  | { ok: true; mask: Mask; rows: number; letters: LetterBox[]; size: AlphabetSizeId; enlarge: number }
+  | {
+      ok: true
+      mask: Mask
+      rows: number
+      letters: LetterBox[]
+      size: AlphabetSizeId
+      enlarge: number
+      /** Ornament stitches ('+' in a glyph), one cell per stitch, width × rows. Not in the mask. */
+      accent: Uint8Array
+    }
   | { ok: false; reason: 'missing'; char: string }
   | { ok: false; reason: 'too-wide' }
 
@@ -85,6 +94,7 @@ export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions):
     const rows = textRows + padRows * 2
     const mask: Mask = { width: width * scale, height: rows * scale, data: new Uint8Array(width * scale * rows * scale) }
     const letters: LetterBox[] = []
+    const accent = new Uint8Array(width * rows)
 
     let top = padRows
     for (const line of set) {
@@ -95,6 +105,16 @@ export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions):
         const glyphTop = top + lift(x0 + gw / 2)
         line.rows.forEach((row, y) => {
           for (let x = glyph.x; x < glyph.x + glyph.width; x++) {
+            if (row[x] === '+') {
+              for (let dy = 0; dy < enlarge; dy++) {
+                accent.fill(
+                  1,
+                  (glyphTop + y * enlarge + dy) * width + left + x * enlarge,
+                  (glyphTop + y * enlarge + dy) * width + left + (x + 1) * enlarge,
+                )
+              }
+              continue
+            }
             if (row[x] !== '#') continue
             // Each stitch becomes an enlarge × enlarge block of solid mask pixels.
             const sx = left + x * enlarge
@@ -108,7 +128,7 @@ export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions):
       }
       top += (line.rows.length + lineGap) * enlarge
     }
-    return { ok: true, mask, rows, letters, size: sizeId, enlarge }
+    return { ok: true, mask, rows, letters, size: sizeId, enlarge, accent }
   }
   return { ok: false, reason: 'too-wide' }
 }

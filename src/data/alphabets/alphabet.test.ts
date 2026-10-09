@@ -23,7 +23,7 @@ describe.each(cases)('%s %s', (_name, sizeId, alphabet) => {
     expect(glyph.rows).toHaveLength(height)
     for (const row of glyph.rows) {
       expect(row).toHaveLength(glyph.width)
-      expect(row).toMatch(/^[#.]+$/)
+      expect(row).toMatch(alphabet.ornamented ? /^[#+.]+$/ : /^[#.]+$/)
     }
     expect(glyph.rows.some((row) => row.includes('#'))).toBe(true)
   })
