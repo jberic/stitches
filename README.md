@@ -27,7 +27,7 @@ All fonts are under the [SIL Open Font License 1.1](https://openfontlicense.org)
 
 ## Stitch palettes
 
-Every pattern sits on one fabric, cream #FBF3EC, and uses two threads from one of 12 palettes in `src/data/palettes.ts`: one for the lettering, one for the accent (shadow, ornaments, and in v2 the icons).
+Every pattern sits on one fabric, cream #FBF3EC, and uses two threads from one of 11 palettes in `src/data/palettes.ts`: one for the lettering, one for the accent (shadow, ornaments, and in v2 the icons).
 
 - Built from the hues of the design handoff ("Cross Stitch Design System", stitch palettes): the darker colour of each handoff palette letters, the other hue becomes the accent.
 - Threads are stored as codes only; names and screen colours come from `threads.json`. Each code is the closest thread (CIEDE2000) to the handoff colour that passes on the fabric: lettering at least 4.5:1, accent at least 2:1. Tests check every palette.

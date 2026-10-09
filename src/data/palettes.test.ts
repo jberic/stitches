@@ -3,9 +3,9 @@ import { contrast } from './colour'
 import { FABRIC, PALETTES, paletteById, patternColours } from './palettes'
 
 describe('palettes', () => {
-  it('has 12 palettes with unique ids, all on the one fabric', () => {
-    expect(PALETTES).toHaveLength(12)
-    expect(new Set(PALETTES.map((p) => p.id)).size).toBe(12)
+  it('has 11 palettes with unique ids, all on the one fabric', () => {
+    expect(PALETTES).toHaveLength(11)
+    expect(new Set(PALETTES.map((p) => p.id)).size).toBe(11)
     for (const p of PALETTES) expect(patternColours(p).fabric).toBe(FABRIC.hex)
   })
 
@@ -28,5 +28,12 @@ describe('palettes', () => {
   it('falls back to the first palette for an unknown id', () => {
     expect(paletteById('99').id).toBe('01')
     expect(paletteById(null).id).toBe('01')
+  })
+})
+
+describe('removed palettes', () => {
+  it('no longer offers Garnet and raspberry (03), and an old link to it falls back to the default', () => {
+    expect(PALETTES.map((p) => p.id)).not.toContain('03')
+    expect(paletteById('03').id).toBe('01')
   })
 })
