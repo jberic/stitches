@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { paletteById, patternColours } from '../data/palettes'
+import { pairPalette, patternColours } from '../data/palettes'
 import { decodeCells, entryKey, type HistoryEntry } from '../state/history'
 import './HistoryStrip.css'
 
@@ -17,7 +17,7 @@ function Thumbnail({ entry }: { entry: HistoryEntry }) {
     const canvas = ref.current
     if (!canvas) return
     const { width, height, cells } = entry.grid
-    const { fabric, lettering, accent } = patternColours(paletteById(entry.state.palette))
+    const { fabric, lettering, accent } = patternColours(pairPalette(entry.state.lettering, entry.state.accent))
     const cell = THUMB_PX / (width + 4)
     const dpr = window.devicePixelRatio || 1
     const w = THUMB_PX

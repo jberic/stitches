@@ -25,14 +25,14 @@ All fonts are under the [SIL Open Font License 1.1](https://openfontlicense.org)
 | IBM Plex Sans  | Interface                         | © 2017 IBM Corp. Reserved Font Name "Plex"    |
 | IBM Plex Mono  | Codes and counts                  | © 2017 IBM Corp. Reserved Font Name "Plex"    |
 
-## Stitch palettes
+## Thread colours
 
-Every pattern sits on one fabric, cream #FBF3EC, and uses two threads from one of 11 palettes in `src/data/palettes.ts`: one for the lettering, one for the accent (shadow, ornaments, and in v2 the icons).
+Every pattern sits on one fabric, cream #FBF3EC, and uses two threads: one for the lettering, one for the accent (shadow, ornaments, and in v2 the icons).
 
-- Built from the hues of the design handoff ("Cross Stitch Design System", stitch palettes): the darker colour of each handoff palette letters, the other hue becomes the accent.
-- Threads are stored as codes only; names and screen colours come from `threads.json`. Each code is the closest thread (CIEDE2000) to the handoff colour that passes on the fabric: lettering at least 4.5:1, accent at least 2:1. Tests check every palette.
-- Pale hues had to darken to stay visible on cream: blush became 21 Alizarin Light, straw 833 Golden Olive Light, ecru 3023 Brown Gray Light. The handoff's garnet (#5F051C) has no close thread; 814 Garnet Dark is a little lighter.
-- The fabric's screen colour is a design choice, not thread data. Screen colours are approximate for every thread. Check against a physical thread card.
+- **Colour wheel.** Pick either thread with a saturation and brightness square and a hue slider, or type a hex value or a thread code. Wherever you point, the pattern uses the closest thread in `threads.json`, measured with CIEDE2000 (how alike two colours look, not raw RGB), and the five closest are offered to choose between. Links store the two thread codes (`l` and `a`).
+- **Suggested pairs.** Six pairs in `src/data/palettes.ts` to start from, built from the hues of the design handoff ("Cross Stitch Design System"). Each code is the closest thread to the handoff colour that passes on the fabric: lettering at least 4.5:1, accent at least 2:1. Tests check every pair. Links from before the colour wheel (`p=07`) still open in their exact threads.
+- **Warnings, not rules.** Any two threads can be used. The picker says so in plain words when the lettering is pale on the fabric (under 3:1), when the two threads are hard to tell apart (under 1.8:1), or when the accent barely shows (under 1.25:1).
+- The fabric's screen colour is a design choice, not thread data. Screen colours are approximate for every thread, so "closest thread" means closest on screen. Check against a physical thread card.
 
 ## Thread colour data
 

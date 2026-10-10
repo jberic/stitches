@@ -49,3 +49,17 @@ describe('history', () => {
     expect(decodeCells(encodeCells(cells))).toEqual(cells)
   })
 })
+
+describe('history saved before the colour wheel', () => {
+  it("keeps the old palette's exact threads", () => {
+    const old = [
+      {
+        label: 'x',
+        grid: { width: 1, height: 1, cells: '1' },
+        state: { text: 'Hi', seed: 'k3j9a', width: 50, palette: '07', fabric: 14, letterCase: 'typed' },
+      },
+    ]
+    const [entry] = loadHistory({ getItem: () => JSON.stringify(old) })
+    expect([entry.state.lettering, entry.state.accent]).toEqual(['939', '729'])
+  })
+})

@@ -1,4 +1,4 @@
-import { DEFAULT_PALETTE_ID, PALETTES } from '../data/palettes'
+import { DEFAULT_PALETTE_ID, codesForPaletteId, isThreadCode } from '../data/palettes'
 import { DEFAULT_WIDTH, MAX_WIDTH, MIN_WIDTH } from '../pattern/generate'
 import { isSeed } from '../pattern/random'
 import type { LetterCase } from '../pattern/recipe'
@@ -10,7 +10,9 @@ export interface ShareState {
   text: string
   seed: string
   width: number
-  palette: string
+  /** Thread codes: the lettering thread and the accent thread. */
+  lettering: string
+  accent: string
   fabric: FabricCount
   letterCase: LetterCase
 }
@@ -19,7 +21,8 @@ export const DEFAULT_STATE: ShareState = {
   text: 'Hello sunshine',
   seed: 'k3j9a',
   width: DEFAULT_WIDTH,
-  palette: DEFAULT_PALETTE_ID,
+  lettering: codesForPaletteId(DEFAULT_PALETTE_ID)![0],
+  accent: codesForPaletteId(DEFAULT_PALETTE_ID)![1],
   fabric: DEFAULT_FABRIC_COUNT,
   letterCase: 'typed',
 }
@@ -30,14 +33,18 @@ export function readShareState(search: string): ShareState {
   const text = params.get('text')
   const seed = params.get('seed')
   const width = Number(params.get('w'))
-  const palette = params.get('p')
+  const lettering = params.get('l')
+  const accent = params.get('a')
+  // Links made before the colour wheel name a palette instead.
+  const fromPalette = codesForPaletteId(params.get('p'))
   const fabric = Number(params.get('f'))
   const letterCase = params.get('c')
   return {
     text: text && text.trim() && text.length <= MAX_CHARS * 2 ? text : DEFAULT_STATE.text,
     seed: isSeed(seed) ? seed : DEFAULT_STATE.seed,
     width: Number.isInteger(width) && width >= MIN_WIDTH && width <= MAX_WIDTH ? width : DEFAULT_STATE.width,
-    palette: PALETTES.some((p) => p.id === palette) ? palette! : DEFAULT_STATE.palette,
+    lettering: isThreadCode(lettering) ? lettering! : (fromPalette?.[0] ?? DEFAULT_STATE.lettering),
+    accent: isThreadCode(accent) ? accent! : (fromPalette?.[1] ?? DEFAULT_STATE.accent),
     fabric: isFabricCount(fabric) ? fabric : DEFAULT_STATE.fabric,
     letterCase: letterCase === 'upper' || letterCase === 'lower' ? letterCase : DEFAULT_STATE.letterCase,
   }
@@ -48,7 +55,8 @@ export function shareSearch(state: ShareState): string {
     text: state.text,
     seed: state.seed,
     w: String(state.width),
-    p: state.palette,
+    l: state.lettering,
+    a: state.accent,
     f: String(state.fabric),
     c: state.letterCase,
   })

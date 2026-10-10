@@ -50,6 +50,12 @@ function isEntry(value: unknown): value is HistoryEntry {
   )
 }
 
+/** A saved state as a link; entries saved before the colour wheel carry a palette id instead of thread codes. */
+function searchFor(state: ShareState & { palette?: string }): string {
+  const search = shareSearch(state)
+  return state.lettering ? search : `${search}&p=${encodeURIComponent(state.palette ?? '')}`
+}
+
 export function loadHistory(storage: Pick<Storage, 'getItem'> | undefined = safeStorage()): HistoryEntry[] {
   try {
     const raw = storage?.getItem(STORAGE_KEY)
@@ -59,7 +65,7 @@ export function loadHistory(storage: Pick<Storage, 'getItem'> | undefined = safe
     // Re-read each state through the link parser, so a stale or edited entry can't carry bad values.
     return parsed
       .filter(isEntry)
-      .map((e) => ({ ...e, state: readShareState(shareSearch(e.state)) }))
+      .map((e) => ({ ...e, state: readShareState(searchFor(e.state)) }))
       .slice(0, HISTORY_LIMIT)
   } catch {
     return []

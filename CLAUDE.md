@@ -14,7 +14,7 @@ Web tool: type a phrase, get a two-colour cross-stitch pattern in a retro letter
 - Every result goes through the legibility check. If it fails, derive a new recipe from the same seed and retry (max 5 attempts).
 - Fonts must be open-licence and self-hosted. Wait for fonts to load before drawing.
 - Icons are drawn for this project as small bitmaps. Do not copy patterns, icons or artwork from reference images or other sites.
-- Colours come from a curated list of pairs. Thread data lives in `src/data/threads.json` as `{ code, name, hex }`. Never hand-type it. Record the source and licence in the README.
+- Colours: any two threads, picked with the colour wheel (`src/components/ThreadPicker.tsx`), which snaps to the closest thread by CIEDE2000; six suggested pairs to start from (`src/data/palettes.ts`). Warn, don't block, when a pair is hard to read. Thread data lives in `src/data/threads.json` as `{ code, name, hex }`. Never hand-type it. Record the source and licence in the README.
 - No brand logos. Thread codes appear as plain text only.
 
 ## Design

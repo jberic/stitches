@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import { paletteById, patternColours } from '../data/palettes'
+import { pairPalette, patternColours } from '../data/palettes'
 import { MAX_WIDTH, MIN_WIDTH, findReadableWidth, generatePattern, type GenerateResult } from '../pattern/generate'
 import { DEFAULT_MOTIF, describeRecipe, fontFailed, seedWithNewStyle, type Choices, type LetterCase } from '../pattern/recipe'
 import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
@@ -10,7 +10,7 @@ import { addToHistory, encodeCells, entryKey, loadHistory, saveHistory, type His
 import { readShareState, shareSearch, writeShareState, type ShareState } from '../state/url'
 import { HistoryStrip } from './HistoryStrip'
 import { Legend } from './Legend'
-import { PalettePicker } from './PalettePicker'
+import { ThreadPicker } from './ThreadPicker'
 import { Segmented } from './Segmented'
 import { PatternChart, type ChartColours } from './PatternChart'
 import './Tool.css'
@@ -24,17 +24,17 @@ export function Tool({ inputRef }: Props) {
   const [text, setText] = useState(initial.text)
   const [width, setWidth] = useState(initial.width)
   const [seed, setSeed] = useState(initial.seed)
-  const [paletteId, setPaletteId] = useState(initial.palette)
+  const [threads, setThreads] = useState({ lettering: initial.lettering, accent: initial.accent })
   const [fabricCount, setFabricCount] = useState<FabricCount>(initial.fabric)
   const [letterCase, setLetterCase] = useState<LetterCase>(initial.letterCase)
   // Motifs are saved for v2 (see DEFAULT_MOTIF): v1 patterns are letters only.
   const choices = useMemo<Choices>(() => ({ motif: DEFAULT_MOTIF, letterCase }), [letterCase])
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory())
-  // Read by the link writer without re-running generation when only the palette changes.
-  const paletteRef = useRef(paletteId)
+  // Read by the link writer without re-running generation when only the threads change.
+  const threadsRef = useRef(threads)
   useEffect(() => {
-    paletteRef.current = paletteId
-  }, [paletteId])
+    threadsRef.current = threads
+  }, [threads])
   const [result, setResult] = useState<GenerateResult | null>(null)
   const [failed, setFailed] = useState(false)
   const [download, setDownload] = useState<'idle' | 'busy' | 'failed'>('idle')
@@ -68,7 +68,7 @@ export function Tool({ inputRef }: Props) {
           if (mode !== 'none') {
             const current = readShareState(window.location.search)
             const text = linesKey.split('\n').join(' ')
-            writeShareState({ ...current, text, seed, width, ...choices, palette: paletteRef.current }, mode)
+            writeShareState({ ...current, text, seed, width, ...choices, ...threadsRef.current }, mode)
           }
         })
         .catch(() => id === request.current && setFailed(true))
@@ -84,7 +84,7 @@ export function Tool({ inputRef }: Props) {
       setText(state.text)
       setWidth(state.width)
       setSeed(state.seed)
-      setPaletteId(state.palette)
+      setThreads({ lettering: state.lettering, accent: state.accent })
       setFabricCount(state.fabric)
       setLetterCase(state.letterCase)
     }
@@ -103,10 +103,10 @@ export function Tool({ inputRef }: Props) {
     }
   }
 
-  // A new palette only recolours the pattern; the link is updated in place.
-  const choosePalette = (id: string) => {
-    setPaletteId(id)
-    writeShareState({ ...readShareState(window.location.search), palette: id }, 'replace')
+  // New threads only recolour the pattern; the link is updated in place.
+  const chooseThreads = (lettering: string, accent: string) => {
+    setThreads({ lettering, accent })
+    writeShareState({ ...readShareState(window.location.search), lettering, accent }, 'replace')
   }
 
   const chooseFabric = (count: FabricCount) => {
@@ -114,7 +114,7 @@ export function Tool({ inputRef }: Props) {
     writeShareState({ ...readShareState(window.location.search), fabric: count }, 'replace')
   }
 
-  const palette = paletteById(paletteId)
+  const palette = useMemo(() => pairPalette(threads.lettering, threads.accent), [threads])
   const chartColours = useMemo<ChartColours>(() => {
     const { fabric, lettering, accent } = patternColours(palette)
     return { fabric, lettering: lettering.hex, accent: accent.hex }
@@ -153,12 +153,13 @@ export function Tool({ inputRef }: Props) {
             text: pattern.meta.text,
             seed: pattern.meta.seed,
             width: pattern.width,
-            palette: palette.id,
+            lettering: threads.lettering,
+            accent: threads.accent,
             fabric: fabricCount,
             ...choices,
           }
         : null,
-    [pattern, palette.id, fabricCount, choices],
+    [pattern, threads, fabricCount, choices],
   )
   const shownKey = shownState && shareSearch(shownState)
 
@@ -193,7 +194,7 @@ export function Tool({ inputRef }: Props) {
     setText(entry.state.text)
     setWidth(entry.state.width)
     setSeed(entry.state.seed)
-    setPaletteId(entry.state.palette)
+    setThreads({ lettering: entry.state.lettering, accent: entry.state.accent })
     setFabricCount(entry.state.fabric)
     setLetterCase(entry.state.letterCase)
   }
@@ -293,7 +294,7 @@ export function Tool({ inputRef }: Props) {
         </div>
 
         <div className="field">
-          <PalettePicker value={palette.id} onChange={choosePalette} />
+          <ThreadPicker lettering={threads.lettering} accent={threads.accent} onChange={chooseThreads} />
           <p className="hint">Screen colours are approximate. Check against your physical thread card.</p>
         </div>
 
