@@ -76,15 +76,15 @@ main,
   border-radius: 2px;
 }
 
-/* A running stitch across the page: the drawn rule repeats, so it never stretches its dashes. */
+/* A running stitch across the page: 4-stitch dashes with 5-stitch gaps, as in the Figma rule. */
 .running-stitch {
   height: 1px;
-  background: url('./assets/running-stitch-rule.png') repeat-x left center / 1328px 1px;
+  background: repeating-linear-gradient(to right, var(--accent) 0 4px, transparent 4px 9px) -2px 0;
 }
 
 .wordmark {
   --wordmark-under: var(--accent);
-  --wordmark-over: #a4523a;
+  --wordmark-over: #7d1a33;
 
   margin: 0;
   line-height: 0;

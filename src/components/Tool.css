@@ -264,7 +264,7 @@
   padding: 0.9rem 1.5rem;
   border: 0;
   border-radius: 999px;
-  /* Cream on rust is 6.1:1. */
+  /* Cream on deep red is 12.6:1. */
   background: var(--accent);
   color: var(--sheet);
   font-family: var(--font-ui);

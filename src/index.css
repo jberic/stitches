@@ -10,11 +10,11 @@
   --line: #948378;
   /* Decorative dividers only, 1.3:1 on --bg: too faint for anything that must be seen. */
   --hairline: #ddd3c5;
-  /* Rust, from the stitch mark: 5.8:1 on --bg. The primary button, focus rings and the wordmark. */
-  --accent: #93452e;
-  /* Hover and pressed rust, 7.5:1 on --bg. */
-  --accent-strong: #7a3824;
-  --focus: #93452e;
+  /* Deep red: 11.9:1 on --bg. The primary button, focus rings, the stitch mark, the rule and the wordmark. */
+  --accent: #5f051c;
+  /* Hover and pressed, darker still; cream on it is 14.5:1. */
+  --accent-strong: #4a0416;
+  --focus: #5f051c;
   /* Soft warm shadow colour, as r g b for use with an alpha. */
   --shadow: 57 45 40;
 
