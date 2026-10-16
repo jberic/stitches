@@ -130,7 +130,6 @@ const IN_MIX: AlphabetId[] = [
   'sampler',
   'sprig',
   'daisy',
-  'marking',
   'beaded',
   'checker',
   'gothic',
@@ -149,7 +148,7 @@ const IN_MIX: AlphabetId[] = [
 ]
 
 /** Alphabets with a small size that fit most phrases: the first stand-ins when another can't draw one. */
-const COMPACT_ALPHABETS: AlphabetId[] = ['marking', 'serif', 'sampler', 'block', 'typewriter']
+const COMPACT_ALPHABETS: AlphabetId[] = ['serif', 'sampler', 'block', 'typewriter']
 
 /** The same letters without decoration, for when a Nature or Food icon was asked for. */
 const PLAIN_VERSION: Partial<Record<AlphabetId, AlphabetId>> = {

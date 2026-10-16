@@ -98,7 +98,7 @@ describe('recipeFor', () => {
         expect([m.letterCase, m.capitalsFrom, describeRecipe(m).includes('set in capitals')]).toEqual(['upper', 'mixed', true])
       } else expect(m.capitalsFrom).toBeNull()
     }
-    // One of 22 alphabets, so a handful in 200 seeds.
+    // One of 21 alphabets, so a handful in 200 seeds.
     expect(slabs).toBeGreaterThan(2)
   })
 
@@ -111,7 +111,7 @@ describe('recipeFor', () => {
     const unsupported = { ...result(false, false), unsupported: true }
     // First a compact alphabet, in the typed case unless it is capitals-only (and then it says so).
     const compact = recipeFor(seed, 1, { recipe: first, check: unsupported }, mixed)
-    expect(['marking', 'serif', 'sampler', 'block', 'typewriter']).toContain(compact.alphabet)
+    expect(['serif', 'sampler', 'block', 'typewriter']).toContain(compact.alphabet)
     expect(compact.capitalsFrom ?? compact.letterCase).toBe('mixed')
     // If that can't draw it either, a font in the typed case.
     const font = recipeFor(seed, 2, { recipe: compact, check: unsupported }, mixed)

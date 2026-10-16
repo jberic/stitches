@@ -29,7 +29,6 @@ const STYLES: { label: string; recipe: Partial<Recipe> }[] = [
   { label: 'Sampler', recipe: { alphabet: 'sampler' } },
   { label: 'Sprig', recipe: { alphabet: 'sprig' } },
   { label: 'Daisy', recipe: { alphabet: 'daisy' } },
-  { label: 'Marking', recipe: { alphabet: 'marking' } },
   { label: 'Beaded', recipe: { alphabet: 'beaded' } },
   { label: 'Checker', recipe: { alphabet: 'checker' } },
   { label: 'Gothic', recipe: { alphabet: 'gothic' } },

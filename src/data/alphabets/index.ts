@@ -11,7 +11,6 @@ import { DECO } from './deco'
 import { FOLK } from './folk'
 import { GOTHIC } from './gothic'
 import { HOLLOW } from './hollow'
-import { MARKING } from './marking'
 import { SAMPLER } from './sampler'
 import { SERIF } from './serif'
 import { SLAB } from './slab'
@@ -30,7 +29,6 @@ export const ALPHABETS = {
   sampler: SAMPLER,
   sprig: SPRIG,
   daisy: DAISY,
-  marking: MARKING,
   beaded: BEADED,
   checker: CHECKER,
   gothic: GOTHIC,
