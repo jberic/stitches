@@ -27,6 +27,12 @@ export const DEFAULT_STATE: ShareState = {
   letterCase: 'typed',
 }
 
+/** True when the address names a pattern (a shared link or a reload), not a bare visit. */
+export function hasShareState(search: string): boolean {
+  const params = new URLSearchParams(search)
+  return params.has('text') || params.has('seed')
+}
+
 /** Reads a link. Anything missing or broken falls back to the default. */
 export function readShareState(search: string): ShareState {
   const params = new URLSearchParams(search)
@@ -70,8 +76,35 @@ export function shareSearch(state: ShareState): string {
  */
 export function writeShareState(state: ShareState, mode: 'replace' | 'push') {
   const search = shareSearch(state)
+  rememberLastState(search)
   if (search === window.location.search) return
   const url = `${window.location.pathname}${search}${window.location.hash}`
   if (mode === 'push') window.history.pushState(null, '', url)
   else window.history.replaceState(null, '', url)
+}
+
+const LAST_KEY = 'say-it-with-stitches:last'
+
+/** Kept in this browser only, so a returning visitor carries on where they left off. */
+function rememberLastState(search: string) {
+  try {
+    window.localStorage.setItem(LAST_KEY, search)
+  } catch {
+    // Storage blocked: the next visit just starts fresh.
+  }
+}
+
+/**
+ * Where the tool opens: the pattern a link names; otherwise this browser's
+ * last pattern; otherwise the default.
+ */
+export function startingState(search: string): ShareState {
+  if (hasShareState(search)) return readShareState(search)
+  try {
+    const last = window.localStorage.getItem(LAST_KEY)
+    if (last) return readShareState(last)
+  } catch {
+    // Storage blocked: start fresh.
+  }
+  return readShareState('')
 }

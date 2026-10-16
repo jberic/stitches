@@ -15,7 +15,7 @@ import { downloadPatternSheet } from '../export/patternImage'
 import { legendFor } from '../pattern/legend'
 import { FABRIC_COUNTS, finishedSize, type FabricCount } from '../pattern/size'
 import { addToHistory, encodeCells, entryKey, loadHistory, saveHistory, type HistoryEntry } from '../state/history'
-import { readShareState, shareSearch, writeShareState, type ShareState } from '../state/url'
+import { readShareState, shareSearch, startingState, writeShareState, type ShareState } from '../state/url'
 import { HistoryStrip } from './HistoryStrip'
 import { Legend } from './Legend'
 import { ThreadPicker } from './ThreadPicker'
@@ -28,7 +28,7 @@ interface Props {
 }
 
 export function Tool({ inputRef }: Props) {
-  const [initial] = useState(() => readShareState(window.location.search))
+  const [initial] = useState(() => startingState(window.location.search))
   const [text, setText] = useState(initial.text)
   const [width, setWidth] = useState(initial.width)
   const [seed, setSeed] = useState(initial.seed)

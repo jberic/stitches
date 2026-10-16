@@ -35,10 +35,10 @@ export const FABRIC = { name: 'Cream', hex: '#FBF3EC' }
 
 /** Recommended pairs: quick picks to start from. Any two threads can be chosen with the colour wheel. */
 export const PALETTES: Palette[] = [
+  { id: '07', name: 'Navy and mustard', lettering: { name: 'Navy', code: '939' }, accent: { name: 'Mustard', code: '729' } },
   { id: '01', name: 'Garnet and mustard', lettering: { name: 'Garnet', code: '814' }, accent: { name: 'Mustard', code: '729' } },
   { id: '04', name: 'Pine and blush', lettering: { name: 'Pine', code: '890' }, accent: { name: 'Blush', code: '21' } },
   { id: '06', name: 'Plum and sage', lettering: { name: 'Plum', code: '35' }, accent: { name: 'Sage', code: '523' } },
-  { id: '07', name: 'Navy and mustard', lettering: { name: 'Navy', code: '939' }, accent: { name: 'Mustard', code: '729' } },
   { id: '11', name: 'Charcoal and straw', lettering: { name: 'Charcoal', code: '310' }, accent: { name: 'Straw', code: '833' } },
   {
     id: '12',
@@ -48,7 +48,7 @@ export const PALETTES: Palette[] = [
   },
 ]
 
-export const DEFAULT_PALETTE_ID = '01'
+export const DEFAULT_PALETTE_ID = '07'
 
 /**
  * Pairs that used to be palettes, by their old id, so a link made before the

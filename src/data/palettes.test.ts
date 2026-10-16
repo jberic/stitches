@@ -35,15 +35,15 @@ describe('palettes', () => {
   })
 
   it('falls back to the first palette for an unknown id', () => {
-    expect(paletteById('99').id).toBe('01')
-    expect(paletteById(null).id).toBe('01')
+    expect(paletteById('99').id).toBe('07')
+    expect(paletteById(null).id).toBe('07')
   })
 })
 
 describe('removed palettes', () => {
   it('no longer offers Garnet and raspberry (03), and an old link to it falls back to the default', () => {
     expect(PALETTES.map((p) => p.id)).not.toContain('03')
-    expect(paletteById('03').id).toBe('01')
+    expect(paletteById('03').id).toBe('07')
   })
 })
 
@@ -74,7 +74,7 @@ describe('the colour wheel', () => {
   })
 
   it('names a custom pair after its threads, and keeps a recommended name', () => {
-    expect(pairPalette('814', '729').name).toBe(PALETTES[0].name)
+    expect(pairPalette('814', '729').name).toBe('Garnet and mustard')
     expect(pairPalette('310', '729')).toMatchObject({ id: 'custom', lettering: { code: '310' }, accent: { code: '729' } })
   })
 

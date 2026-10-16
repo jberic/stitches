@@ -44,6 +44,8 @@ body {
 
 html {
   scrollbar-gutter: stable;
+  /* Shown when the page bounces past either end: cream above, the footer's red below. */
+  background: linear-gradient(to bottom, var(--bg) 50%, #801c2a 50%);
 }
 
 body {
