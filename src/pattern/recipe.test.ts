@@ -98,7 +98,7 @@ describe('recipeFor', () => {
         expect([m.letterCase, m.capitalsFrom, describeRecipe(m).includes('set in capitals')]).toEqual(['upper', 'mixed', true])
       } else expect(m.capitalsFrom).toBeNull()
     }
-    // One of 21 alphabets, so a handful in 200 seeds.
+    // One of 20 alphabets, so a handful in 200 seeds.
     expect(slabs).toBeGreaterThan(2)
   })
 

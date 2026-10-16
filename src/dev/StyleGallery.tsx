@@ -35,7 +35,6 @@ const STYLES: { label: string; recipe: Partial<Recipe> }[] = [
   { label: 'Art Deco', recipe: { alphabet: 'deco' } },
   { label: 'Swash', recipe: { alphabet: 'swash' } },
   { label: 'Tuscan initial', recipe: { alphabet: 'tuscan' } },
-  { label: 'Folk initial', recipe: { alphabet: 'folk' } },
   { label: 'Botanical initial', recipe: { alphabet: 'botanical' } },
   { label: 'Typewriter', recipe: { alphabet: 'typewriter' } },
   { label: 'Stencil', recipe: { alphabet: 'stencil' } },

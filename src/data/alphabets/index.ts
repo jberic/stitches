@@ -8,7 +8,6 @@ import { CHECKER } from './checker'
 import { CURSIVE } from './cursive'
 import { DAISY } from './daisy'
 import { DECO } from './deco'
-import { FOLK } from './folk'
 import { GOTHIC } from './gothic'
 import { HOLLOW } from './hollow'
 import { SAMPLER } from './sampler'
@@ -35,7 +34,6 @@ export const ALPHABETS = {
   deco: DECO,
   swash: SWASH,
   tuscan: TUSCAN,
-  folk: FOLK,
   botanical: BOTANICAL,
   typewriter: TYPEWRITER,
   stencil: STENCIL,

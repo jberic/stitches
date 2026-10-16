@@ -136,7 +136,6 @@ const IN_MIX: AlphabetId[] = [
   'deco',
   'swash',
   'tuscan',
-  'folk',
   'botanical',
   'typewriter',
   'stencil',
