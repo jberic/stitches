@@ -1,12 +1,14 @@
-import { ALPHABETS } from '../data/alphabets'
+import { ALPHABETS, type AlphabetId } from '../data/alphabets'
 import type { AlphabetSizeId } from '../data/alphabets/alphabet'
 import { iconCells, iconSizes } from '../data/icons'
-import { SCRIPT_FONTS, loadDisplayFont } from '../fonts'
+import { SCRIPT_FONTS, loadDisplayFont, type DisplayFont } from '../fonts'
 import { maskFromCanvas } from './canvas'
 import { cleanup, smoothEdges, type Grid } from './cleanup'
 import { ACCENT, EFFECT_REACH, addEffect, type Effect, iconSizeFor, padColumns, placeIconBelow } from './compose'
 import { coverage, stitchesFrom, trimRows, type Mask } from './downsample'
 import { renderAlphabet } from './layouts/alphabet'
+import { newSeed } from './random'
+import { styleWidth } from './styleWidths'
 import { renderStackedBlock, type LetterBox } from './layouts/stackedBlock'
 import { checkLegibility, type LegibilityCheck } from './legibility'
 import { DEFAULT_CHOICES, MAX_ATTEMPTS, WORDMARK_RECIPE, recipeFor, resolveChoices, type Choices, type Recipe } from './recipe'
@@ -391,4 +393,65 @@ export async function findReadableWidth(
     if (result.check.ok) return width
   }
   return null
+}
+
+/** What a style is called by: its stitch alphabet, or its display font. */
+export function letterformOf(recipe: Recipe): AlphabetId | DisplayFont {
+  return recipe.alphabet ?? recipe.font
+}
+
+export interface NextStyle {
+  seed: string
+  width: number
+  result: GenerateResult
+}
+
+/**
+ * The seed for "Generate again", judged by the finished pattern rather than
+ * the style a seed asks for. Each candidate is drawn at its style's own width
+ * (STYLE_WIDTHS); the first that passes the check as that style, and isn't one
+ * of the styles just shown, wins. If none does within a few tries, the first that at
+ * least looks different is used. Deterministic for a given seed sequence.
+ */
+export async function nextStyle({
+  lines,
+  choices = DEFAULT_CHOICES,
+  recent,
+  fallbackWidth,
+  makeSeed = newSeed,
+}: {
+  lines: string[]
+  choices?: Choices
+  /** Styles shown most recently, the one on screen first. */
+  recent: (AlphabetId | DisplayFont)[]
+  /** Width for a style missing from STYLE_WIDTHS. */
+  fallbackWidth: number
+  makeSeed?: () => string
+}): Promise<NextStyle> {
+  const resolved = resolveChoices(lines, choices)
+  let different: NextStyle | null = null
+  let last: NextStyle | null = null
+  for (let draws = 0, renders = 0; draws < 60 && renders < 8; draws++) {
+    const seed = makeSeed()
+    const wanted = letterformOf(recipeFor(seed, 0, undefined, resolved))
+    // Cheap first: skip seeds that ask for a style just seen.
+    if (recent.includes(wanted)) continue
+    const width = styleWidth(wanted, fallbackWidth)
+    const result = await generatePattern({ lines, width, seed, choices })
+    renders++
+    const got = letterformOf(result.recipe)
+    last = { seed, width, result }
+    // Only a pattern that passed the check counts: when every attempt fails, the least bad one can still be the style asked for.
+    if (!result.check.ok) continue
+    if (got === wanted) return last
+    if (!different && !recent.includes(got)) different = last
+  }
+  return (
+    different ??
+    last ?? {
+      seed: makeSeed(),
+      width: fallbackWidth,
+      result: await generatePattern({ lines, width: fallbackWidth, seed: makeSeed(), choices }),
+    }
+  )
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { DEFAULT_WIDTH, generatePattern, renderRecipe, type GenerateResult } from '../pattern/generate'
+import { DEFAULT_WIDTH, generatePattern, letterformOf, nextStyle, renderRecipe, type GenerateResult } from '../pattern/generate'
 import type { Grid } from '../pattern/cleanup'
-import { MAX_ATTEMPTS, describeRecipe, fontFailed, seedWithNewStyle } from '../pattern/recipe'
+import { MAX_ATTEMPTS, describeRecipe } from '../pattern/recipe'
 import { hashString } from '../pattern/random'
 import { parsePhrase } from '../pattern/text'
 import { TEST_PHRASES } from './phrases'
@@ -35,15 +35,16 @@ async function runPhrase(phrase: string, width: number, salt: string): Promise<R
   const again = await generatePattern({ lines: parsed.lines, width, seed })
   const raw = (await renderRecipe(parsed.lines, width, result.recipe, seed)).raw
 
-  // "Generate again" from here: does the shown style really change font?
+  // "Generate again" from here, judged by the finished pattern.
   let n = 0
-  const nextSeed = seedWithNewStyle(
-    result.recipe,
-    () => seedFor(phrase, `${salt}:next:${n++}`),
-    undefined,
-    fontFailed(result.attempts),
-  )
-  const next = await generatePattern({ lines: parsed.lines, width, seed: nextSeed })
+  const next = (
+    await nextStyle({
+      lines: parsed.lines,
+      recent: [letterformOf(result.recipe)],
+      fallbackWidth: width,
+      makeSeed: () => seedFor(phrase, `${salt}:next:${n++}`),
+    })
+  ).result
 
   return {
     phrase,

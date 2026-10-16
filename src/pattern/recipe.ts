@@ -1,7 +1,7 @@
 import { ALPHABETS, type AlphabetId } from '../data/alphabets'
 import { ICON_SETS, iconPhrase, type IconName } from '../data/icons'
 import { CAPITALS_ONLY, PATTERN_FONTS, SCRIPT_FONTS, type DisplayFont } from '../fonts'
-import { between, newSeed, pick, randomFor } from './random'
+import { between, pick, randomFor } from './random'
 import type { Effect } from './compose'
 import type { LegibilityCheck } from './legibility'
 
@@ -391,37 +391,4 @@ export function describeRecipe(recipe: Recipe): string {
 
 function round2(n: number) {
   return Math.round(n * 100) / 100
-}
-
-/** Whether any font attempt on this phrase failed the check. */
-export function fontFailed(attempts: PreviousAttempt[]): boolean {
-  return attempts.some((a) => !a.recipe.alphabet && !a.check.ok)
-}
-
-/**
- * A new seed whose style visibly differs from the current one: a different
- * font, alphabet or effect, and never the same icon twice in a row.
- */
-export function seedWithNewStyle(
-  current: Recipe | undefined,
-  makeSeed: () => string = newSeed,
-  choices: Choices = DEFAULT_CHOICES,
-  /** A font already failed on this phrase: skip seeds that start with a font, they'd likely fall back to Block again. */
-  avoidFonts = false,
-): string {
-  for (let i = 0; i < 30; i++) {
-    const seed = makeSeed()
-    if (!current) return seed
-    // Same phrase, so the same case as the pattern on screen.
-    const next = recipeFor(seed, 0, undefined, {
-      motif: choices.motif,
-      letterCase: current.capitalsFrom ?? current.letterCase,
-      caseForced: choices.letterCase !== 'typed',
-    })
-    const letterform = (r: Recipe) => r.alphabet ?? r.font
-    const newLook = letterform(next) !== letterform(current) || next.effect !== current.effect
-    if (avoidFonts && !next.alphabet) continue
-    if (newLook && (next.icon === null || next.icon !== current.icon)) return seed
-  }
-  return makeSeed()
 }

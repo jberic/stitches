@@ -1,7 +1,15 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { pairPalette, patternColours } from '../data/palettes'
-import { MAX_WIDTH, MIN_WIDTH, findReadableWidth, generatePattern, type GenerateResult } from '../pattern/generate'
-import { DEFAULT_MOTIF, describeRecipe, fontFailed, seedWithNewStyle, type Choices, type LetterCase } from '../pattern/recipe'
+import {
+  MAX_WIDTH,
+  MIN_WIDTH,
+  findReadableWidth,
+  generatePattern,
+  letterformOf,
+  nextStyle,
+  type GenerateResult,
+} from '../pattern/generate'
+import { DEFAULT_MOTIF, describeRecipe, type Choices, type LetterCase } from '../pattern/recipe'
 import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
 import { downloadPatternSheet } from '../export/patternImage'
 import { legendFor } from '../pattern/legend'
@@ -36,6 +44,14 @@ export function Tool({ inputRef }: Props) {
     threadsRef.current = threads
   }, [threads])
   const [result, setResult] = useState<GenerateResult | null>(null)
+  const [choosing, setChoosing] = useState(false)
+  // The last few styles shown, so "Generate again" doesn't bring one straight back.
+  const recentStyles = useRef<ReturnType<typeof letterformOf>[]>([])
+  useEffect(() => {
+    if (!result) return
+    const shown = letterformOf(result.recipe)
+    recentStyles.current = [shown, ...recentStyles.current.filter((s) => s !== shown)].slice(0, 4)
+  }, [result])
   const [failed, setFailed] = useState(false)
   const [download, setDownload] = useState<'idle' | 'busy' | 'failed'>('idle')
   // Legend highlight: hover or focus previews a colour, a click pins it.
@@ -92,9 +108,18 @@ export function Tool({ inputRef }: Props) {
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
-  const generateAgain = () => {
-    historyMode.current = 'push'
-    setSeed(seedWithNewStyle(result?.recipe, undefined, choices, result ? fontFailed(result.attempts) : false))
+  const generateAgain = async () => {
+    if (!phrase.ok || choosing) return
+    setChoosing(true)
+    try {
+      // A new style, judged by the finished pattern, at that style's own width.
+      const next = await nextStyle({ lines: phrase.lines, choices, recent: recentStyles.current, fallbackWidth: width })
+      historyMode.current = 'push'
+      setWidth(next.width)
+      setSeed(next.seed)
+    } finally {
+      setChoosing(false)
+    }
     // On short screens the button sits below the pattern; bring the new one into view.
     const sheet = sheetRef.current
     if (sheet && sheet.getBoundingClientRect().top < 0) {
@@ -274,7 +299,7 @@ export function Tool({ inputRef }: Props) {
 
         <div className="generate">
           <div className="generate-actions">
-            <button type="button" className="generate-button" onClick={generateAgain} disabled={!phrase.ok}>
+            <button type="button" className="generate-button" onClick={generateAgain} disabled={!phrase.ok || choosing}>
               Generate again
             </button>
             <button
