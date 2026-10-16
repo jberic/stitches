@@ -27,8 +27,8 @@ export const STYLE_WIDTHS: Record<AlphabetId, number> & Partial<Record<DisplayFo
   western: 64,
   assisi: 40,
   cursive: 42,
-  Shrikhand: 100,
-  'Bagel Fat One': 100,
+  Shrikhand: 40,
+  'Bagel Fat One': 40,
   'Rubik Mono One': 40,
 }
 
