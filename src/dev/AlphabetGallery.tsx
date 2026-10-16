@@ -57,7 +57,7 @@ export function AlphabetGallery() {
                 </span>
               </h2>
               <div className="glyph-grid" style={{ background: FABRIC.hex }}>
-                {REQUIRED_CHARACTERS.filter((c) => alphabet.lowercase || !/[a-z]/.test(c)).map((char) => (
+                {REQUIRED_CHARACTERS.filter((c) => size.glyphs.has(c)).map((char) => (
                   <figure key={char} className="glyph-cell">
                     <Stitched rows={size.glyphs.get(char)!.rows} cell={cell} colour={ink} />
                     <figcaption>{char}</figcaption>
