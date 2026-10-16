@@ -240,3 +240,64 @@
   padding: 1.25rem;
   border-radius: 4px;
 }
+
+/* All styles page */
+.font-row {
+  display: grid;
+  grid-template-columns: minmax(14rem, 18rem) 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.font-row h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.125rem;
+}
+
+.font-row-head p {
+  margin: 0.25rem 0;
+  font-size: 0.8125rem;
+}
+
+.font-row-width {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.font-row-width input {
+  flex: 1;
+}
+
+.font-ok {
+  color: #2f6b3a;
+}
+
+.font-bad {
+  color: var(--accent);
+}
+
+.font-row-sample {
+  min-height: 4rem;
+  padding: 0.75rem;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.font-list {
+  margin: 1rem 0 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 40rem) {
+  .font-row {
+    grid-template-columns: 1fr;
+  }
+}
