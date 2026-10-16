@@ -13,6 +13,8 @@ export const FLOURISH = defineAlphabet({
   name: 'Flourish',
   effects: [],
   lowercase: false,
+  // The swashes are the point; at the small size it would just be Serif again.
+  largeOnly: true,
   regular: {
     capRows: 18,
     descRows: 4,

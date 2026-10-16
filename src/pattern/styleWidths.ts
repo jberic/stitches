@@ -16,8 +16,8 @@ export const STYLE_WIDTHS: Record<AlphabetId, number> & Partial<Record<DisplayFo
   beaded: 93,
   checker: 95,
   gothic: 79,
-  // A first guess until set on fonts.html.
-  flourish: 90,
+  // The widest setting: its swash capitals are 22 rows tall and need the room.
+  flourish: 100,
   deco: 64,
   swash: 88,
   tuscan: 65,

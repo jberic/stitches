@@ -190,6 +190,7 @@ function drawLettering(upper: string[], width: number, recipe: Recipe): Letterin
       alphabet: ALPHABETS[recipe.alphabet],
       letterGap: recipe.letterGap,
       lineGap: recipe.lineGap + 1,
+      sizes: ALPHABETS[recipe.alphabet].largeOnly ? ['regular'] : undefined,
     })
     if (!result.ok) {
       return unsupportedLettering(

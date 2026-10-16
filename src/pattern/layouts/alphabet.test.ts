@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BLOCK } from '../../data/alphabets/block'
+import { FLOURISH } from '../../data/alphabets/flourish'
 import { coverage, stitchesFrom } from '../downsample'
 import { renderAlphabet } from './alphabet'
 
@@ -14,6 +15,13 @@ describe('renderAlphabet', () => {
   it('drops to the small size for a long word', () => {
     const result = renderAlphabet(['SUNSHINE'], options)
     expect(result.ok && result.size).toBe('small')
+  })
+
+  it('turns a phrase away rather than drop a large-only alphabet to its small size', () => {
+    expect(FLOURISH.largeOnly).toBe(true)
+    const large = { ...options, width: 100, alphabet: FLOURISH, sizes: ['regular' as const] }
+    expect(renderAlphabet(['LOVE'], large).ok).toBe(true)
+    expect(renderAlphabet(['SUNSHINE'], large).ok).toBe(false)
   })
 
   it('enlarges short words by a whole number to fill the width', () => {

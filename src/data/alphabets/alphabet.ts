@@ -63,6 +63,8 @@ export interface StitchAlphabet {
   reversed?: boolean
   /** Lowercase letters join: one stitch apart, bridged by a stitch on the baseline. */
   joined?: boolean
+  /** Only the regular size counts: a phrase too wide for it goes to another style. */
+  largeOnly?: boolean
 }
 
 function buildSize(source: AlphabetSizeSource): AlphabetSize {
@@ -92,6 +94,7 @@ export function defineAlphabet(source: {
   initial?: boolean
   reversed?: boolean
   joined?: boolean
+  largeOnly?: boolean
 }): StitchAlphabet {
   return {
     name: source.name,
@@ -105,6 +108,7 @@ export function defineAlphabet(source: {
     initial: source.initial,
     reversed: source.reversed,
     joined: source.joined,
+    largeOnly: source.largeOnly,
   }
 }
 
