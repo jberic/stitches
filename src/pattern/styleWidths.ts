@@ -16,6 +16,8 @@ export const STYLE_WIDTHS: Record<AlphabetId, number> & Partial<Record<DisplayFo
   beaded: 93,
   checker: 95,
   gothic: 79,
+  // A first guess until set on fonts.html.
+  flourish: 90,
   deco: 64,
   swash: 88,
   tuscan: 65,

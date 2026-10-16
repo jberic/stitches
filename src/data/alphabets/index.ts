@@ -8,6 +8,7 @@ import { CHECKER } from './checker'
 import { CURSIVE } from './cursive'
 import { DAISY } from './daisy'
 import { DECO } from './deco'
+import { FLOURISH } from './flourish'
 import { GOTHIC } from './gothic'
 import { HOLLOW } from './hollow'
 import { SAMPLER } from './sampler'
@@ -31,6 +32,7 @@ export const ALPHABETS = {
   beaded: BEADED,
   checker: CHECKER,
   gothic: GOTHIC,
+  flourish: FLOURISH,
   deco: DECO,
   swash: SWASH,
   tuscan: TUSCAN,
