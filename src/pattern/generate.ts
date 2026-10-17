@@ -1,7 +1,7 @@
 import { ALPHABETS, type AlphabetId } from '../data/alphabets'
 import type { AlphabetSizeId } from '../data/alphabets/alphabet'
 import { iconCells, iconSizes } from '../data/icons'
-import { SCRIPT_FONTS, loadDisplayFont, type DisplayFont } from '../fonts'
+import { INLINE_FONTS, SCRIPT_FONTS, loadDisplayFont, type DisplayFont } from '../fonts'
 import { maskFromCanvas } from './canvas'
 import { cleanup, smoothEdges, type Grid } from './cleanup'
 import { ACCENT, EFFECT_REACH, addEffect, type Effect, iconSizeFor, padColumns, placeIconBelow } from './compose'
@@ -270,7 +270,9 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
   // Stitch alphabets are drawn exactly on the grid, so tidy-up would only do
   // harm (it took the one-stitch dot off a small i). Font edges get evened out.
   const tidy = recipe.alphabet ? raw : smoothEdges(cleanup(raw, cover), cover)
-  const legible = checkLegibility(mask, SCALE, tidy, cover, letters)
+  const legible = checkLegibility(mask, SCALE, tidy, cover, letters, {
+    ignoreThinHoles: !recipe.alphabet && INLINE_FONTS.includes(recipe.font),
+  })
   const check = checkScriptSize(legible, letters, recipe)
   // Ornaments join after the check: they decorate the letters, they don't make them readable.
   const withOrnaments = tidy.cells.slice()

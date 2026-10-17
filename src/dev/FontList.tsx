@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ALPHABETS, type AlphabetId } from '../data/alphabets'
 import { FABRIC, paletteById, patternColours } from '../data/palettes'
-import { PATTERN_FONTS, type DisplayFont } from '../fonts'
+import { CAPITALS_ONLY, PATTERN_FONTS, type DisplayFont } from '../fonts'
 import { MAX_WIDTH, MIN_WIDTH, renderRecipe, type Rendered } from '../pattern/generate'
 import { recipeFor, textCase, type Recipe } from '../pattern/recipe'
 import { parsePhrase } from '../pattern/text'
@@ -47,7 +47,7 @@ function recipeFor_(style: Style, lines: string[]): Recipe {
     recipe.capitalsFrom = recipe.letterCase
     recipe.letterCase = 'upper'
   }
-  if (!alphabet && recipe.font === 'Rubik Mono One') recipe.letterCase = 'upper'
+  if (!alphabet && CAPITALS_ONLY.includes(recipe.font)) recipe.letterCase = 'upper'
   return recipe
 }
 

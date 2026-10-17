@@ -57,6 +57,7 @@ export function checkLegibility(
   grid: Grid,
   cover: Float32Array,
   letters: LetterBox[] = [],
+  options: { ignoreThinHoles?: boolean } = {},
 ): LegibilityCheck {
   let inkTotal = 0
   let inkOnStitches = 0
@@ -80,12 +81,16 @@ export function checkLegibility(
   }
   const drawingShapes = countShapes(sub, MIN_SHAPE_SUBCELLS)
   const stitchedShapes = countShapes(grid, 1)
-  const drawingHoles = holes(sub, MIN_HOLE_SUBCELLS)
+  const ratio = scale / half
+  // Some faces cut decorative slits into their strokes (Rye's inline). A slit
+  // narrower than a stitch can never stay open, so for those it isn't counted.
+  const drawingHoles = holes(sub, MIN_HOLE_SUBCELLS).filter(
+    (cells) => !options.ignoreThinHoles || holdsAStitch(cells, sub.width, ratio),
+  )
   const enclosed = enclosedCells(grid)
   // A hole survives if any part of it is still enclosed background in the grid,
   // in the same place. Matching by position (not by count) means small sealed
   // notches along letter edges can't hide a counter that filled in.
-  const ratio = scale / half
   const holesLost = drawingHoles.filter(
     (cells) =>
       !cells.some((i) => {
@@ -275,6 +280,16 @@ export function holes(grid: Grid, minSize: number): number[][] {
   return components(grid, false)
     .filter((c) => !c.touchesEdge && c.cells.length >= minSize)
     .map((c) => c.cells)
+}
+
+/** True if the hole has room somewhere for one whole stitch (a ratio × ratio block of its cells). */
+function holdsAStitch(cells: number[], width: number, ratio: number): boolean {
+  const inHole = new Set(cells)
+  const r = Math.max(1, Math.round(ratio))
+  return cells.some((i) => {
+    for (let dy = 0; dy < r; dy++) for (let dx = 0; dx < r; dx++) if (!inHole.has(i + dy * width + dx)) return false
+    return (i % width) + r <= width
+  })
 }
 
 /** 1 for every background cell that is inside a hole. */

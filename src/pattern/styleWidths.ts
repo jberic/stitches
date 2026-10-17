@@ -32,6 +32,11 @@ export const STYLE_WIDTHS: Record<AlphabetId, number> & Partial<Record<DisplayFo
   Shrikhand: 40,
   'Bagel Fat One': 40,
   'Rubik Mono One': 40,
+  // Where most seeds came out readable for "Love" ("LOVE" for Cinzel, which sets capitals only).
+  'Cinzel Decorative': 60,
+  UnifrakturMaguntia: 100,
+  Rye: 70,
+  'Bodoni Moda': 70,
 }
 
 /** The width for a style, or the given width for one not in the list. */

@@ -47,3 +47,28 @@
   src: url('/fonts/rubikmonoone/RubikMonoOne-Regular.ttf') format('truetype');
   font-display: block;
 }
+/* Display fonts from the Claude Design handoff "Stitch Alphabets". The heavy
+   weights are the only face of each family, so canvas text always gets them. */
+@font-face {
+  font-family: 'Cinzel Decorative';
+  src: url('/fonts/cinzeldecorative/CinzelDecorative-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-display: block;
+}
+@font-face {
+  font-family: 'UnifrakturMaguntia';
+  src: url('/fonts/unifrakturmaguntia/UnifrakturMaguntia-Book.ttf') format('truetype');
+  font-display: block;
+}
+@font-face {
+  font-family: 'Rye';
+  src: url('/fonts/rye/Rye-Regular.ttf') format('truetype');
+  font-display: block;
+}
+@font-face {
+  font-family: 'Bodoni Moda';
+  src: url('/fonts/bodonimoda/BodoniModa-Variable.ttf') format('truetype');
+  /* Only the 900 weight is declared, so any request is set at 900 on the variable font's weight axis. */
+  font-weight: 900;
+  font-display: block;
+}

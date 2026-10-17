@@ -13,17 +13,21 @@ npm run dev
 
 ## Fonts
 
-All fonts are under the [SIL Open Font License 1.1](https://openfontlicense.org), self-hosted from `public/fonts/`, with each font's `OFL.txt` next to it. Files come from the [Google Fonts repository](https://github.com/google/fonts). Bagel Fat One is cut down to Latin characters (1.5 MB to 51 KB) with `scripts/subset-fonts.sh`; the others are unmodified. Fonts with a Reserved Font Name (Chango, IBM Plex) must stay unmodified under the OFL.
+All fonts are under the [SIL Open Font License 1.1](https://openfontlicense.org), self-hosted from `public/fonts/`, with each font's `OFL.txt` next to it. Files come from the [Google Fonts repository](https://github.com/google/fonts). Bagel Fat One is cut down to Latin characters (1.5 MB to 51 KB) with `scripts/subset-fonts.sh`; the others are unmodified. Fonts with a Reserved Font Name (Chango, IBM Plex, Cinzel, UnifrakturMaguntia, Rye) must stay unmodified under the OFL. Bodoni Moda's file is renamed from `BodoniModa[opsz,wght].ttf` but otherwise unchanged.
 
-| Font           | Use                               | Copyright                                     |
-| -------------- | --------------------------------- | --------------------------------------------- |
-| Chango         | Wordmark                          | © 2011 Fontstage. Reserved Font Name "Chango" |
-| Shrikhand      | Pattern lettering                 | © 2015 Jonny Pinhorn                          |
-| Bagel Fat One  | Pattern lettering                 | © 2022 The Bagel Fat Project Authors          |
-| Rubik Mono One | Pattern lettering (capitals only) | © 2015 The Rubik Project Authors              |
-| Fraunces       | Headings                          | © 2018 The Fraunces Project Authors           |
-| IBM Plex Sans  | Interface                         | © 2017 IBM Corp. Reserved Font Name "Plex"    |
-| IBM Plex Mono  | Codes and counts                  | © 2017 IBM Corp. Reserved Font Name "Plex"    |
+| Font                      | Use                               | Copyright                                                      |
+| ------------------------- | --------------------------------- | -------------------------------------------------------------- |
+| Chango                    | Wordmark                          | © 2011 Fontstage. Reserved Font Name "Chango"                  |
+| Shrikhand                 | Pattern lettering                 | © 2015 Jonny Pinhorn                                           |
+| Bagel Fat One             | Pattern lettering                 | © 2022 The Bagel Fat Project Authors                           |
+| Rubik Mono One            | Pattern lettering (capitals only) | © 2015 The Rubik Project Authors                               |
+| Fraunces                  | Headings                          | © 2018 The Fraunces Project Authors                            |
+| IBM Plex Sans             | Interface                         | © 2017 IBM Corp. Reserved Font Name "Plex"                     |
+| IBM Plex Mono             | Codes and counts                  | © 2017 IBM Corp. Reserved Font Name "Plex"                     |
+| Cinzel Decorative (Black) | Pattern lettering (capitals only) | © 2012 Natanael Gama. Reserved Font Name "Cinzel"              |
+| UnifrakturMaguntia        | Pattern lettering                 | © 2010 j. 'mach' wust. Reserved Font Name "UnifrakturMaguntia" |
+| Rye                       | Pattern lettering                 | © 2011 Sorkin Type Co. Reserved Font Name "Rye"                |
+| Bodoni Moda (900)         | Pattern lettering                 | © 2020 The Bodoni Moda Project Authors                         |
 
 The Flourish stitch alphabet is drawn from Cinzel Decorative Bold (© 2012 Natanael Gama, Reserved Font Name "Cinzel", OFL 1.1). The capitals were turned into stitches once and stored as grids in `src/data/alphabets/flourish.ts`, so the font itself isn't shipped; the file and its `OFL.txt` are kept in `design/fonts/cinzeldecorative/`. The hooks, swashes and knots on the letters are drawn for this project.
 
