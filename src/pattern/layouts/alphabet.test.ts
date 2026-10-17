@@ -24,6 +24,15 @@ describe('renderAlphabet', () => {
     expect(renderAlphabet(['SUNSHINE'], large).ok).toBe(false)
   })
 
+  it('tucks a letter in over the tail of the one before, without touching it', () => {
+    const tucked = { ...options, width: 100, maxScale: 1, alphabet: FLOURISH, sizes: ['regular' as const] }
+    const result = renderAlphabet(['LO'], tucked)
+    const size = FLOURISH.sizes.regular
+    const apart = size.glyphs.get('L')!.width + 1 + size.glyphs.get('O')!.width
+    expect(result.ok && result.letters[1].x - result.letters[0].x).toBeLessThan(size.glyphs.get('L')!.width)
+    expect(result.ok && result.contentWidth).toBeLessThan(apart)
+  })
+
   it('enlarges short words by a whole number to fill the width', () => {
     const result = renderAlphabet(['HI'], options)
     expect(result.ok && result.enlarge).toBe(3)

@@ -33,8 +33,8 @@ describe.each(cases)('%s %s', (_name, sizeId, alphabet) => {
     expect(glyph.rows.some((row) => row.includes('#'))).toBe(true)
   })
 
-  it('keeps capitals inside the cap height', () => {
-    for (const char of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+  it('keeps capitals inside the cap height, unless the alphabet has tails', () => {
+    for (const char of alphabet.tails ? '' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
       const glyph = size.glyphs.get(char)!
       for (const row of glyph.rows.slice(size.capRows)) expect(row).not.toContain('#')
     }

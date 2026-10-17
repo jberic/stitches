@@ -47,7 +47,8 @@ interface SetLine {
  * bridged by a stitch on the baseline in the gap between them, like a pen
  * stroke carrying on.
  */
-function setLine(size: AlphabetSize, line: string, gap: number, joined = false): SetLine | string {
+function setLine(size: AlphabetSize, line: string, gap: number, joined = false, tuck = false): SetLine | string {
+  if (tuck) return setTucked(size, line, gap)
   const height = size.capRows + size.descRows
   const rows = Array.from({ length: height }, () => '')
   const glyphs: SetLine['glyphs'] = []
@@ -74,6 +75,48 @@ function setLine(size: AlphabetSize, line: string, gap: number, joined = false):
 }
 
 /**
+ * Sets a line letter by letter, sliding each letter left over the one before
+ * as far as it goes while every stitch stays at least `gap` clear of the
+ * previous letters, across, up and down. A tail below the baseline then sits
+ * under the next letter instead of pushing it away.
+ */
+function setTucked(size: AlphabetSize, line: string, gap: number): SetLine | string {
+  const height = size.capRows + size.descRows
+  const grid: boolean[][] = Array.from({ length: height }, () => [])
+  const glyphs: SetLine['glyphs'] = []
+  let width = 0
+  for (const [i, char] of [...line].entries()) {
+    if (char === ' ') {
+      width += (i > 0 ? gap : 0) + size.space
+      continue
+    }
+    const glyph = size.glyphs.get(char)
+    if (!glyph) return char
+    let x = i > 0 ? width + gap : 0
+    if (i > 0 && line[i - 1] !== ' ') {
+      // The furthest right stitch of what is set so far, in this row and the rows either side.
+      const right = grid.map((row) => row.lastIndexOf(true))
+      let need = 0
+      glyph.rows.forEach((row, y) => {
+        const left = row.indexOf('#')
+        if (left < 0) return
+        const reach = Math.max(right[y - 1] ?? -1, right[y], right[y + 1] ?? -1)
+        if (reach >= 0) need = Math.max(need, reach + gap + 1 - left)
+      })
+      x = Math.min(x, need)
+    }
+    glyph.rows.forEach((row, y) => {
+      for (let c = 0; c < row.length; c++) if (row[c] === '#') grid[y][x + c] = true
+    })
+    glyphs.push({ x, width: glyph.width })
+    width = Math.max(width, x + glyph.width)
+  }
+  const rows = grid.map((row) => Array.from({ length: width }, (_, c) => (row[c] ? '#' : '.')).join(''))
+  const descends = rows.slice(size.capRows).some((row) => row.includes('#'))
+  return { rows: descends ? rows : rows.slice(0, size.capRows), glyphs, descends }
+}
+
+/**
  * Sets lines of a stitch alphabet on the grid, centred, at the largest size
  * that fits: the regular size if the longest line fits, else the small one.
  * Short words may be enlarged by a whole number so they fill the width; the
@@ -88,7 +131,7 @@ export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions):
     const size = alphabet.sizes[sizeId]
     const set: SetLine[] = []
     for (const line of lines) {
-      const result = setLine(size, line, letterGap, alphabet.joined)
+      const result = setLine(size, line, letterGap, alphabet.joined, alphabet.tails)
       if (typeof result === 'string') return { ok: false, reason: 'missing', char: result }
       set.push(result)
     }

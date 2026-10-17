@@ -65,6 +65,8 @@ export interface StitchAlphabet {
   joined?: boolean
   /** Only the regular size counts: a phrase too wide for it goes to another style. */
   largeOnly?: boolean
+  /** Capitals hang tails below the baseline, and the next letter tucks in over them. */
+  tails?: boolean
 }
 
 function buildSize(source: AlphabetSizeSource): AlphabetSize {
@@ -95,6 +97,7 @@ export function defineAlphabet(source: {
   reversed?: boolean
   joined?: boolean
   largeOnly?: boolean
+  tails?: boolean
 }): StitchAlphabet {
   return {
     name: source.name,
@@ -109,6 +112,7 @@ export function defineAlphabet(source: {
     reversed: source.reversed,
     joined: source.joined,
     largeOnly: source.largeOnly,
+    tails: source.tails,
   }
 }
 
