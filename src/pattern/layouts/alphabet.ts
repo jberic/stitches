@@ -167,9 +167,9 @@ export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions):
                   (glyphTop + y * enlarge + dy) * width + left + (x + 1) * enlarge,
                 )
               }
-              continue
-            }
-            if (row[x] !== '#') continue
+              // A two-tone alphabet's second-thread stitches are still letter: they count in the drawing.
+              if (!alphabet.twoTone) continue
+            } else if (row[x] !== '#') continue
             // Each stitch becomes an enlarge × enlarge block of solid mask pixels.
             const sx = left + x * enlarge
             for (let py = (glyphTop + y * enlarge) * scale; py < (glyphTop + (y + 1) * enlarge) * scale; py++) {

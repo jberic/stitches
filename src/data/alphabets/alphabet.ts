@@ -72,6 +72,12 @@ export interface StitchAlphabet {
    * Delft's sampler frame, Holbein's outline, Shadow Slab's drop shadow.
    */
   withEffect?: 'sampler' | 'outline' | 'drop'
+  /**
+   * The '+' stitches are part of the letters, worked in the second thread
+   * (Variegated's lower half), not decoration: they count in the legibility
+   * check and take the second thread over the lettering.
+   */
+  twoTone?: boolean
 }
 
 function buildSize(source: AlphabetSizeSource): AlphabetSize {
@@ -104,6 +110,7 @@ export function defineAlphabet(source: {
   largeOnly?: boolean
   tails?: boolean
   withEffect?: 'sampler' | 'outline' | 'drop'
+  twoTone?: boolean
 }): StitchAlphabet {
   return {
     name: source.name,
@@ -120,6 +127,7 @@ export function defineAlphabet(source: {
     largeOnly: source.largeOnly,
     tails: source.tails,
     withEffect: source.withEffect,
+    twoTone: source.twoTone,
   }
 }
 

@@ -32,6 +32,7 @@ import { SWASH } from './swash'
 import { TUSCAN } from './tuscan'
 import { TYPEWRITER } from './typewriter'
 import { WESTERN } from './western'
+import { VARIEGATED } from './variegated'
 import { WOOD_TYPE } from './woodtype'
 
 /** The stitch alphabets on offer. Add new ones here. */
@@ -70,6 +71,7 @@ export const ALPHABETS = {
   copperplate: COPPERPLATE,
   woodtype: WOOD_TYPE,
   didone: DIDONE,
+  variegated: VARIEGATED,
 } satisfies Record<string, StitchAlphabet>
 
 export type AlphabetId = keyof typeof ALPHABETS

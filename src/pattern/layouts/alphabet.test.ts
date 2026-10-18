@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { BLOCK } from '../../data/alphabets/block'
 import { FLOURISH } from '../../data/alphabets/flourish'
 import { INLINE } from '../../data/alphabets/inline'
+import { VARIEGATED } from '../../data/alphabets/variegated'
 import { coverage, stitchesFrom } from '../downsample'
 import { renderAlphabet } from './alphabet'
 
@@ -37,6 +38,16 @@ describe('renderAlphabet', () => {
   it('keeps accent stitches when letters tuck in', () => {
     const result = renderAlphabet(['OO'], { ...options, width: 100, maxScale: 1, alphabet: INLINE, sizes: ['regular'] })
     expect(result.ok && result.accent.some((on) => on === 1)).toBe(true)
+  })
+
+  it("draws a two-tone alphabet's second-thread stitches into the drawing the check reads", () => {
+    const result = renderAlphabet(['I'], { ...options, width: 100, maxScale: 1, alphabet: VARIEGATED, sizes: ['regular'] })
+    if (!result.ok) throw new Error('did not fit')
+    const cell = result.accent.findIndex((on) => on === 1)
+    const x = cell % 100
+    const y = Math.floor(cell / 100)
+    expect(cell).toBeGreaterThan(-1)
+    expect(result.mask.data[y * options.scale * result.mask.width + x * options.scale]).toBe(255)
   })
 
   it('enlarges short words by a whole number to fill the width', () => {

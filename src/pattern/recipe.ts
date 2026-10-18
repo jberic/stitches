@@ -157,6 +157,7 @@ const IN_MIX: AlphabetId[] = [
   'copperplate',
   'woodtype',
   'didone',
+  'variegated',
 ]
 
 /** Alphabets with a small size that fit most phrases: the first stand-ins when another can't draw one. */

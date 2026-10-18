@@ -286,7 +286,9 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
   const check = checkScriptSize(legible, letters, recipe)
   // Ornaments join after the check: they decorate the letters, they don't make them readable.
   const withOrnaments = tidy.cells.slice()
-  if (accent) accent.forEach((on, i) => on && !withOrnaments[i] && (withOrnaments[i] = ACCENT))
+  // A two-tone alphabet's second-thread stitches are lettering too, so they take over those cells.
+  const overLettering = Boolean(chosen?.twoTone)
+  if (accent) accent.forEach((on, i) => on && (overLettering || !withOrnaments[i]) && (withOrnaments[i] = ACCENT))
   const trimmed = trimRows(withOrnaments, inner)
   const stitched: Recipe = { ...recipe, effect: stitchedEffect(planned, size) }
   const left = EFFECT_REACH[stitched.effect].left

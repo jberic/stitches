@@ -45,6 +45,7 @@ export const STYLE_WIDTHS: Record<AlphabetId, number> & Partial<Record<DisplayFo
   copperplate: 92,
   woodtype: 78,
   didone: 78,
+  variegated: 80,
   Shrikhand: 40,
   'Bagel Fat One': 40,
   'Rubik Mono One': 40,
