@@ -230,7 +230,7 @@ describe('script fonts set too small', () => {
 describe('ornamented alphabets', () => {
   it('get no icon or effect, and give way to Sampler when a Nature or Food icon is wanted', () => {
     let seen = 0
-    for (let s = 0; s < 300; s++) {
+    for (let s = 0; s < 400; s++) {
       const r = recipeFor(`o${s}`, 0, undefined, { motif: 'any', letterCase: 'upper' })
       if (r.alphabet === 'sprig' || r.alphabet === 'daisy') {
         seen++

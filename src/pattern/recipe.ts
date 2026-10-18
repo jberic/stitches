@@ -154,6 +154,9 @@ const IN_MIX: AlphabetId[] = [
   'assisi',
   'cursive',
   'delft',
+  'inline',
+  'holbein',
+  'shadowslab',
 ]
 
 /** Alphabets with a small size that fit most phrases: the first stand-ins when another can't draw one. */
@@ -380,6 +383,7 @@ const EFFECT_PHRASES: Record<Effect, string | null> = {
   // The alphabet's name says it: "Assisi stitch letters".
   assisi: null,
   sampler: 'a sampler frame',
+  drop: 'a drop shadow',
 }
 
 /** Plain-words name for a style, so people can say what they liked. */

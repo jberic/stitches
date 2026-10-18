@@ -33,6 +33,8 @@ The Flourish stitch alphabet is drawn from Cinzel Decorative Bold (© 2012 Natan
 
 The Delft stitch alphabet is drawn from Cinzel Bold (© 2020 The Cinzel Project Authors, Reserved Font Name "Cinzel", OFL 1.1) in the same way; the font file and its `OFL.txt` are in `design/fonts/cinzel/`. Its rosettes and sampler frame follow style 2a of the Claude Design handoff "Stitch Alphabets".
 
+Three more stitch alphabets come from that handoff the same way, each turned into stitches once at 20 rows, so their fonts aren't shipped: Inline from Bodoni Moda Black (style 2h), Holbein from Abril Fatface (© 2011 TypeTogether, Reserved Font Names "Abril" and "Abril Fatface"; style 2d) and Shadow Slab from Alfa Slab One (© 2016 The Alfa Slab One Project Authors, Reserved Font Name "Alfa Slab"; style 2f). The Abril Fatface and Alfa Slab One files and their `OFL.txt` are in `design/fonts/`.
+
 ## Thread colours
 
 Every pattern sits on one fabric, cream #FBF3EC, and uses two threads: one for the lettering, one for the accent (shadow, ornaments, and in v2 the icons).

@@ -11,9 +11,12 @@ import { DECO } from './deco'
 import { DELFT } from './delft'
 import { FLOURISH } from './flourish'
 import { GOTHIC } from './gothic'
+import { HOLBEIN } from './holbein'
 import { HOLLOW } from './hollow'
+import { INLINE } from './inline'
 import { SAMPLER } from './sampler'
 import { SERIF } from './serif'
+import { SHADOW_SLAB } from './shadowslab'
 import { SLAB } from './slab'
 import { SPRIG } from './sprig'
 import { STENCIL } from './stencil'
@@ -46,6 +49,9 @@ export const ALPHABETS = {
   assisi: ASSISI,
   cursive: CURSIVE,
   delft: DELFT,
+  inline: INLINE,
+  holbein: HOLBEIN,
+  shadowslab: SHADOW_SLAB,
 } satisfies Record<string, StitchAlphabet>
 
 export type AlphabetId = keyof typeof ALPHABETS

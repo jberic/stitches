@@ -31,6 +31,10 @@ export const STYLE_WIDTHS: Record<AlphabetId, number> & Partial<Record<DisplayFo
   cursive: 42,
   // Four capitals in their frame: LOVE needs 80, HOME 94.
   delft: 96,
+  // Four capitals: HOME, the widest of the test words.
+  inline: 90,
+  holbein: 90,
+  shadowslab: 94,
   Shrikhand: 40,
   'Bagel Fat One': 40,
   'Rubik Mono One': 40,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { BLOCK } from '../../data/alphabets/block'
 import { FLOURISH } from '../../data/alphabets/flourish'
+import { INLINE } from '../../data/alphabets/inline'
 import { coverage, stitchesFrom } from '../downsample'
 import { renderAlphabet } from './alphabet'
 
@@ -31,6 +32,11 @@ describe('renderAlphabet', () => {
     const apart = size.glyphs.get('L')!.width + 1 + size.glyphs.get('O')!.width
     expect(result.ok && result.letters[1].x - result.letters[0].x).toBeLessThan(size.glyphs.get('L')!.width)
     expect(result.ok && result.contentWidth).toBeLessThan(apart)
+  })
+
+  it('keeps accent stitches when letters tuck in', () => {
+    const result = renderAlphabet(['OO'], { ...options, width: 100, maxScale: 1, alphabet: INLINE, sizes: ['regular'] })
+    expect(result.ok && result.accent.some((on) => on === 1)).toBe(true)
   })
 
   it('enlarges short words by a whole number to fill the width', () => {

@@ -39,9 +39,15 @@ export function legendFor(pattern: Pattern, palette: Palette): Legend {
         : effect === 'sampler'
           ? 'Lettering and frame'
           : 'Lettering'
-  const effectPart = { none: null, shadow: 'shadow', block3d: '3D side', outline: 'lettering', assisi: null, sampler: null }[
-    effect
-  ]
+  const effectPart = {
+    none: null,
+    shadow: 'shadow',
+    block3d: '3D side',
+    outline: 'lettering',
+    assisi: null,
+    sampler: null,
+    drop: 'shadow',
+  }[effect]
   const iconLabel = icon && ICON_LABELS[icon]
   const { alphabet } = pattern.meta.recipe
   const ornament = alphabet ? ALPHABETS[alphabet].ornament : undefined

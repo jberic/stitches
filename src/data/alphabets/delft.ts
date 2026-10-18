@@ -15,7 +15,7 @@ export const DELFT = defineAlphabet({
   lowercase: false,
   largeOnly: true,
   tails: true,
-  framed: true,
+  withEffect: 'sampler',
   regular: {
     capRows: 20,
     descRows: 8,

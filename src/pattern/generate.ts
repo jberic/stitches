@@ -251,7 +251,7 @@ function stitchedEffect(recipe: Recipe, size: AlphabetSizeId | undefined): Effec
     recipe.effect === 'none' ||
     recipe.effect === 'shadow' ||
     recipe.effect === 'assisi' ||
-    recipe.effect === 'sampler'
+    (recipe.alphabet && ALPHABETS[recipe.alphabet].withEffect === recipe.effect)
   )
     return recipe.effect
   const suits = (ALPHABETS[recipe.alphabet].effects as Effect[]).includes(recipe.effect)
@@ -265,13 +265,13 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
     recipe.letterCase === 'upper' ? line.toLocaleUpperCase() : recipe.letterCase === 'lower' ? line.toLocaleLowerCase() : line,
   )
   // The lettering leaves room at its sides for the effect to reach into.
-  // Assisi alphabets always end in the Assisi panel, and sampler alphabets in
-  // their frame, so plan that room from the start.
+  // Assisi alphabets always end in the Assisi panel, and some alphabets always
+  // wear their own effect (Delft's frame), so plan that room from the start.
   const chosen = recipe.alphabet ? ALPHABETS[recipe.alphabet] : null
   const planned: Recipe = chosen?.reversed
     ? { ...recipe, effect: 'assisi' }
-    : chosen?.framed
-      ? { ...recipe, effect: 'sampler' }
+    : chosen?.withEffect
+      ? { ...recipe, effect: chosen.withEffect }
       : recipe
   const reach = EFFECT_REACH[planned.effect]
   const inner = width - reach.left - reach.right

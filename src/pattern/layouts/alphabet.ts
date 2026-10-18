@@ -82,7 +82,12 @@ function setLine(size: AlphabetSize, line: string, gap: number, joined = false, 
  */
 function setTucked(size: AlphabetSize, line: string, gap: number): SetLine | string {
   const height = size.capRows + size.descRows
-  const grid: boolean[][] = Array.from({ length: height }, () => [])
+  // Each cell keeps its glyph character: '#' a stitch, '+' an accent stitch.
+  const grid: string[][] = Array.from({ length: height }, () => [])
+  const inked = (row: string[]) => {
+    for (let c = row.length - 1; c >= 0; c--) if (row[c] === '#' || row[c] === '+') return c
+    return -1
+  }
   const glyphs: SetLine['glyphs'] = []
   let width = 0
   for (const [i, char] of [...line].entries()) {
@@ -95,10 +100,10 @@ function setTucked(size: AlphabetSize, line: string, gap: number): SetLine | str
     let x = i > 0 ? width + gap : 0
     if (i > 0 && line[i - 1] !== ' ') {
       // The furthest right stitch of what is set so far, in this row and the rows either side.
-      const right = grid.map((row) => row.lastIndexOf(true))
+      const right = grid.map(inked)
       let need = 0
       glyph.rows.forEach((row, y) => {
-        const left = row.indexOf('#')
+        const left = row.search(/[#+]/)
         if (left < 0) return
         const reach = Math.max(right[y - 1] ?? -1, right[y], right[y + 1] ?? -1)
         if (reach >= 0) need = Math.max(need, reach + gap + 1 - left)
@@ -106,13 +111,13 @@ function setTucked(size: AlphabetSize, line: string, gap: number): SetLine | str
       x = Math.min(x, need)
     }
     glyph.rows.forEach((row, y) => {
-      for (let c = 0; c < row.length; c++) if (row[c] === '#') grid[y][x + c] = true
+      for (let c = 0; c < row.length; c++) if (row[c] !== '.') grid[y][x + c] = row[c]
     })
     glyphs.push({ x, width: glyph.width })
     width = Math.max(width, x + glyph.width)
   }
-  const rows = grid.map((row) => Array.from({ length: width }, (_, c) => (row[c] ? '#' : '.')).join(''))
-  const descends = rows.slice(size.capRows).some((row) => row.includes('#'))
+  const rows = grid.map((row) => Array.from({ length: width }, (_, c) => row[c] ?? '.').join(''))
+  const descends = rows.slice(size.capRows).some((row) => /[#+]/.test(row))
   return { rows: descends ? rows : rows.slice(0, size.capRows), glyphs, descends }
 }
 

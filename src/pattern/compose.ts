@@ -14,13 +14,14 @@ export const ACCENT = 2
  * - shadow: a solid drop shadow two stitches deep, down and to the right
  * - block3d: a solid side three stitches deep, down and to the left, like
  *   carved block letters
+ * - drop: a one-stitch drop shadow, down and to the right
  * - outline: a one-stitch contour round every letter. The letters swap to the
  *   lighter accent thread and the outline takes the darker lettering thread,
  *   which reads best on light fabric (the lettering thread is the darker one
  *   in every palette).
  */
-export type Effect = 'none' | 'shadow' | 'block3d' | 'outline' | 'assisi' | 'sampler'
-export const EFFECTS: Effect[] = ['none', 'shadow', 'block3d', 'outline', 'assisi', 'sampler']
+export type Effect = 'none' | 'shadow' | 'block3d' | 'outline' | 'assisi' | 'sampler' | 'drop'
+export const EFFECTS: Effect[] = ['none', 'shadow', 'block3d', 'outline', 'assisi', 'sampler', 'drop']
 
 /** Stitches an effect reaches beyond the letters, so the lettering can leave room for it. */
 export const EFFECT_REACH: Record<Effect, { left: number; right: number; bottom: number; top: number }> = {
@@ -32,6 +33,7 @@ export const EFFECT_REACH: Record<Effect, { left: number; right: number; bottom:
   assisi: { left: 3, right: 3, bottom: 3, top: 3 },
   // Two stitches of fabric around the words, a one-stitch frame, and corner blocks one stitch beyond it.
   sampler: { left: 4, right: 4, bottom: 4, top: 4 },
+  drop: { left: 0, right: 1, bottom: 1, top: 0 },
 }
 
 /** Applies an effect. The grid must already have the effect's reach free at its sides. */
@@ -41,6 +43,7 @@ export function addEffect(grid: Grid, effect: Effect): Grid {
   if (effect === 'outline') return outline(grid)
   if (effect === 'assisi') return assisi(grid)
   if (effect === 'sampler') return sampler(grid)
+  if (effect === 'drop') return extrude(grid, 1, 1)
   return grid
 }
 
