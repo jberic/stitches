@@ -31,19 +31,20 @@ The Delft stitch alphabet is drawn from Cinzel Bold (© 2020 The Cinzel Project 
 
 Three more stitch alphabets come from that handoff the same way, each turned into stitches once at 20 rows, so their fonts aren't shipped: Inline from Bodoni Moda Black (style 2h), Holbein from Abril Fatface (© 2011 TypeTogether, Reserved Font Names "Abril" and "Abril Fatface"; style 2d) and Shadow Slab from Alfa Slab One (© 2016 The Alfa Slab One Project Authors, Reserved Font Name "Alfa Slab"; style 2f). The Abril Fatface and Alfa Slab One files and their `OFL.txt` are in `design/fonts/`.
 
-Nine more come from the same handoff, made the same way at 20 rows:
+Ten more come from the same handoff, made the same way at 20 rows:
 
-| Stitch alphabet | Drawn from                                                                                                    | Handoff style         |
-| --------------- | ------------------------------------------------------------------------------------------------------------- | --------------------- |
-| Counted         | Playfair Display SC Black, © 2017 The Playfair Display Project Authors, Reserved Font Name "Playfair Display" | 2b Counted Chart      |
-| Blackwork       | Ultra, © 2010 Astigmatic, Apache 2.0                                                                          | 2c Blackwork          |
-| Forest          | Spectral SC ExtraBold, © 2017 The Spectral Project Authors                                                    | 2g Forest Sampler     |
-| Fraktur         | UnifrakturCook Bold, © 2010 j. 'mach' wust, Reserved Font Name "UnifrakturCook"                               | 2i Gold on Black Aida |
-| Assisi Roman    | Cinzel Bold, © 2020 The Cinzel Project Authors, Reserved Font Name "Cinzel"                                   | 2j Assisi Work        |
-| Blackletter     | UnifrakturMaguntia, © 2010 j. 'mach' wust, Reserved Font Name "UnifrakturMaguntia"                            | 1b Blackletter        |
-| Copperplate     | Pinyon Script, © 2024 The Pinyon Project Authors                                                              | 1c Copperplate Script |
-| Wood Type       | Rye, © 2011 Sorkin Type Co, Reserved Font Name "Rye"                                                          | 1d Wood Type          |
-| Didone          | Bodoni Moda Black, © 2020 The Bodoni Moda Project Authors                                                     | 1e Didone             |
+| Stitch alphabet | Drawn from                                                                                                    | Handoff style                             |
+| --------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| Counted         | Playfair Display SC Black, © 2017 The Playfair Display Project Authors, Reserved Font Name "Playfair Display" | 2b Counted Chart                          |
+| Blackwork       | Ultra, © 2010 Astigmatic, Apache 2.0                                                                          | 2c Blackwork                              |
+| Forest          | Spectral SC ExtraBold, © 2017 The Spectral Project Authors                                                    | 2g Forest Sampler                         |
+| Fraktur         | UnifrakturCook Bold, © 2010 j. 'mach' wust, Reserved Font Name "UnifrakturCook"                               | 2i Gold on Black Aida                     |
+| Assisi Roman    | Cinzel Bold, © 2020 The Cinzel Project Authors, Reserved Font Name "Cinzel"                                   | 2j Assisi Work                            |
+| Blackletter     | UnifrakturMaguntia, © 2010 j. 'mach' wust, Reserved Font Name "UnifrakturMaguntia"                            | 1b Blackletter                            |
+| Copperplate     | Pinyon Script, © 2024 The Pinyon Project Authors                                                              | 1c Copperplate Script                     |
+| Wood Type       | Rye, © 2011 Sorkin Type Co, Reserved Font Name "Rye"                                                          | 1d Wood Type                              |
+| Didone          | Bodoni Moda Black, © 2020 The Bodoni Moda Project Authors                                                     | 1e Didone                                 |
+| Variegated      | Grenze Gotisch ExtraBold, © 2020 The Grenze Gotisch Project Authors                                           | 2e Variegated Thread, as a two-tone split |
 
 All are OFL 1.1 except Ultra (Apache 2.0). The font files and their licences are in `design/fonts/`; none are shipped. Bodoni Moda's file is renamed from `BodoniModa[opsz,wght].ttf` but otherwise unchanged.
 
