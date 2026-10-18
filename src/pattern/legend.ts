@@ -31,8 +31,17 @@ export function legendFor(pattern: Pattern, palette: Palette): Legend {
   const { lettering, accent } = patternColours(palette)
   const { icon, effect } = pattern.meta.recipe
   // With an outline the threads swap: the darker one outlines, the accent fills the letters.
-  const letteringUse = effect === 'outline' ? 'Outline' : effect === 'assisi' ? 'Outline and frame' : 'Lettering'
-  const effectPart = { none: null, shadow: 'shadow', block3d: '3D side', outline: 'lettering', assisi: null }[effect]
+  const letteringUse =
+    effect === 'outline'
+      ? 'Outline'
+      : effect === 'assisi'
+        ? 'Outline and frame'
+        : effect === 'sampler'
+          ? 'Lettering and frame'
+          : 'Lettering'
+  const effectPart = { none: null, shadow: 'shadow', block3d: '3D side', outline: 'lettering', assisi: null, sampler: null }[
+    effect
+  ]
   const iconLabel = icon && ICON_LABELS[icon]
   const { alphabet } = pattern.meta.recipe
   const ornament = alphabet ? ALPHABETS[alphabet].ornament : undefined

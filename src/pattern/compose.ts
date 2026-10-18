@@ -19,8 +19,8 @@ export const ACCENT = 2
  *   which reads best on light fabric (the lettering thread is the darker one
  *   in every palette).
  */
-export type Effect = 'none' | 'shadow' | 'block3d' | 'outline' | 'assisi'
-export const EFFECTS: Effect[] = ['none', 'shadow', 'block3d', 'outline', 'assisi']
+export type Effect = 'none' | 'shadow' | 'block3d' | 'outline' | 'assisi' | 'sampler'
+export const EFFECTS: Effect[] = ['none', 'shadow', 'block3d', 'outline', 'assisi', 'sampler']
 
 /** Stitches an effect reaches beyond the letters, so the lettering can leave room for it. */
 export const EFFECT_REACH: Record<Effect, { left: number; right: number; bottom: number; top: number }> = {
@@ -30,6 +30,8 @@ export const EFFECT_REACH: Record<Effect, { left: number; right: number; bottom:
   outline: { left: 1, right: 1, bottom: 1, top: 1 },
   // Two stitches of background around the words, then a one-stitch frame.
   assisi: { left: 3, right: 3, bottom: 3, top: 3 },
+  // Two stitches of fabric around the words, a one-stitch frame, and corner blocks one stitch beyond it.
+  sampler: { left: 4, right: 4, bottom: 4, top: 4 },
 }
 
 /** Applies an effect. The grid must already have the effect's reach free at its sides. */
@@ -38,6 +40,7 @@ export function addEffect(grid: Grid, effect: Effect): Grid {
   if (effect === 'block3d') return extrude(grid, -1, 3)
   if (effect === 'outline') return outline(grid)
   if (effect === 'assisi') return assisi(grid)
+  if (effect === 'sampler') return sampler(grid)
   return grid
 }
 
@@ -124,6 +127,49 @@ export function assisi(grid: Grid): Grid {
       else if (frame || near(x, y)) out.cells[i] = LETTERING
       else out.cells[i] = ACCENT
     }
+  }
+  return out
+}
+
+/**
+ * A sampler frame, after the Delft style in the Stitch Alphabets handoff: a
+ * one-stitch line in the lettering thread two stitches clear of the words,
+ * with a 3×3 chequered block on each corner. The grid must have four free
+ * columns each side.
+ */
+export function sampler(grid: Grid): Grid {
+  const out = withRows(grid, 4, 4)
+  const { width, height } = out
+  let minX = width
+  let maxX = -1
+  for (let i = 0; i < out.cells.length; i++) {
+    if (!out.cells[i]) continue
+    minX = Math.min(minX, i % width)
+    maxX = Math.max(maxX, i % width)
+  }
+  if (maxX < 0) return out
+  const left = Math.max(1, minX - 3)
+  const right = Math.min(width - 2, maxX + 3)
+  const top = 1
+  const bottom = height - 2
+  const put = (x: number, y: number, on: boolean) => {
+    if (x >= 0 && y >= 0 && x < width && y < height) out.cells[y * width + x] = on ? LETTERING : 0
+  }
+  for (let x = left; x <= right; x++) {
+    put(x, top, true)
+    put(x, bottom, true)
+  }
+  for (let y = top; y <= bottom; y++) {
+    put(left, y, true)
+    put(right, y, true)
+  }
+  for (const [cx, cy] of [
+    [left, top],
+    [right, top],
+    [left, bottom],
+    [right, bottom],
+  ]) {
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) put(cx + a, cy + b, (a + b) % 2 === 0)
   }
   return out
 }

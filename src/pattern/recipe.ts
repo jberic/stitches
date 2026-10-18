@@ -153,6 +153,7 @@ const IN_MIX: AlphabetId[] = [
   'western',
   'assisi',
   'cursive',
+  'delft',
 ]
 
 /** Alphabets with a small size that fit most phrases: the first stand-ins when another can't draw one. */
@@ -378,6 +379,7 @@ const EFFECT_PHRASES: Record<Effect, string | null> = {
   outline: 'an outline',
   // The alphabet's name says it: "Assisi stitch letters".
   assisi: null,
+  sampler: 'a sampler frame',
 }
 
 /** Plain-words name for a style, so people can say what they liked. */

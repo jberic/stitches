@@ -31,6 +31,8 @@ All fonts are under the [SIL Open Font License 1.1](https://openfontlicense.org)
 
 The Flourish stitch alphabet is drawn from Cinzel Decorative Bold (© 2012 Natanael Gama, Reserved Font Name "Cinzel", OFL 1.1). The capitals were turned into stitches once and stored as grids in `src/data/alphabets/flourish.ts`, so the font itself isn't shipped; the file and its `OFL.txt` are kept in `design/fonts/cinzeldecorative/`. The hooks, swashes and knots on the letters are drawn for this project.
 
+The Delft stitch alphabet is drawn from Cinzel Bold (© 2020 The Cinzel Project Authors, Reserved Font Name "Cinzel", OFL 1.1) in the same way; the font file and its `OFL.txt` are in `design/fonts/cinzel/`. Its rosettes and sampler frame follow style 2a of the Claude Design handoff "Stitch Alphabets".
+
 ## Thread colours
 
 Every pattern sits on one fabric, cream #FBF3EC, and uses two threads: one for the lettering, one for the accent (shadow, ornaments, and in v2 the icons).

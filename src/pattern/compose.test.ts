@@ -37,6 +37,20 @@ describe('effects', () => {
     expect(show(addEffect(o, 'outline'))[4]).toBe('#+#.#+#')
   })
 
+  it('sampler: a frame two stitches clear of the words, with a chequered block over each corner', () => {
+    expect(show(addEffect(grid(['....#....']), 'sampler'))).toEqual([
+      '#.#...#.#',
+      '.#.###.#.',
+      '#.#...#.#',
+      '.#.....#.',
+      '.#..#..#.',
+      '.#.....#.',
+      '#.#...#.#',
+      '.#.###.#.',
+      '#.#...#.#',
+    ])
+  })
+
   it('leaves the grid alone for none', () => {
     const g = grid(['#.'])
     expect(addEffect(g, 'none')).toBe(g)

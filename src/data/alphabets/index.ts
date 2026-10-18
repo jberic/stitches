@@ -8,6 +8,7 @@ import { CHECKER } from './checker'
 import { CURSIVE } from './cursive'
 import { DAISY } from './daisy'
 import { DECO } from './deco'
+import { DELFT } from './delft'
 import { FLOURISH } from './flourish'
 import { GOTHIC } from './gothic'
 import { HOLLOW } from './hollow'
@@ -44,6 +45,7 @@ export const ALPHABETS = {
   western: WESTERN,
   assisi: ASSISI,
   cursive: CURSIVE,
+  delft: DELFT,
 } satisfies Record<string, StitchAlphabet>
 
 export type AlphabetId = keyof typeof ALPHABETS

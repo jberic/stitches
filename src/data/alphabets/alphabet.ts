@@ -67,6 +67,8 @@ export interface StitchAlphabet {
   largeOnly?: boolean
   /** Capitals hang tails below the baseline, and the next letter tucks in over them. */
   tails?: boolean
+  /** A sampler alphabet: the words always sit in a sampler frame (see compose.ts). */
+  framed?: boolean
 }
 
 function buildSize(source: AlphabetSizeSource): AlphabetSize {
@@ -98,6 +100,7 @@ export function defineAlphabet(source: {
   joined?: boolean
   largeOnly?: boolean
   tails?: boolean
+  framed?: boolean
 }): StitchAlphabet {
   return {
     name: source.name,
@@ -113,6 +116,7 @@ export function defineAlphabet(source: {
     joined: source.joined,
     largeOnly: source.largeOnly,
     tails: source.tails,
+    framed: source.framed,
   }
 }
 

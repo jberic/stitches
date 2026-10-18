@@ -246,7 +246,13 @@ function decorate(lettering: Grid, recipe: Recipe): Grid {
  * anything. The pattern records this, so the caption and key stay true.
  */
 function stitchedEffect(recipe: Recipe, size: AlphabetSizeId | undefined): Effect {
-  if (!recipe.alphabet || recipe.effect === 'none' || recipe.effect === 'shadow' || recipe.effect === 'assisi')
+  if (
+    !recipe.alphabet ||
+    recipe.effect === 'none' ||
+    recipe.effect === 'shadow' ||
+    recipe.effect === 'assisi' ||
+    recipe.effect === 'sampler'
+  )
     return recipe.effect
   const suits = (ALPHABETS[recipe.alphabet].effects as Effect[]).includes(recipe.effect)
   return size === 'regular' && suits ? recipe.effect : 'shadow'
@@ -259,8 +265,14 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
     recipe.letterCase === 'upper' ? line.toLocaleUpperCase() : recipe.letterCase === 'lower' ? line.toLocaleLowerCase() : line,
   )
   // The lettering leaves room at its sides for the effect to reach into.
-  // Assisi alphabets always end in the Assisi panel, so plan its room from the start.
-  const planned: Recipe = recipe.alphabet && ALPHABETS[recipe.alphabet].reversed ? { ...recipe, effect: 'assisi' } : recipe
+  // Assisi alphabets always end in the Assisi panel, and sampler alphabets in
+  // their frame, so plan that room from the start.
+  const chosen = recipe.alphabet ? ALPHABETS[recipe.alphabet] : null
+  const planned: Recipe = chosen?.reversed
+    ? { ...recipe, effect: 'assisi' }
+    : chosen?.framed
+      ? { ...recipe, effect: 'sampler' }
+      : recipe
   const reach = EFFECT_REACH[planned.effect]
   const inner = width - reach.left - reach.right
   const { mask, letters, unsupported, size, accent } = drawLettering(cased, inner, recipe)
