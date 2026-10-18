@@ -35,14 +35,19 @@ export const STYLE_WIDTHS: Record<AlphabetId, number> & Partial<Record<DisplayFo
   inline: 90,
   holbein: 90,
   shadowslab: 94,
+  // HOME, or LOVE for Blackwork and Copperplate, which only fit four letters at 100.
+  counted: 84,
+  blackwork: 100,
+  forest: 92,
+  fraktur: 76,
+  assisiroman: 92,
+  blackletter: 80,
+  copperplate: 100,
+  woodtype: 80,
+  didone: 82,
   Shrikhand: 40,
   'Bagel Fat One': 40,
   'Rubik Mono One': 40,
-  // Where most seeds came out readable for "Love" ("LOVE" for Cinzel, which sets capitals only).
-  'Cinzel Decorative': 60,
-  UnifrakturMaguntia: 100,
-  Rye: 70,
-  'Bodoni Moda': 70,
 }
 
 /** The width for a style, or the given width for one not in the list. */

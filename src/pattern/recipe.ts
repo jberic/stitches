@@ -80,11 +80,6 @@ const THRESHOLDS: Record<DisplayFont, [number, number]> = {
   Shrikhand: [0.44, 0.54],
   'Bagel Fat One': [0.42, 0.52],
   'Rubik Mono One': [0.42, 0.52],
-  // Measured on LOVE and Hello at 100 stitches: Rye's inline cuts only stay open from about 0.5.
-  'Cinzel Decorative': [0.42, 0.52],
-  UnifrakturMaguntia: [0.42, 0.52],
-  Rye: [0.48, 0.56],
-  'Bodoni Moda': [0.42, 0.5],
 }
 
 /** When the seed's font can't make a phrase readable, try these, sturdiest first. */
@@ -99,10 +94,6 @@ const RESCUE_THRESHOLDS: Record<DisplayFont, number> = {
   Shrikhand: 0.5,
   'Bagel Fat One': 0.46,
   'Rubik Mono One': 0.46,
-  'Cinzel Decorative': 0.46,
-  UnifrakturMaguntia: 0.46,
-  Rye: 0.52,
-  'Bodoni Moda': 0.46,
 }
 
 const THRESHOLD_STEP = 0.07
@@ -157,6 +148,15 @@ const IN_MIX: AlphabetId[] = [
   'inline',
   'holbein',
   'shadowslab',
+  'counted',
+  'blackwork',
+  'forest',
+  'fraktur',
+  'assisiroman',
+  'blackletter',
+  'copperplate',
+  'woodtype',
+  'didone',
 ]
 
 /** Alphabets with a small size that fit most phrases: the first stand-ins when another can't draw one. */

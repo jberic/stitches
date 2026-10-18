@@ -1,15 +1,23 @@
 import type { StitchAlphabet } from './alphabet'
 import { ASSISI } from './assisi'
+import { ASSISI_ROMAN } from './assisiroman'
 import { BALLOON } from './balloon'
 import { BEADED } from './beaded'
+import { BLACKLETTER } from './blackletter'
+import { BLACKWORK } from './blackwork'
 import { BLOCK } from './block'
 import { BOTANICAL } from './botanical'
 import { CHECKER } from './checker'
+import { COPPERPLATE } from './copperplate'
+import { COUNTED } from './counted'
 import { CURSIVE } from './cursive'
 import { DAISY } from './daisy'
 import { DECO } from './deco'
 import { DELFT } from './delft'
+import { DIDONE } from './didone'
 import { FLOURISH } from './flourish'
+import { FOREST } from './forest'
+import { FRAKTUR } from './fraktur'
 import { GOTHIC } from './gothic'
 import { HOLBEIN } from './holbein'
 import { HOLLOW } from './hollow'
@@ -24,6 +32,7 @@ import { SWASH } from './swash'
 import { TUSCAN } from './tuscan'
 import { TYPEWRITER } from './typewriter'
 import { WESTERN } from './western'
+import { WOOD_TYPE } from './woodtype'
 
 /** The stitch alphabets on offer. Add new ones here. */
 export const ALPHABETS = {
@@ -52,6 +61,15 @@ export const ALPHABETS = {
   inline: INLINE,
   holbein: HOLBEIN,
   shadowslab: SHADOW_SLAB,
+  counted: COUNTED,
+  blackwork: BLACKWORK,
+  forest: FOREST,
+  fraktur: FRAKTUR,
+  assisiroman: ASSISI_ROMAN,
+  blackletter: BLACKLETTER,
+  copperplate: COPPERPLATE,
+  woodtype: WOOD_TYPE,
+  didone: DIDONE,
 } satisfies Record<string, StitchAlphabet>
 
 export type AlphabetId = keyof typeof ALPHABETS
