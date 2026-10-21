@@ -1,6 +1,6 @@
 # Say It With Stitches
 
-Type a phrase, get a two-colour cross-stitch pattern in a retro lettering style. "Generate again" gives the same words in a new style.
+Type a phrase straight onto the page and it is stitched live as a two-colour cross-stitch pattern. Pick the lettering style, colours, case, width and fabric in the toolbar at the bottom, then download the chart.
 
 ## Run it locally
 
@@ -53,7 +53,7 @@ All are OFL 1.1 except Ultra (Apache 2.0). The font files and their licences are
 Every pattern sits on one fabric, cream #FBF3EC, and uses two threads: one for the lettering, one for the accent (shadow, ornaments, and in v2 the icons).
 
 - **Colour wheel.** Pick either thread with a saturation and brightness square and a hue slider, or type a hex value or a thread code. Wherever you point, the pattern uses the closest thread in `threads.json`, measured with CIEDE2000 (how alike two colours look, not raw RGB), and the five closest are offered to choose between. Links store the two thread codes (`l` and `a`).
-- **Suggested pairs.** Six pairs in `src/data/palettes.ts` to start from, built from the hues of the design handoff ("Cross Stitch Design System"). Each code is the closest thread to the handoff colour that passes on the fabric: lettering at least 4.5:1, accent at least 2:1. Tests check every pair. Links from before the colour wheel (`p=07`) still open in their exact threads.
+- **Starting pair.** Everyone starts in Navy and mustard (939 and 729); there are no suggested pairs in the interface. The six pairs in `src/data/palettes.ts` remain so older links (`p=07`) still open in their exact threads and a chosen pair keeps its name.
 - **Warnings, not rules.** Any two threads can be used. The picker says so in plain words when the lettering is pale on the fabric (under 3:1), when the two threads are hard to tell apart (under 1.8:1), or when the accent barely shows (under 1.25:1).
 - The fabric's screen colour is a design choice, not thread data. Screen colours are approximate for every thread, so "closest thread" means closest on screen. Check against a physical thread card.
 

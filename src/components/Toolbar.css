@@ -1,0 +1,248 @@
+/* The floating toolbar, centred at the bottom of the screen. */
+.toolbar-wrap {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(0.75rem, 3vh, 2rem);
+  z-index: 3;
+  width: max-content;
+  max-width: calc(100vw - 1.5rem);
+  transform: translateX(-50%);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgb(var(--shadow) / 0.1),
+    0 18px 40px -18px rgb(var(--shadow) / 0.35);
+}
+
+.toolbar-items {
+  display: flex;
+  gap: 0.125rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.toolbar-items::-webkit-scrollbar {
+  display: none;
+}
+
+.toolbar-item {
+  display: grid;
+  gap: 0.05rem;
+  justify-items: center;
+  min-width: 5.5rem;
+  padding: 0.55rem 1rem;
+  border: 0;
+  border-radius: 0.875rem;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.toolbar-item:hover {
+  background: var(--bg);
+}
+
+.toolbar-item[aria-expanded='true'] {
+  background: var(--bg);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+
+.toolbar-item:focus-visible,
+.toolbar-close:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.toolbar-label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.toolbar-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 9rem;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolbar-swatch {
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(var(--shadow) / 0.2);
+}
+
+.toolbar-action {
+  flex: none;
+  padding-left: 0.25rem;
+}
+
+.toolbar-download {
+  padding: 0.85rem 1.25rem;
+  border: 0;
+  border-radius: 0.875rem;
+  background: var(--accent);
+  color: #fbf4ec;
+  font: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.toolbar-download:hover {
+  background: var(--accent-strong);
+}
+
+.toolbar-download:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.toolbar-download:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* A tool's panel opens above the bar. */
+.toolbar-panel {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 0.75rem);
+  width: min(22rem, calc(100vw - 1.5rem));
+  max-height: min(70vh, 40rem);
+  overflow: auto;
+  padding: 1rem 1.25rem 1.25rem;
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgb(var(--shadow) / 0.1),
+    0 24px 56px -20px rgb(var(--shadow) / 0.4);
+  transform: translateX(-50%);
+  animation: panel-in 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.toolbar-panel[data-wide] {
+  width: min(44rem, calc(100vw - 1.5rem));
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 0.5rem);
+  }
+}
+
+.toolbar-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.875rem;
+}
+
+.toolbar-panel-head h2 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.toolbar-close {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+
+.toolbar-close:hover {
+  background: var(--bg);
+}
+
+.toolbar-close svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.toolbar-panel .hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+}
+
+/* Phones: the bar spans the screen and scrolls sideways; panels rise from the bottom. */
+@media (max-width: 640px) {
+  .toolbar-wrap {
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    width: auto;
+    max-width: none;
+    transform: none;
+  }
+  .toolbar {
+    padding-left: 0.5rem;
+  }
+  .toolbar-items {
+    flex: 1;
+  }
+  .toolbar-item {
+    min-width: 4.75rem;
+    padding: 0.5rem 0.6rem;
+  }
+  .toolbar-label {
+    font-size: 0.875rem;
+  }
+  .toolbar-download {
+    padding: 0.8rem 0.9rem;
+  }
+  .toolbar-panel,
+  .toolbar-panel[data-wide] {
+    left: 0;
+    width: 100%;
+    max-height: 72vh;
+    transform: none;
+    animation-name: sheet-in;
+  }
+  @keyframes sheet-in {
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar-panel {
+    animation: none;
+  }
+}

@@ -5,16 +5,12 @@
 
   --gutter: clamp(1rem, 4vw, 3.5rem);
 
-  display: grid;
-  grid-template-rows: auto 1fr auto;
   min-height: 100vh;
   min-height: 100dvh;
 }
 
-/* Header and tool sit in a centred column; the footer runs edge to edge. */
-.site-header,
-main,
-.site-footer-inner {
+/* The header sits in a centred column over the fabric. */
+.site-header {
   width: 100%;
   max-width: 90rem;
   margin-inline: auto;
@@ -27,9 +23,18 @@ main,
 }
 
 .site-header {
+  position: relative;
+  z-index: 2;
   display: grid;
   gap: 28px;
   padding-top: clamp(1.25rem, 3vw, 2.5rem);
+  /* Clicks between the mark and About fall through to the stage, so you can start typing anywhere. */
+  pointer-events: none;
+}
+
+.site-header a,
+.site-header button {
+  pointer-events: auto;
 }
 
 .site-nav {
@@ -95,37 +100,6 @@ main,
   width: 100%;
 }
 
-/* Room between the header and the tool. */
-main {
-  margin-top: clamp(2.5rem, 7vw, 6rem);
-  padding-bottom: clamp(3rem, 8vw, 6rem);
-}
-
-/* The footer: the wordmark stitched large across a band of deep red, with the tagline. */
-.site-footer {
-  /* Cream stitches on #801C2A are 8.6:1; the pink tagline is 7.1:1. */
-  background: #801c2a;
-  padding-block: clamp(3.5rem, 10vw, 8rem) clamp(3rem, 7vw, 5.5rem);
-}
-
-.site-footer .wordmark {
-  --wordmark-under: #f3eee4;
-  --wordmark-over: #fbf3ec;
-}
-
-.site-footer-tagline {
-  margin: clamp(1.5rem, 4vw, 2.75rem) 0 0;
-  font-family: var(--font-heading);
-  font-size: clamp(1.25rem, 3vw, 2.25rem);
-  font-weight: 500;
-  font-variation-settings:
-    'opsz' 72,
-    'SOFT' 100;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  color: #ffcfc5;
-}
-
 /* Page reveal: each block rises a little out of a soft blur, one after another. */
 .reveal {
   transition:
@@ -148,12 +122,18 @@ main {
   transition: none;
 }
 
+.page[data-phase='waiting'] .reveal-fade,
+.page[data-phase='intro'] .reveal-fade {
+  transform: none;
+  filter: none;
+}
+
 /* The intro: the wordmark sews itself in large in the middle of the screen,
    a line appears word by word below it, then both drift up and away. */
 .intro {
   position: fixed;
   inset: 0;
-  z-index: 2;
+  z-index: 5;
   display: flex;
   flex-direction: column;
   align-items: center;

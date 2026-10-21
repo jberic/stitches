@@ -4,6 +4,8 @@ import './Segmented.css'
 interface Option<T extends string | number> {
   value: T
   label: string
+  /** Shown but not choosable, like Lowercase for a capitals-only style. */
+  disabled?: boolean
 }
 
 interface Props<T extends string | number> {
@@ -32,6 +34,7 @@ export function Segmented<T extends string | number>({ legend, options, value, o
               name={name}
               value={String(option.value)}
               checked={option.value === value}
+              disabled={option.disabled}
               onChange={() => onChange(option.value)}
             />
             <span>{option.label}</span>

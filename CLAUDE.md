@@ -2,7 +2,7 @@
 
 The site is called "Say It With Stitches". Use that name in the page title, header, README and metadata. Do not use any thread brand name in the product name.
 
-Web tool: type a phrase, get a two-colour cross-stitch pattern in a retro lettering style; "Generate again" gives the same words in a new style. See `embroidery-build-brief.md` (kept locally, not in the repo) for scope and build order.
+Web tool: type a phrase straight onto the page and it is stitched live as a two-colour cross-stitch pattern; the lettering style, colours, case, width and fabric are picked in a floating toolbar. See `embroidery-build-brief.md` (kept locally, not in the repo) for scope and build order.
 
 ## Rules
 
@@ -10,19 +10,20 @@ Web tool: type a phrase, get a two-colour cross-stitch pattern in a retro letter
 - v1 has one export: Download saves a PNG of the chart and thread key (`src/export/patternImage.ts`). No PDF yet and no image upload. Keep the pattern data model (a grid of colour indexes plus metadata) separate from rendering so a PDF can be added later.
 - Stack: Vite, React, TypeScript, plain canvas or SVG. Keep dependencies few; ask before adding one.
 - Generation is deterministic: the same text and seed always give the same pattern. Use a seeded random generator, never `Math.random()` in the generator.
-- Put the text and seed in the URL so a result can be shared.
-- Every result goes through the legibility check. If it fails, derive a new recipe from the same seed and retry (max 5 attempts).
+- Put the text, seed and style in the URL so a result can be shared.
+- Every result goes through the legibility check. If it fails, retry inside the chosen style (a font's threshold, an alphabet's spacing; max 5 attempts), never by switching style. If it still fails, keep the style and say so, with a width that works if there is one.
 - Fonts must be open-licence and self-hosted. Wait for fonts to load before drawing.
 - Icons are drawn for this project as small bitmaps. Do not copy patterns, icons or artwork from reference images or other sites.
-- Colours: any two threads, picked with the colour wheel (`src/components/ThreadPicker.tsx`), which snaps to the closest thread by CIEDE2000; six suggested pairs to start from (`src/data/palettes.ts`). Warn, don't block, when a pair is hard to read. Thread data lives in `src/data/threads.json` as `{ code, name, hex }`. Never hand-type it. Record the source and licence in the README.
+- Colours: no suggested pairs. Everyone starts in Navy and mustard (939 and 729) and builds their own with the colour wheel (`src/components/ThreadPicker.tsx`), which snaps to the closest thread by CIEDE2000. The second thread is only offered for styles that stitch part of the pattern in it. Warn, don't block, when a pair is hard to read. Thread data lives in `src/data/threads.json` as `{ code, name, hex }`. Never hand-type it. Record the source and licence in the README.
 - No brand logos. Thread codes appear as plain text only.
 
 ## Design
 
 - Header (from Figma, "Warm craft editorial"): the deep red stitch mark on the left, About on the right, and a running-stitch rule underneath. Assets in `src/assets/`. The maker credit and the colour data credit (required by its CC BY 4.0 licence) live in the About panel and on the downloaded image.
-- Wordmark: "SAY IT WITH STITCHES" in capitals, drawn as a stitch pattern by the tool's own engine. Deep red in the page-load intro; cream across a full-width #801C2A footer, with the tagline "Type a phrase, get a cross-stitch pattern." in #FFCFC5.
-- Page load: the wordmark sews itself in large in the middle of the screen, a short line appears word by word, then both drift away while the tool rises in (pattern from ol.studio; do not copy its fonts, imagery or layout). First keystroke or click skips ahead. Plays once per session. Respect `prefers-reduced-motion`.
-- Colours: text #392D28 on background #F3EEE4 (11.5:1); deep red #5F051C (11.9:1) for the primary button, focus, the stitch mark, the running-stitch rule and the wordmark. Tokens in `src/index.css`. The pattern sheet stays light, with a hairline border. Check contrast for any new colour.
+- Wordmark: "SAY IT WITH STITCHES" in capitals, drawn as a stitch pattern by the tool's own engine, in deep red, in the page-load intro only.
+- Page load: the wordmark sews itself in large in the middle of the screen, a short line appears word by word, then both drift away while the tool fades in (pattern from ol.studio; do not copy its fonts, imagery or layout). First keystroke or click skips ahead. Plays once per session. Respect `prefers-reduced-motion`.
+- The page (`src/components/Tool.tsx`): one screen, no footer. The whole background is the fabric, a cream Aida grid (`Stage.tsx`), with the words stitched large in the middle; click anywhere and type, and the first keystroke replaces the example. It opens on "Hello sunshine" in Swash at 100 stitches. A floating toolbar at the bottom (`Toolbar.tsx`) holds Typography (every style, previewed with your own words), Colours, Fabric, Width, Letters and Download. The thread key (codes, names, stitch counts, total, finished size) sits in a corner card on screens 1440px and wider, and in a Threads toolbar item on smaller ones.
+- Colours: text #392D28 on the fabric #FBF3EC (12.1:1), muted #6B5D55 (5.8:1); deep red #5F051C (12.5:1) for the Download button, focus, the stitch mark, the running-stitch rule and the wordmark. Tokens in `src/index.css`. Check contrast for any new colour.
 
 - Fraunces for headings, IBM Plex Sans for UI, IBM Plex Mono for codes and counts.
 - Every colour has a distinct symbol that works in black and white.

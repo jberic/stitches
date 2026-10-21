@@ -1,0 +1,99 @@
+/* The page is the fabric: the stage sits behind the header and the toolbar. */
+.stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.stage-fabric {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+/* The real text field: invisible, over the whole stage, so a click or tap anywhere starts typing. */
+.stage-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  /* 16px stops iOS zooming in on focus. */
+  font-size: 16px;
+  opacity: 0;
+  cursor: text;
+}
+
+.stage-input::selection {
+  background: transparent;
+}
+
+/* A stitched cursor after the last word, blinking like a text cursor. */
+.stage-caret {
+  position: absolute;
+  background: var(--accent);
+  border-radius: 1px;
+  pointer-events: none;
+  animation: caret-blink 1.1s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Under the words: the hint, or a note about the pattern. */
+.stage-note {
+  position: absolute;
+  left: 50%;
+  top: 60%;
+  width: min(36rem, calc(100vw - 2rem));
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.stage-note > * {
+  pointer-events: auto;
+}
+
+.stage-hint {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--fg-muted);
+}
+
+.stage-hint kbd {
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.stage-notice {
+  display: inline-block;
+  margin: 0;
+  padding: 0.55rem 0.9rem;
+  border-radius: 0.6rem;
+  background: rgb(255 255 255 / 0.82);
+  box-shadow: 0 1px 2px rgb(var(--shadow) / 0.12);
+  font-size: 0.875rem;
+  color: var(--fg);
+}
+
+.stage-notice .link-button {
+  margin-left: 0.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-caret {
+    animation: none;
+  }
+}

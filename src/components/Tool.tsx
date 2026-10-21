@@ -3,68 +3,86 @@ import { pairPalette, patternColours } from '../data/palettes'
 import {
   MAX_WIDTH,
   MIN_WIDTH,
-  findReadableWidth,
-  generatePattern,
-  letterformOf,
-  nextStyle,
+  generateInStyle,
+  readableWidthInStyle,
+  startingWidth,
   type GenerateResult,
 } from '../pattern/generate'
-import { DEFAULT_MOTIF, describeRecipe, type Choices, type LetterCase } from '../pattern/recipe'
+import {
+  DEFAULT_MOTIF,
+  capitalsOnly,
+  describeRecipe,
+  styleName,
+  usesSecondThread,
+  type Choices,
+  type LetterCase,
+  type StyleId,
+} from '../pattern/recipe'
 import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
 import { downloadPatternSheet } from '../export/patternImage'
 import { legendFor } from '../pattern/legend'
 import { FABRIC_COUNTS, finishedSize, type FabricCount } from '../pattern/size'
-import { addToHistory, encodeCells, entryKey, loadHistory, saveHistory, type HistoryEntry } from '../state/history'
-import { readShareState, shareSearch, startingState, writeShareState, type ShareState } from '../state/url'
-import { HistoryStrip } from './HistoryStrip'
-import { Legend } from './Legend'
-import { ThreadPicker } from './ThreadPicker'
+import { styleWidth } from '../pattern/styleWidths'
+import { thread } from '../data/palettes'
+import { readShareState, startingState, writeShareState } from '../state/url'
 import { Segmented } from './Segmented'
-import { PatternChart, type ChartColours } from './PatternChart'
+import { Stage } from './Stage'
+import { StylePicker } from './StylePicker'
+import { ThreadKey } from './ThreadKey'
+import { ThreadPicker } from './ThreadPicker'
+import { Toolbar, type ToolbarItem } from './Toolbar'
+import type { ChartColours } from './PatternChart'
 import './Tool.css'
 
 interface Props {
-  inputRef?: React.Ref<HTMLInputElement>
+  inputRef?: React.RefObject<HTMLInputElement | null>
+}
+
+const CASE_LABELS: Record<LetterCase, string> = { typed: 'As typed', upper: 'Capitals', lower: 'Lowercase' }
+
+/** True while the media query matches. */
+function useMedia(query: string) {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches)
+  useEffect(() => {
+    const list = window.matchMedia(query)
+    const onChange = () => setMatches(list.matches)
+    list.addEventListener('change', onChange)
+    return () => list.removeEventListener('change', onChange)
+  }, [query])
+  return matches
 }
 
 export function Tool({ inputRef }: Props) {
   const [initial] = useState(() => startingState(window.location.search))
   const [text, setText] = useState(initial.text)
+  // Untouched since the page opened: the first keystroke replaces the example.
+  const [pristine, setPristine] = useState(true)
   const [width, setWidth] = useState(initial.width)
   const [seed, setSeed] = useState(initial.seed)
+  const [style, setStyle] = useState<StyleId>(initial.style)
   const [threads, setThreads] = useState({ lettering: initial.lettering, accent: initial.accent })
   const [fabricCount, setFabricCount] = useState<FabricCount>(initial.fabric)
   const [letterCase, setLetterCase] = useState<LetterCase>(initial.letterCase)
-  // Motifs are saved for v2 (see DEFAULT_MOTIF): v1 patterns are letters only.
   const choices = useMemo<Choices>(() => ({ motif: DEFAULT_MOTIF, letterCase }), [letterCase])
-  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory())
-  // Read by the link writer without re-running generation when only the threads change.
   const threadsRef = useRef(threads)
   useEffect(() => {
     threadsRef.current = threads
   }, [threads])
+
+  /** The newest result, and the last one that could be drawn at all (kept on screen when a phrase doesn't fit). */
   const [result, setResult] = useState<GenerateResult | null>(null)
-  const [choosing, setChoosing] = useState(false)
-  // The last few styles shown, so "Generate again" doesn't bring one straight back.
-  const recentStyles = useRef<ReturnType<typeof letterformOf>[]>([])
-  useEffect(() => {
-    if (!result) return
-    const shown = letterformOf(result.recipe)
-    recentStyles.current = [shown, ...recentStyles.current.filter((s) => s !== shown)].slice(0, 4)
-  }, [result])
+  const [shown, setShown] = useState<GenerateResult | null>(null)
   const [failed, setFailed] = useState(false)
+  const [focused, setFocused] = useState(false)
   const [download, setDownload] = useState<'idle' | 'busy' | 'failed'>('idle')
-  // Legend highlight: hover or focus previews a colour, a click pins it.
   const [preview, setPreview] = useState<number | null>(null)
   const [pinned, setPinned] = useState<number | null>(null)
-  /** For a hard-to-read result: a width that works, keyed by the result it belongs to. */
   const [readableAt, setReadableAt] = useState<{ for: GenerateResult; width: number | null } | null>(null)
   const request = useRef(0)
-  /** How the next state change should land in browser history. */
+  const styleRequest = useRef<StyleId | null>(null)
   const historyMode = useRef<'replace' | 'push' | 'none'>('replace')
-  const widthRef = useRef<HTMLInputElement>(null)
-  const sheetRef = useRef<HTMLElement>(null)
-  const ids = { text: useId(), textHint: useId(), width: useId(), status: useId(), downloadHint: useId() }
+  const wide = useMedia('(min-width: 1440px)')
+  const ids = { text: useId(), hint: useId(), width: useId() }
 
   const phrase = parsePhrase(text)
   const linesKey = phrase.ok ? phrase.lines.join('\n') : null
@@ -73,26 +91,28 @@ export function Tool({ inputRef }: Props) {
     if (linesKey === null) return
     const id = ++request.current
     const timer = window.setTimeout(() => {
-      generatePattern({ lines: linesKey.split('\n'), width, seed, choices })
+      generateInStyle({ lines: linesKey.split('\n'), width, seed, style, choices })
         .then((next) => {
-          // Keep the previous pattern on screen until the newest request is ready.
           if (id !== request.current) return
           setResult(next)
+          if (!next.check.unsupported) setShown(next)
           setFailed(false)
           const mode = historyMode.current
           historyMode.current = 'replace'
           if (mode !== 'none') {
             const current = readShareState(window.location.search)
-            const text = linesKey.split('\n').join(' ')
-            writeShareState({ ...current, text, seed, width, ...choices, ...threadsRef.current }, mode)
+            writeShareState(
+              { ...current, text: linesKey.split('\n').join(' '), seed, width, style, ...choices, ...threadsRef.current },
+              mode,
+            )
           }
         })
         .catch(() => id === request.current && setFailed(true))
     }, 90)
     return () => window.clearTimeout(timer)
-  }, [linesKey, width, seed, choices])
+  }, [linesKey, width, seed, style, choices])
 
-  // Back and Forward step through styles you have generated.
+  // Back and Forward step through the styles you picked.
   useEffect(() => {
     const onPop = () => {
       const state = readShareState(window.location.search)
@@ -100,6 +120,7 @@ export function Tool({ inputRef }: Props) {
       setText(state.text)
       setWidth(state.width)
       setSeed(state.seed)
+      setStyle(state.style)
       setThreads({ lettering: state.lettering, accent: state.accent })
       setFabricCount(state.fabric)
       setLetterCase(state.letterCase)
@@ -108,27 +129,19 @@ export function Tool({ inputRef }: Props) {
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
-  const generateAgain = async () => {
-    if (!phrase.ok || choosing) return
-    setChoosing(true)
-    try {
-      // A new style, judged by the finished pattern, at that style's own width.
-      const next = await nextStyle({ lines: phrase.lines, choices, recent: recentStyles.current, fallbackWidth: width })
-      historyMode.current = 'push'
-      setWidth(next.width)
-      setSeed(next.seed)
-    } finally {
-      setChoosing(false)
-    }
-    // On short screens the button sits below the pattern; bring the new one into view.
-    const sheet = sheetRef.current
-    if (sheet && sheet.getBoundingClientRect().top < 0) {
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      sheet.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' })
-    }
+  const chooseStyle = async (next: StyleId) => {
+    if (next === style) return
+    // Show the new style straight away at its usual width, then settle on the width that suits these words.
+    historyMode.current = 'push'
+    styleRequest.current = next
+    setStyle(next)
+    setWidth(styleWidth(next, width))
+    if (!phrase.ok) return
+    const fitted = await startingWidth(phrase.lines, seed, next, choices)
+    // Only if no other style was picked meanwhile.
+    if (styleRequest.current === next) setWidth(fitted)
   }
 
-  // New threads only recolour the pattern; the link is updated in place.
   const chooseThreads = (lettering: string, accent: string) => {
     setThreads({ lettering, accent })
     writeShareState({ ...readShareState(window.location.search), lettering, accent }, 'replace')
@@ -145,84 +158,25 @@ export function Tool({ inputRef }: Props) {
     return { fabric, lettering: lettering.hex, accent: accent.hex }
   }, [palette])
 
-  const pattern = result?.pattern
+  const pattern = shown?.pattern ?? null
   const legend = useMemo(() => pattern && legendFor(pattern, palette), [pattern, palette])
   const highlight = preview ?? (legend?.rows.some((r) => r.index === pinned) ? pinned : null)
-  const tooNarrow = result?.tooNarrow
-  const hardToRead = result && !result.check.ok && !tooNarrow
+  const unsupported = result?.check.unsupported
+  const hardToRead = result && !result.check.ok && !unsupported && !result.tooNarrow
+  const tooNarrow = result && !unsupported ? result.tooNarrow : undefined
 
-  // When no attempt was readable, look for the narrowest width that is.
+  // When the pattern isn't readable at this width, look for a width in the same style that is.
   useEffect(() => {
-    if (!result || result.check.ok || result.tooNarrow) return
+    if (!result || result.check.ok || (result.tooNarrow && !result.check.unsupported)) return
     let alive = true
-    const { meta } = result.pattern
-    findReadableWidth(meta.text.split(' '), meta.seed, result.pattern.width, choices).then(
-      (width) => alive && setReadableAt({ for: result, width }),
+    readableWidthInStyle(result.pattern.meta.lines, seed, style, width, choices).then(
+      (found) => alive && setReadableAt({ for: result, width: found }),
     )
     return () => {
       alive = false
     }
-  }, [result, choices])
+  }, [result, seed, style, width, choices])
   const suggestedWidth = readableAt?.for === result ? readableAt.width : null
-
-  const applyWidth = (next: number) => {
-    setWidth(next)
-    // The button that called this disappears once the width fits, so keep keyboard focus nearby.
-    widthRef.current?.focus()
-  }
-  // The settings behind what's on screen now, for the history strip.
-  const shownState = useMemo<ShareState | null>(
-    () =>
-      pattern
-        ? {
-            text: pattern.meta.text,
-            seed: pattern.meta.seed,
-            width: pattern.width,
-            lettering: threads.lettering,
-            accent: threads.accent,
-            fabric: fabricCount,
-            ...choices,
-          }
-        : null,
-    [pattern, threads, fabricCount, choices],
-  )
-  const shownKey = shownState && shareSearch(shownState)
-
-  // A result joins the history once it has stayed on screen for a second,
-  // so half-typed words don't fill the strip.
-  useEffect(() => {
-    if (!pattern || !shownState) return
-    const timer = window.setTimeout(() => {
-      const entry: HistoryEntry = {
-        state: shownState,
-        grid: { width: pattern.width, height: pattern.height, cells: encodeCells(pattern.cells) },
-        label: `${shownState.text}: ${describeRecipe(pattern.meta.recipe)}, ${palette.name.toLowerCase()}`,
-      }
-      setHistory((list) => addToHistory(list, entry))
-    }, 1000)
-    return () => window.clearTimeout(timer)
-  }, [pattern, shownState, palette.name])
-
-  useEffect(() => saveHistory(history), [history])
-
-  const restore = (entry: HistoryEntry) => {
-    if (entryKey(entry) === shownKey) return
-    // Write the link now: if only the colours differ, no new pattern is generated to write it.
-    writeShareState(entry.state, 'push')
-    const regenerates =
-      entry.state.text !== shownState?.text ||
-      entry.state.seed !== shownState?.seed ||
-      entry.state.width !== shownState?.width ||
-      entry.state.letterCase !== shownState?.letterCase
-    // Only a regeneration consumes this; set it otherwise and the next edit wouldn't update the link.
-    if (regenerates) historyMode.current = 'none'
-    setText(entry.state.text)
-    setWidth(entry.state.width)
-    setSeed(entry.state.seed)
-    setThreads({ lettering: entry.state.lettering, accent: entry.state.accent })
-    setFabricCount(entry.state.fabric)
-    setLetterCase(entry.state.letterCase)
-  }
 
   const downloadSheet = async () => {
     if (!pattern || !legend || download === 'busy') return
@@ -241,112 +195,138 @@ export function Tool({ inputRef }: Props) {
     }
   }
 
-  const charsLeft = MAX_CHARS - text.trim().length
   const size = pattern && finishedSize(pattern.width, pattern.height, fabricCount)
+  const capitals = capitalsOnly(style)
+  const second = usesSecondThread(style)
+  const name = styleName(style)
+  const l = thread(threads.lettering)
+  const a = thread(threads.accent)
 
-  return (
-    <div className="tool">
-      <section className="tool-stage" aria-label="Pattern">
-        <figure className="sheet" ref={sheetRef}>
-          {pattern ? (
-            <PatternChart
-              pattern={pattern}
-              colours={chartColours}
-              highlight={highlight}
-              label={`Cross-stitch pattern of “${pattern.meta.text}”, ${pattern.width} by ${pattern.height} stitches, ${palette.name.toLowerCase()}.`}
-            />
-          ) : (
-            <div className="sheet-empty" aria-hidden="true" />
-          )}
-          {pattern && (
-            <figcaption className="sheet-caption">
-              <span>{describeRecipe(pattern.meta.recipe)}</span>
-              <span className="mono">
-                {pattern.width} × {pattern.height} stitches
-              </span>
-            </figcaption>
-          )}
-          {legend && <Legend legend={legend} highlight={highlight} pinned={pinned} onPreview={setPreview} onPin={setPinned} />}
-        </figure>
-        <HistoryStrip entries={history} currentKey={shownKey} onSelect={restore} />
-      </section>
+  const onType = (value: string) => {
+    setPristine(false)
+    setText(value)
+  }
 
-      <section className="tool-controls" aria-label="Pattern settings">
-        <div className="field field-phrase">
-          <label htmlFor={ids.text} className="eyebrow">
-            Your words
-          </label>
-          <input
-            ref={inputRef}
-            id={ids.text}
-            className="phrase-input"
-            type="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            maxLength={MAX_CHARS + 10}
-            autoComplete="off"
-            spellCheck={false}
-            aria-describedby={`${ids.textHint} ${ids.status}`}
-            aria-invalid={!phrase.ok}
-          />
-          <p id={ids.textHint} className="hint">
-            Up to four words. Each word gets its own line.
-            <span className="mono hint-count" aria-hidden="true">
-              {charsLeft}
-            </span>
-          </p>
-        </div>
+  // Until you've typed, the example is just a placeholder: the first character
+  // you type, paste or delete replaces all of it, wherever the cursor was.
+  const ownRef = useRef<HTMLInputElement | null>(null)
+  const fieldRef = inputRef ?? ownRef
+  useEffect(() => {
+    const field = fieldRef.current
+    if (!field || !pristine) return
+    const onBefore = (e: InputEvent) => {
+      e.preventDefault()
+      onType(e.inputType.startsWith('delete') ? '' : (e.data ?? e.dataTransfer?.getData('text') ?? ''))
+    }
+    field.addEventListener('beforeinput', onBefore)
+    return () => field.removeEventListener('beforeinput', onBefore)
+  }, [pristine, fieldRef])
 
-        <div className="generate">
-          <div className="generate-actions">
-            <button type="button" className="generate-button" onClick={generateAgain} disabled={!phrase.ok || choosing}>
-              Generate again
-            </button>
-            <button
-              type="button"
-              className="download-button"
-              onClick={downloadSheet}
-              disabled={!pattern || download === 'busy'}
-              aria-describedby={ids.downloadHint}
-            >
-              {download === 'busy' ? 'Preparing…' : 'Download'}
-            </button>
-          </div>
-          <p className="hint">Same words, new style.</p>
-          <p id={ids.downloadHint} className="visually-hidden">
-            Saves a PNG image of the chart and thread key.
-          </p>
-        </div>
+  const input = (
+    <input
+      ref={fieldRef}
+      id={ids.text}
+      className="stage-input"
+      type="text"
+      value={text}
+      onChange={(e) => onType(e.target.value)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      maxLength={MAX_CHARS + 10}
+      autoComplete="off"
+      autoCapitalize="off"
+      spellCheck={false}
+      aria-label="Your words"
+      aria-describedby={ids.hint}
+      aria-invalid={!phrase.ok}
+    />
+  )
 
-        <div className="field">
-          <ThreadPicker lettering={threads.lettering} accent={threads.accent} onChange={chooseThreads} />
+  const keyProps = legend &&
+    size &&
+    pattern && {
+      legend,
+      size,
+      stitchesWide: pattern.width,
+      stitchesHigh: pattern.height,
+      fabricCount,
+      highlight,
+      pinned,
+      onPreview: setPreview,
+      onPin: setPinned,
+    }
+
+  const items: ToolbarItem[] = [
+    {
+      id: 'type',
+      label: 'Typography',
+      value: name,
+      wide: true,
+      panel: (
+        <StylePicker
+          lines={phrase.ok ? phrase.lines : ['Hello', 'sunshine']}
+          seed={seed}
+          choices={choices}
+          colours={chartColours}
+          value={style}
+          onChange={chooseStyle}
+        />
+      ),
+    },
+    {
+      id: 'colours',
+      label: 'Colours',
+      value: (
+        <>
+          <span className="toolbar-swatch" style={{ background: l.hex }} />
+          {second && <span className="toolbar-swatch" style={{ background: a.hex }} />}
+          {l.code}
+          {second && ` · ${a.code}`}
+        </>
+      ),
+      panel: (
+        <>
+          <ThreadPicker lettering={threads.lettering} accent={threads.accent} onChange={chooseThreads} showAccent={second} />
           <p className="hint">Screen colours are approximate. Check against your physical thread card.</p>
-        </div>
-
-        <div className="field">
+        </>
+      ),
+    },
+    {
+      id: 'fabric',
+      label: 'Fabric',
+      value: `${fabricCount}-count`,
+      panel: (
+        <>
           <Segmented
-            legend="Letters"
-            options={[
-              { value: 'typed', label: 'As typed' },
-              { value: 'upper', label: 'Capitals' },
-              { value: 'lower', label: 'Lowercase' },
-            ]}
-            value={letterCase}
-            onChange={(next: LetterCase) => setLetterCase(next)}
+            legend="Aida count"
+            options={FABRIC_COUNTS.map((count) => ({ value: count, label: `${count}` }))}
+            value={fabricCount}
+            onChange={chooseFabric}
           />
-        </div>
-
-        <div className="field">
+          {size && (
+            <p className="hint">
+              Finished design: {size.cm.width.toFixed(1)} × {size.cm.height.toFixed(1)} cm ({size.inches.width.toFixed(1)} ×{' '}
+              {size.inches.height.toFixed(1)} in)
+            </p>
+          )}
+        </>
+      ),
+    },
+    {
+      id: 'width',
+      label: 'Width',
+      value: `${width} stitches`,
+      panel: (
+        <div className="width-control">
           <div className="field-row">
             <label htmlFor={ids.width} className="eyebrow">
-              Width
+              Stitches wide
             </label>
             <output htmlFor={ids.width} className="mono value">
-              {width} <span>stitches</span>
+              {width}
             </output>
           </div>
           <input
-            ref={widthRef}
             id={ids.width}
             className="range"
             type="range"
@@ -362,57 +342,111 @@ export function Tool({ inputRef }: Props) {
             <span>{MAX_WIDTH}</span>
           </div>
         </div>
-
-        <div className="field">
+      ),
+    },
+    {
+      id: 'letters',
+      label: 'Letters',
+      value: capitals ? 'Capitals' : CASE_LABELS[letterCase],
+      panel: (
+        <>
           <Segmented
-            legend="Fabric"
-            options={FABRIC_COUNTS.map((count) => ({ value: count, label: `${count}-count` }))}
-            value={fabricCount}
-            onChange={chooseFabric}
+            legend="Case"
+            options={(['typed', 'upper', 'lower'] as LetterCase[]).map((value) => ({
+              value,
+              label: CASE_LABELS[value],
+              disabled: capitals && value === 'lower',
+            }))}
+            value={letterCase}
+            onChange={(next: LetterCase) => setLetterCase(next)}
           />
-          {size && (
-            <p className="finished-size" aria-live="polite">
-              <span className="mono">
-                {size.cm.width.toFixed(1)} × {size.cm.height.toFixed(1)} cm
-              </span>
-              <span className="mono finished-size-inches">
-                {size.inches.width.toFixed(1)} × {size.inches.height.toFixed(1)} in
-              </span>
-              <span className="hint-inline">finished design on {fabricCount}-count Aida</span>
-            </p>
-          )}
-        </div>
+          {capitals && <p className="hint">{name} only has capitals, so your words are stitched in capitals.</p>}
+        </>
+      ),
+    },
+  ]
+  if (!wide && keyProps) {
+    items.push({
+      id: 'threads',
+      label: 'Threads',
+      value: `${keyProps.legend.total.toLocaleString('en')} stitches`,
+      panel: <ThreadKey {...keyProps} />,
+    })
+  }
 
-        <div id={ids.status} className="status" role="status" aria-live="polite">
-          {!phrase.ok && <p className="notice">{PHRASE_MESSAGES[phrase.reason]}</p>}
-          {phrase.ok && failed && <p className="notice">Something went wrong drawing that. Try again.</p>}
-          {download === 'failed' && <p className="notice">The download didn't work. Try again.</p>}
-          {phrase.ok && hardToRead && (
-            <p className="notice">
-              This one is hard to read at {width} stitches wide.{' '}
+  return (
+    <div className="tool">
+      <Stage
+        pattern={pattern}
+        colours={chartColours}
+        label={
+          pattern
+            ? `Cross-stitch pattern of “${pattern.meta.text}” in ${name}, ${pattern.width} by ${pattern.height} stitches. Type to change the words.`
+            : 'Cross-stitch pattern'
+        }
+        highlight={highlight}
+        sewKey={`${style}|${letterCase}`}
+        above=".site-header"
+        below=".toolbar-wrap"
+        input={input}
+        focused={focused}
+      >
+        <div id={ids.hint} role="status" aria-live="polite">
+          {!phrase.ok ? (
+            <p className="stage-notice">{PHRASE_MESSAGES[phrase.reason]}</p>
+          ) : failed ? (
+            <p className="stage-notice">Something went wrong drawing that. Try again.</p>
+          ) : download === 'failed' ? (
+            <p className="stage-notice">The download didn't work. Try again.</p>
+          ) : unsupported ? (
+            <p className="stage-notice">
+              Too long for {name} at {width} stitches.{' '}
               {suggestedWidth ? (
-                <button type="button" className="link-button" onClick={() => applyWidth(suggestedWidth)}>
+                <button type="button" className="link-button" onClick={() => setWidth(suggestedWidth)}>
                   Make it {suggestedWidth} wide
                 </button>
               ) : (
-                'Try it wider, with fewer words, or generate again.'
+                'Try fewer letters or another style.'
               )}
             </p>
-          )}
-          {phrase.ok && tooNarrow && (
-            <p className="notice">
+          ) : tooNarrow ? (
+            <p className="stage-notice">
               “{tooNarrow.word}” is too long to read clearly at {width} stitches wide.{' '}
               {tooNarrow.suggestedWidth ? (
-                <button type="button" className="link-button" onClick={() => applyWidth(tooNarrow.suggestedWidth!)}>
+                <button type="button" className="link-button" onClick={() => setWidth(tooNarrow.suggestedWidth!)}>
                   Make it {tooNarrow.suggestedWidth} wide
                 </button>
               ) : (
                 'Try a shorter word.'
               )}
             </p>
-          )}
+          ) : hardToRead ? (
+            <p className="stage-notice">
+              Hard to read in {name} at {width} stitches.{' '}
+              {suggestedWidth ? (
+                <button type="button" className="link-button" onClick={() => setWidth(suggestedWidth)}>
+                  Make it {suggestedWidth} wide
+                </button>
+              ) : (
+                'Try a wider pattern or another style.'
+              )}
+            </p>
+          ) : pristine ? (
+            <p className="stage-hint">Type your own words · up to four</p>
+          ) : null}
         </div>
-      </section>
+      </Stage>
+
+      {wide && keyProps && <ThreadKey {...keyProps} card />}
+
+      <Toolbar
+        items={items}
+        action={
+          <button type="button" className="toolbar-download" onClick={downloadSheet} disabled={!pattern || download === 'busy'}>
+            {download === 'busy' ? 'Preparing…' : 'Download'}
+          </button>
+        }
+      />
     </div>
   )
 }

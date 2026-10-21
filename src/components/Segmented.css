@@ -55,6 +55,20 @@
   font-weight: 500;
 }
 
+.segmented-option:has(input:disabled) {
+  cursor: not-allowed;
+}
+
+.segmented-option input:disabled {
+  cursor: not-allowed;
+}
+
+.segmented-option input:disabled + span {
+  color: var(--line);
+  text-decoration: line-through;
+  text-decoration-color: rgb(var(--shadow) / 0.3);
+}
+
 .segmented-option input:focus-visible + span {
   outline: 3px solid var(--focus);
   outline-offset: 2px;

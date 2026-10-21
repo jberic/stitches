@@ -1,0 +1,55 @@
+/* The thread key: a quiet card in the bottom-left corner, on screens wide enough to have room beside the toolbar. */
+.thread-key {
+  position: fixed;
+  left: clamp(1rem, 3vw, 2.5rem);
+  bottom: clamp(0.75rem, 3vh, 2rem);
+  z-index: 2;
+  width: 18rem;
+  padding: 0.5rem 0.75rem 0.75rem;
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 0.92);
+  box-shadow:
+    0 1px 2px rgb(var(--shadow) / 0.1),
+    0 18px 40px -22px rgb(var(--shadow) / 0.35);
+}
+
+.thread-key .legend,
+.thread-key-inline .legend {
+  margin-top: 0;
+}
+
+.thread-key .legend-rows,
+.thread-key-inline .legend-rows {
+  border-top: 0;
+}
+
+.thread-key .legend-row,
+.thread-key-inline .legend-row {
+  grid-template-columns: 1.25rem minmax(0, 1fr) auto;
+  padding: 0.45rem 0.25rem;
+  font-size: 0.8125rem;
+}
+
+.thread-key .legend-use,
+.thread-key-inline .legend-use {
+  display: none;
+}
+
+.thread-key .legend-total,
+.thread-key-inline .legend-total {
+  padding: 0.5rem 0.25rem 0;
+}
+
+.thread-key-size {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.25rem 0;
+  border-top: 1px solid rgb(var(--shadow) / 0.08);
+  font-size: 0.8125rem;
+}
+
+.thread-key-muted {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+}

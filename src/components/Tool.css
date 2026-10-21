@@ -1,79 +1,9 @@
-.tool {
-  --chart-number: var(--sheet-muted);
-
-  display: grid;
-  gap: clamp(2rem, 4vw, 4rem);
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-}
-
-@media (min-width: 900px) {
-  .tool {
-    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
-  }
-  .tool-controls {
-    position: sticky;
-    top: 2rem;
-  }
-}
-
-/* The sheet: the pattern sits on it like a printed chart on a table. */
-.sheet {
-  scroll-margin-top: 1rem;
-  margin: 0;
-  background: var(--sheet);
-  padding: clamp(0.75rem, 2.5vw, 2.5rem);
-  border-radius: 2px;
-  color: var(--sheet-ink);
-  /* The sheet and the page are close in colour (1.05:1), so a hairline and a soft shadow lift it. */
-  border: 1px solid var(--hairline);
-  box-shadow:
-    0 1px 3px -1px rgb(var(--shadow) / 0.12),
-    0 28px 56px -32px rgb(var(--shadow) / 0.28);
-}
-
-.chart {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-.chart canvas {
-  display: block;
-  max-width: 100%;
-}
-
-.sheet-empty {
-  aspect-ratio: 5 / 4;
-}
-
-.sheet-caption {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.25rem 1rem;
-  margin-top: clamp(0.75rem, 2vw, 1.75rem);
-  padding-top: 0.75rem;
-  border-top: 1px solid rgb(var(--shadow) / 0.12);
-  font-size: 0.8125rem;
-  color: var(--sheet-muted);
-}
+/* Shared bits of the tool's panels. The stage, toolbar and thread key have their own files. */
 
 .mono {
   font-family: var(--font-mono);
   font-feature-settings: 'zero' 0;
   letter-spacing: 0;
-}
-
-/* Controls */
-.tool-controls {
-  display: grid;
-  gap: 2.5rem;
-}
-
-.field {
-  display: grid;
-  gap: 0.75rem;
 }
 
 .field-row {
@@ -91,65 +21,15 @@
   color: var(--fg-muted);
 }
 
-.phrase-input {
-  width: 100%;
-  margin: 0;
-  padding: 0.05em 0 0.15em;
-  border: 0;
-  border-bottom: 2px solid var(--fg);
-  border-radius: 0;
-  background: transparent;
-  color: var(--fg);
-  caret-color: var(--fg);
-  font-family: var(--font-heading);
-  font-size: clamp(2rem, 3.4vw, 3rem);
-  font-weight: 650;
-  font-variation-settings:
-    'opsz' 144,
-    'SOFT' 100,
-    'WONK' 1;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  transition: border-color 160ms ease;
-}
-
-.phrase-input:focus {
-  outline: none;
-  border-bottom-color: var(--fg);
-}
-
-.phrase-input:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 6px;
-}
-
-.phrase-input[aria-invalid='true'] {
-  border-bottom-style: dashed;
-}
-
-.hint {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  margin: 0;
-  font-size: 0.875rem;
-  color: var(--fg-muted);
-}
-
-.hint-count {
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-}
-
 .value {
   font-size: 1.5rem;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
-.value span {
-  font-size: 0.75rem;
-  color: var(--fg-muted);
+.width-control {
+  display: grid;
+  gap: 0.5rem;
 }
 
 /* Range: a single thread pulled across. */
@@ -185,7 +65,7 @@
   margin-top: calc(-0.5625rem + 1px);
   border-radius: 50%;
   background: var(--fg);
-  box-shadow: 0 0 0 4px var(--bg);
+  box-shadow: 0 0 0 4px #fff;
   transition: transform 160ms ease;
 }
 
@@ -195,7 +75,7 @@
   border: 0;
   border-radius: 50%;
   background: var(--fg);
-  box-shadow: 0 0 0 4px var(--bg);
+  box-shadow: 0 0 0 4px #fff;
 }
 
 .range:hover::-webkit-slider-thumb,
@@ -225,18 +105,6 @@
   color: var(--fg-muted);
 }
 
-.status:empty {
-  display: none;
-}
-
-.notice {
-  margin: 0;
-  padding: 0.25rem 0 0.25rem 1rem;
-  border-left: 2px solid var(--fg);
-  font-size: 0.9375rem;
-  line-height: 1.45;
-}
-
 .link-button {
   padding: 0;
   border: 0;
@@ -251,118 +119,7 @@
   cursor: pointer;
 }
 
-/* Generate again: the main action, so it's the one solid shape in the controls. */
-.generate {
-  display: grid;
-  justify-items: start;
-  gap: 0.5rem;
-}
-
-.generate-button {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.9rem 1.5rem;
-  border: 0;
-  border-radius: 999px;
-  /* Cream on deep red is 12.6:1. */
-  background: var(--accent);
-  color: var(--sheet);
-  font-family: var(--font-ui);
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    background-color 160ms ease,
-    transform 160ms ease;
-}
-
-.generate-button:hover {
-  background: var(--accent-strong);
-}
-
-.generate-button:active {
-  transform: scale(0.97);
-}
-
-.generate-button:focus-visible {
+.link-button:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
-}
-
-.generate-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.generate-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.625rem;
-}
-
-/* Secondary to Generate again: same shape, outlined. */
-.download-button {
-  display: inline-flex;
-  align-items: center;
-  padding: calc(0.9rem - 1.5px) calc(1.5rem - 1.5px);
-  border: 1.5px solid var(--line);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--fg);
-  font-family: var(--font-ui);
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    background-color 160ms ease,
-    transform 160ms ease;
-}
-
-.download-button:hover {
-  border-color: var(--fg);
-  background: rgb(var(--shadow) / 0.05);
-}
-
-.download-button:active {
-  transform: scale(0.97);
-}
-
-.download-button:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 3px;
-}
-
-.download-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-/* Finished size: the answer to "how big will it be?", under the size controls. */
-.finished-size {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.25rem 0.75rem;
-  margin: 0;
-}
-
-.finished-size .mono:first-child {
-  font-size: 1.25rem;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-
-.finished-size-inches {
-  font-size: 0.875rem;
-  color: var(--fg-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.hint-inline {
-  flex-basis: 100%;
-  font-size: 0.8125rem;
-  color: var(--fg-muted);
 }

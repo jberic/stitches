@@ -1,15 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { contrast, hexToHsv, hsvToHex } from '../data/colour'
-import {
-  FABRIC,
-  PALETTES,
-  isThreadCode,
-  nearestThreads,
-  patternColours,
-  thread,
-  type Palette,
-  type Thread,
-} from '../data/palettes'
+import { FABRIC, isThreadCode, nearestThreads, thread, type Thread } from '../data/palettes'
 import './ThreadPicker.css'
 
 type Role = 'lettering' | 'accent'
@@ -18,27 +9,14 @@ interface Props {
   lettering: string
   accent: string
   onChange: (lettering: string, accent: string) => void
+  /** Offer the second thread too: only for styles that stitch part of the pattern in it. */
+  showAccent: boolean
 }
 
 /** Where to warn: the lettering must read on the fabric, the two threads must look different. */
 const MIN_LETTERING_ON_FABRIC = 3
 const MIN_BETWEEN_THREADS = 1.8
 const MIN_ACCENT_ON_FABRIC = 1.25
-
-/** A swatch: one lettering stitch and one accent stitch on the fabric. */
-function PairSwatch({ palette }: { palette: Palette }) {
-  const { fabric, lettering, accent } = patternColours(palette)
-  const cross = (x: number, colour: string) => (
-    <path d={`M${x} 6.5L${x + 7} 13.5M${x + 7} 6.5L${x} 13.5`} stroke={colour} strokeWidth="2.6" strokeLinecap="round" />
-  )
-  return (
-    <svg viewBox="0 0 24 20" aria-hidden="true">
-      <rect width="24" height="20" fill={fabric} />
-      {cross(3.5, lettering.hex)}
-      {cross(13.5, accent.hex)}
-    </svg>
-  )
-}
 
 /** The saturation and brightness square for one hue. */
 function Field({ hue }: { hue: number }) {
@@ -65,13 +43,14 @@ function Field({ hue }: { hue: number }) {
 }
 
 /**
- * Colours: suggested pairs to start from, then a colour wheel for either
- * thread. Wherever you point, the pattern uses the closest real thread
- * (CIEDE2000), and the five closest are offered to choose between.
+ * Colours: a colour wheel for the lettering thread, and for the second thread
+ * when the style uses one. Wherever you point, the pattern uses the closest
+ * real thread (CIEDE2000), and the five closest are offered to choose between.
  */
-export function ThreadPicker({ lettering, accent, onChange }: Props) {
+export function ThreadPicker({ lettering, accent, onChange, showAccent }: Props) {
   const ids = { field: useId(), hue: useId(), code: useId(), notes: useId() }
-  const [editing, setEditing] = useState<Role>('lettering')
+  const [chosenRole, setEditing] = useState<Role>('lettering')
+  const editing: Role = showAccent ? chosenRole : 'lettering'
   const code = editing === 'lettering' ? lettering : accent
   const current = thread(code)
   // The handle follows the pointer while you pick; otherwise it sits on the thread's own colour.
@@ -130,39 +109,16 @@ export function ThreadPicker({ lettering, accent, onChange }: Props) {
   const notes = [
     contrast(l.hex, FABRIC.hex) < MIN_LETTERING_ON_FABRIC &&
       'The lettering thread is pale on the cream fabric, so the words may be hard to read.',
-    contrast(l.hex, a.hex) < MIN_BETWEEN_THREADS && 'These two threads are hard to tell apart.',
-    contrast(a.hex, FABRIC.hex) < MIN_ACCENT_ON_FABRIC && 'The accent thread barely shows on the cream fabric.',
+    showAccent && contrast(l.hex, a.hex) < MIN_BETWEEN_THREADS && 'These two threads are hard to tell apart.',
+    showAccent && contrast(a.hex, FABRIC.hex) < MIN_ACCENT_ON_FABRIC && 'The second thread barely shows on the cream fabric.',
   ].filter(Boolean) as string[]
-  const suggested = PALETTES.find((p) => p.lettering.code === lettering && p.accent.code === accent)
 
   return (
     <fieldset className="threads" aria-describedby={notes.length ? ids.notes : undefined}>
-      <div className="field-row">
-        <legend className="eyebrow">Colours</legend>
-        <span className="threads-current">{suggested ? suggested.name : `${l.name} and ${a.name}`}</span>
-      </div>
-
-      <div className="threads-suggested" role="group" aria-label="Suggested pairs">
-        {PALETTES.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            className="threads-pair"
-            aria-pressed={p === suggested}
-            title={p.name}
-            onClick={() => {
-              setPicked(null)
-              onChange(p.lettering.code, p.accent.code)
-            }}
-          >
-            <span className="visually-hidden">{p.name}</span>
-            <PairSwatch palette={p} />
-          </button>
-        ))}
-      </div>
+      <legend className="visually-hidden">Colours</legend>
 
       <div className="threads-tabs" role="group" aria-label="Thread to change">
-        {(['lettering', 'accent'] as Role[]).map((role) => {
+        {(showAccent ? (['lettering', 'accent'] as Role[]) : (['lettering'] as Role[])).map((role) => {
           const t = role === 'lettering' ? l : a
           return (
             <button
@@ -174,7 +130,7 @@ export function ThreadPicker({ lettering, accent, onChange }: Props) {
             >
               <span className="threads-chip" style={{ background: t.hex }} aria-hidden="true" />
               <span className="threads-tab-text">
-                <span className="threads-role">{role === 'lettering' ? 'Lettering' : 'Accent'}</span>
+                <span className="threads-role">{role === 'lettering' ? 'Lettering' : 'Second thread'}</span>
                 <span className="mono">
                   {t.code} {t.name}
                 </span>
