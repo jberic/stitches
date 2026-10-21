@@ -4,7 +4,16 @@ import { hashString, isSeed, mulberry32, newSeed } from './random'
 import type { LegibilityCheck } from './legibility'
 import { ICON_SETS } from '../data/icons'
 import { CAPITALS_ONLY, PATTERN_FONTS, SCRIPT_FONTS } from '../fonts'
-import { MAX_ATTEMPTS, STYLE_CHOICES, describeRecipe, recipeFor, styleRecipe, textCase, type PreviousAttempt } from './recipe'
+import {
+  MAX_ATTEMPTS,
+  STYLE_CHOICES,
+  describeRecipe,
+  recipeFor,
+  styleRecipe,
+  textCase,
+  usesSecondThread,
+  type PreviousAttempt,
+} from './recipe'
 
 describe('mulberry32', () => {
   it('repeats exactly for the same seed', () => {
@@ -270,5 +279,16 @@ describe('styleRecipe', () => {
     const first = styleRecipe('s1', 'Shrikhand', 0, undefined, { motif: 'none', letterCase: 'mixed' })
     const next = styleRecipe('s1', 'Shrikhand', 1, { recipe: first, check: tooHeavy }, { motif: 'none', letterCase: 'mixed' })
     expect(next.threshold).toBeGreaterThan(first.threshold)
+  })
+})
+
+describe('usesSecondThread', () => {
+  it('offers the second thread only for styles that stitch with it', () => {
+    expect(usesSecondThread('holbein')).toBe(true)
+    expect(usesSecondThread('shadowslab')).toBe(true)
+    expect(usesSecondThread('inline')).toBe(true)
+    expect(usesSecondThread('delft')).toBe(false)
+    expect(usesSecondThread('block')).toBe(false)
+    expect(usesSecondThread('Shrikhand')).toBe(false)
   })
 })

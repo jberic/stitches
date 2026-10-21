@@ -97,7 +97,7 @@ export function StylePicker({ lines, seed, choices, colours, value, onChange }: 
               {styleName(style)}
               {capitalsOnly(style) && <span className="style-tag">Capitals</span>}
             </span>
-            {preview === null && <span className="style-note">Your words don't fit in 100 stitches</span>}
+            {preview === null && <span className="style-note">Your words don't fit in {MAX_WIDTH} stitches</span>}
           </button>
         )
       })}

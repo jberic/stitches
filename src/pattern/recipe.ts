@@ -428,7 +428,9 @@ export function capitalsOnly(style: StyleId): boolean {
 export function usesSecondThread(style: StyleId): boolean {
   if (!isAlphabetStyle(style)) return false
   const a = ALPHABETS[style]
-  return Boolean(a.ornamented || a.withEffect || a.twoTone || a.reversed)
+  // Delft's sampler frame is stitched in the lettering thread; an outline or a drop shadow uses the second.
+  const effectUsesIt = a.withEffect === 'outline' || a.withEffect === 'drop'
+  return Boolean(a.ornamented || effectUsesIt || a.twoTone || a.reversed)
 }
 
 /** What the style is called in the interface. */

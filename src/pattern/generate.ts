@@ -26,7 +26,8 @@ import {
 import type { Pattern } from './types'
 
 export const MIN_WIDTH = 40
-export const MAX_WIDTH = 100
+// Wide enough for the 20-row stitch alphabets to set a two-word phrase like HELLO SUNSHINE at full size.
+export const MAX_WIDTH = 150
 export const DEFAULT_WIDTH = 50
 
 /** Mask pixels per stitch. */
@@ -456,7 +457,7 @@ export async function startingWidth(lines: string[], seed: string, style: StyleI
   return readable ?? from
 }
 
-/** The narrowest wider width (steps of 2, up to the maximum) where the chosen style is readable, or null. */
+/** The narrowest wider width (steps of 4, up to the maximum) where the chosen style is readable, or null. */
 export async function readableWidthInStyle(
   lines: string[],
   seed: string,
@@ -464,7 +465,7 @@ export async function readableWidthInStyle(
   from: number,
   choices: Choices = DEFAULT_CHOICES,
 ): Promise<number | null> {
-  for (let width = from + 2; width <= MAX_WIDTH; width += 2) {
+  for (let width = Math.min(MAX_WIDTH, from + 4); width <= MAX_WIDTH; width += 4) {
     const result = await generateInStyle({ lines, width, seed, style, choices })
     if (result.check.ok) return width
   }
