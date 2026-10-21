@@ -468,6 +468,19 @@ export function Tool({ inputRef }: Props) {
             {download === 'busy' ? 'Preparing…' : 'Download'}
           </button>
         }
+        compactAction={
+          <button
+            type="button"
+            className="toolbar-download-icon"
+            onClick={downloadSheet}
+            disabled={!pattern || download === 'busy'}
+            aria-label={download === 'busy' ? 'Preparing the download' : 'Download the chart as an image'}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14" />
+            </svg>
+          </button>
+        }
       />
     </div>
   )
