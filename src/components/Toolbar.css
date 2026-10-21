@@ -297,8 +297,9 @@
   z-index: 5;
   display: flex;
   flex-direction: column;
-  max-height: 85vh;
-  max-height: 85dvh;
+  /* One height for every section, so the sheet doesn't jump when you change tab. */
+  height: 72vh;
+  height: 72dvh;
   padding: 0.5rem 1.25rem max(1.25rem, env(safe-area-inset-bottom));
   border-radius: 1.25rem 1.25rem 0 0;
   background: #fff;
@@ -348,6 +349,12 @@
   cursor: pointer;
 }
 
+.toolbar-tab {
+  transition:
+    background-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
 .toolbar-tab[aria-selected='true'] {
   background: var(--bg);
   box-shadow: inset 0 0 0 1px var(--hairline);
@@ -360,9 +367,33 @@
 
 .toolbar-sheet-body {
   flex: 1;
+  overflow-x: hidden;
   overflow-y: auto;
   min-height: 0;
   padding-bottom: 0.5rem;
+}
+
+/* Changing tab: the new section slides in a little and fades up. */
+.toolbar-sheet-pane {
+  animation: pane-forward 260ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.toolbar-sheet-pane[data-direction='back'] {
+  animation-name: pane-back;
+}
+
+@keyframes pane-forward {
+  from {
+    opacity: 0;
+    transform: translateX(1.25rem);
+  }
+}
+
+@keyframes pane-back {
+  from {
+    opacity: 0;
+    transform: translateX(-1.25rem);
+  }
 }
 
 .toolbar-sheet .styles {
@@ -372,7 +403,11 @@
 @media (prefers-reduced-motion: reduce) {
   .toolbar-panel[data-placed],
   .toolbar-sheet,
-  .toolbar-scrim {
+  .toolbar-scrim,
+  .toolbar-sheet-pane {
     animation: none;
+  }
+  .toolbar-tab {
+    transition: none;
   }
 }

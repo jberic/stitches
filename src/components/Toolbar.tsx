@@ -175,6 +175,9 @@ function WideBar({ items, action }: Props) {
 function CompactBar({ items, compactAction }: Props) {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState(items[0]?.id)
+  // Which way the content slides when you change tab: forward from the right, back from the left.
+  const [direction, setDirection] = useState<'forward' | 'back'>('forward')
+  const bodyRef = useRef<HTMLDivElement>(null)
   const adjustRef = useRef<HTMLButtonElement>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
   const baseId = useId()
@@ -207,6 +210,18 @@ function CompactBar({ items, compactAction }: Props) {
     if (open) focusFirst(sheetRef.current)
   }, [open, tab])
 
+  const chooseTab = (id: string, button: HTMLElement) => {
+    if (id === current.id) return
+    const from = items.findIndex((item) => item.id === current.id)
+    const to = items.findIndex((item) => item.id === id)
+    setDirection(to > from ? 'forward' : 'back')
+    setTab(id)
+    // Each section starts at its top, and its tab scrolls into view.
+    bodyRef.current?.scrollTo({ top: 0 })
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    button.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: reduced ? 'auto' : 'smooth' })
+  }
+
   return (
     <>
       {open && <div className="toolbar-scrim" aria-hidden="true" onClick={close} />}
@@ -227,7 +242,7 @@ function CompactBar({ items, compactAction }: Props) {
                 aria-selected={item.id === current.id}
                 aria-controls={`${baseId}-panel`}
                 className="toolbar-tab"
-                onClick={() => setTab(item.id)}
+                onClick={(e) => chooseTab(item.id, e.currentTarget)}
               >
                 <span className="toolbar-label">{item.label}</span>
                 <span className="toolbar-value">{item.value}</span>
@@ -239,8 +254,12 @@ function CompactBar({ items, compactAction }: Props) {
             role="tabpanel"
             aria-labelledby={`${baseId}-tab-${current.id}`}
             className="toolbar-sheet-body"
+            ref={bodyRef}
           >
-            {current.panel}
+            {/* Keyed by tab, so each change plays the slide. */}
+            <div key={current.id} className="toolbar-sheet-pane" data-direction={direction}>
+              {current.panel}
+            </div>
           </div>
         </div>
       )}
