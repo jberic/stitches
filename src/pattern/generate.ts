@@ -75,6 +75,8 @@ const MIN_STITCHES_PER_LETTER = 4
 
 export interface Rendered {
   pattern: Pattern
+  /** Where each letter sits in the finished pattern, in stitches, in reading order (spaces left out). */
+  letters: LetterBox[]
   /** The stitch alphabet size used, if the style is an alphabet. */
   size?: AlphabetSizeId
   /** The grid straight after downsampling, before tidy-up (for the dev page). */
@@ -93,6 +95,8 @@ export interface GenerateResult {
   check: LegibilityCheck
   /** The stitch alphabet size used, if the style is an alphabet. */
   size?: AlphabetSizeId
+  /** Where each letter sits in the pattern, in stitches, in reading order (spaces left out). */
+  letters: LetterBox[]
   /** Every attempt in order, the chosen one included. */
   attempts: Attempt[]
   /** Set when the longest word is too long for this width to stay readable. */
@@ -310,6 +314,9 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
   const left = EFFECT_REACH[stitched.effect].left
   const lettering = padColumns({ width: inner, height: trimmed.height, cells: trimmed.cells }, left, width - inner - left)
   const { cells, height } = decorate(lettering, stitched)
+  // The letters as placed: shifted by the trimmed rows, the effect's room on the left and above.
+  const top = EFFECT_REACH[stitched.effect].top - trimmed.top
+  const placed = letters.map((box) => ({ ...box, x: box.x + left, y: box.y + top }))
 
   return {
     pattern: {
@@ -318,6 +325,7 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
       cells,
       meta: { text: lines.join(' '), lines: cased, font: recipe.font, seed, recipe: stitched },
     },
+    letters: placed,
     size,
     raw,
     check,
@@ -334,6 +342,7 @@ function unsupportedResult(lines: string[], cased: string[], width: number, reci
       cells,
       meta: { text: lines.join(' '), lines: cased, font: recipe.font, seed, recipe },
     },
+    letters: [],
     raw: { width, height: 1, cells },
     check: {
       ok: false,
@@ -386,6 +395,7 @@ export async function generatePattern({
 
   const { rendered } = best!
   return {
+    letters: rendered.letters,
     pattern: rendered.pattern,
     // As stitched, so "Generate again" compares against what is on screen.
     recipe: rendered.pattern.meta.recipe,
@@ -431,6 +441,7 @@ export async function generateInStyle({
     recipe: best!.pattern.meta.recipe,
     check: best!.check,
     size: best!.size,
+    letters: best!.letters,
     attempts,
     tooNarrow: narrowness(lines, width),
   }

@@ -41,12 +41,12 @@ export function downsample(mask: Mask, scale: number, threshold = 0.5): Uint8Arr
 }
 
 /** Drops fully empty rows from the top and bottom of a grid. */
-export function trimRows(cells: Uint8Array, width: number): { cells: Uint8Array; height: number } {
+export function trimRows(cells: Uint8Array, width: number): { cells: Uint8Array; height: number; top: number } {
   const height = cells.length / width
   const empty = (row: number) => cells.subarray(row * width, (row + 1) * width).every((c) => c === 0)
   let first = 0
   let last = height - 1
   while (first <= last && empty(first)) first++
   while (last >= first && empty(last)) last--
-  return { cells: cells.slice(first * width, (last + 1) * width), height: last - first + 1 }
+  return { cells: cells.slice(first * width, (last + 1) * width), height: last - first + 1, top: first }
 }

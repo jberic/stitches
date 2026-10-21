@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { LetterBox } from '../pattern/layouts/stackedBlock'
 import type { Pattern } from '../pattern/types'
+import { caretBox, indexAt } from './caret'
 import { drawSymbol, type ChartColours } from './chartPaint'
 import './Stage.css'
 
@@ -19,6 +21,12 @@ interface Props {
   /** The text field: the stage is what you type on. */
   input: React.ReactNode
   focused: boolean
+  /** The text as typed, where each pattern letter sits, and where the text cursor is. */
+  text: string
+  letters: LetterBox[]
+  caretIndex: number
+  /** A click or tap on the words: the text index it lands nearest. */
+  onPick: (index: number) => void
 }
 
 const SEW_MS = 520
@@ -39,22 +47,6 @@ function sewingOrder(pattern: Pattern): Float32Array {
   return rank
 }
 
-/** The bottom line of stitches: the rows from the last stitched row up to the gap above it. */
-function lastLine(pattern: Pattern) {
-  const { width, height, cells } = pattern
-  const inked = (y: number) => {
-    for (let x = 0; x < width; x++) if (cells[y * width + x]) return true
-    return false
-  }
-  let bottom = height - 1
-  while (bottom > 0 && !inked(bottom)) bottom--
-  let top = bottom
-  while (top > 0 && inked(top - 1)) top--
-  let right = 0
-  for (let y = top; y <= bottom; y++) for (let x = width - 1; x > right; x--) if (cells[y * width + x]) right = x
-  return { top, bottom, right }
-}
-
 interface Layout {
   cell: number
   /** The pattern's top-left corner in CSS pixels; the fabric grid lines up with it. */
@@ -67,7 +59,22 @@ interface Layout {
  * grid edge to edge, and the words stitched on it, as large as the space
  * between the header and the toolbar allows.
  */
-export function Stage({ pattern, colours, label, highlight, sewKey, above, below, children, input, focused }: Props) {
+export function Stage({
+  pattern,
+  colours,
+  label,
+  highlight,
+  sewKey,
+  above,
+  below,
+  children,
+  input,
+  focused,
+  text,
+  letters,
+  caretIndex,
+  onPick,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [viewport, setViewport] = useState({ w: 0, h: 0, top: 0, bottom: 0 })
   const sewn = useRef<string | null>(null)
@@ -180,27 +187,42 @@ export function Stage({ pattern, colours, label, highlight, sewKey, above, below
     return () => cancelAnimationFrame(frame)
   }, [pattern, colours, layout, viewport, order, highlight, sewKey])
 
-  const caret = pattern && layout ? lastLine(pattern) : null
+  // The stitched cursor: at the text cursor's letter, or alone in the middle when there are no words.
+  const box = pattern && layout ? caretBox(text, letters, caretIndex) : null
+  const middle = (viewport.top + viewport.bottom) / 2
+  const caret =
+    box && layout
+      ? {
+          // On the boundary between letters, centred on it.
+          left: layout.x + box.x * layout.cell - Math.max(1, Math.round(layout.cell / 6)),
+          top: layout.y + box.top * layout.cell,
+          width: Math.max(2, Math.round(layout.cell / 3)),
+          height: box.height * layout.cell,
+        }
+      : !pattern && viewport.w > 0
+        ? { left: viewport.w / 2 - 2, top: middle - 40, width: 4, height: 80 }
+        : null
+
+  // Where a click lands among the letters, so you can add or delete right there.
+  const pick = (e: React.PointerEvent) => {
+    if (!pattern || !layout || e.button !== 0) return
+    const x = (e.clientX - layout.x) / layout.cell
+    const y = (e.clientY - layout.y) / layout.cell
+    onPick(indexAt(text, letters, x, y))
+  }
 
   return (
-    <div className="stage">
+    <div className="stage" onPointerUp={pick}>
       <canvas ref={canvasRef} className="stage-fabric" role="img" aria-label={label} />
       {input}
-      {caret && layout && focused && (
-        <span
-          className="stage-caret"
-          aria-hidden="true"
-          style={{
-            left: layout.x + (caret.right + 2) * layout.cell,
-            top: layout.y + caret.top * layout.cell,
-            width: Math.max(2, Math.round(layout.cell / 3)),
-            height: (caret.bottom - caret.top + 1) * layout.cell,
-          }}
-        />
-      )}
+      {caret && focused && <span className="stage-caret" aria-hidden="true" style={caret} />}
       <div
         className="stage-note"
-        style={layout && pattern ? { top: layout.y + pattern.height * layout.cell + Math.max(16, layout.cell * 1.5) } : undefined}
+        style={
+          layout && pattern
+            ? { top: layout.y + pattern.height * layout.cell + Math.max(16, layout.cell * 1.5) }
+            : { top: middle + 64 }
+        }
       >
         {children}
       </div>

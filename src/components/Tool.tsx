@@ -74,6 +74,8 @@ export function Tool({ inputRef }: Props) {
   const [shown, setShown] = useState<GenerateResult | null>(null)
   const [failed, setFailed] = useState(false)
   const [focused, setFocused] = useState(false)
+  // Where the text cursor is, so the stitched one can follow it.
+  const [caretIndex, setCaretIndex] = useState(initial.text.length)
   const [download, setDownload] = useState<'idle' | 'busy' | 'failed'>('idle')
   const [preview, setPreview] = useState<number | null>(null)
   const [pinned, setPinned] = useState<number | null>(null)
@@ -158,7 +160,9 @@ export function Tool({ inputRef }: Props) {
     return { fabric, lettering: lettering.hex, accent: accent.hex }
   }, [palette])
 
-  const pattern = shown?.pattern ?? null
+  // No words, no pattern: deleting the last letter leaves the fabric empty.
+  const empty = text.trim() === ''
+  const pattern = empty ? null : (shown?.pattern ?? null)
   const legend = useMemo(() => pattern && legendFor(pattern, palette), [pattern, palette])
   const highlight = preview ?? (legend?.rows.some((r) => r.index === pinned) ? pinned : null)
   const unsupported = result?.check.unsupported
@@ -202,9 +206,20 @@ export function Tool({ inputRef }: Props) {
   const l = thread(threads.lettering)
   const a = thread(threads.accent)
 
-  const onType = (value: string) => {
+  const onType = (value: string, cursor = value.length) => {
     setPristine(false)
     setText(value)
+    setCaretIndex(cursor)
+  }
+
+  // A click or tap on the words puts the cursor there, to add or delete letters in place.
+  const pickPosition = (index: number) => {
+    const field = fieldRef.current
+    if (!field) return
+    setPristine(false)
+    field.focus({ preventScroll: true })
+    field.setSelectionRange(index, index)
+    setCaretIndex(index)
   }
 
   // Until you've typed, the example is just a placeholder: the first character
@@ -229,7 +244,8 @@ export function Tool({ inputRef }: Props) {
       className="stage-input"
       type="text"
       value={text}
-      onChange={(e) => onType(e.target.value)}
+      onChange={(e) => onType(e.target.value, e.target.selectionStart ?? e.target.value.length)}
+      onSelect={(e) => setCaretIndex(e.currentTarget.selectionStart ?? text.length)}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
       maxLength={MAX_CHARS + 10}
@@ -390,9 +406,15 @@ export function Tool({ inputRef }: Props) {
         below=".toolbar-wrap"
         input={input}
         focused={focused}
+        text={text}
+        letters={empty ? [] : (shown?.letters ?? [])}
+        caretIndex={caretIndex}
+        onPick={pickPosition}
       >
         <div id={ids.hint} role="status" aria-live="polite">
-          {!phrase.ok ? (
+          {empty ? (
+            <p className="stage-hint">Type your own words · up to four</p>
+          ) : !phrase.ok ? (
             <p className="stage-notice">{PHRASE_MESSAGES[phrase.reason]}</p>
           ) : failed ? (
             <p className="stage-notice">Something went wrong drawing that. Try again.</p>
