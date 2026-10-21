@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { DEFAULT_WIDTH, generateInStyle } from '../pattern/generate'
+import { DEFAULT_WIDTH, MAX_WIDTH, generateInStyle } from '../pattern/generate'
 import { STYLE_CHOICES, capitalsOnly, styleName, type Choices, type StyleId } from '../pattern/recipe'
 import { styleWidth } from '../pattern/styleWidths'
 import type { Pattern } from '../pattern/types'
@@ -68,13 +68,11 @@ export function StylePicker({ lines, seed, choices, colours, value, onChange }: 
         if (!alive) return
         if (cache.has(id)) continue
         try {
-          const result = await generateInStyle({
-            lines: words.split('\n'),
-            width: styleWidth(style, DEFAULT_WIDTH),
-            seed,
-            style,
-            choices: { ...choices, letterCase },
-          })
+          const draw = (width: number) =>
+            generateInStyle({ lines: words.split('\n'), width, seed, style, choices: { ...choices, letterCase } })
+          // At the style's usual width first; if the words don't fit, at the widest a pattern can be.
+          let result = await draw(styleWidth(style, DEFAULT_WIDTH))
+          if (result.check.unsupported) result = await draw(MAX_WIDTH)
           cache.set(id, result.check.unsupported ? null : result.pattern)
         } catch {
           cache.set(id, null)
@@ -99,7 +97,7 @@ export function StylePicker({ lines, seed, choices, colours, value, onChange }: 
               {styleName(style)}
               {capitalsOnly(style) && <span className="style-tag">Capitals</span>}
             </span>
-            {preview === null && <span className="style-note">Too long for this style</span>}
+            {preview === null && <span className="style-note">Your words don't fit in 100 stitches</span>}
           </button>
         )
       })}
