@@ -31,7 +31,7 @@ import { StylePicker } from './StylePicker'
 import { ThreadKey } from './ThreadKey'
 import { ThreadPicker } from './ThreadPicker'
 import { Toolbar, type ToolbarItem } from './Toolbar'
-import type { ChartColours } from './PatternChart'
+import type { ChartColours } from './chartPaint'
 import './Tool.css'
 
 interface Props {
