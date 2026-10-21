@@ -1,7 +1,7 @@
 import { DEFAULT_PALETTE_ID, codesForPaletteId, isThreadCode } from '../data/palettes'
-import { DEFAULT_WIDTH, MAX_WIDTH, MIN_WIDTH } from '../pattern/generate'
+import { MAX_WIDTH, MIN_WIDTH } from '../pattern/generate'
 import { isSeed } from '../pattern/random'
-import type { LetterCase } from '../pattern/recipe'
+import { STYLE_CHOICES, recipeFor, resolveChoices, type LetterCase, type StyleId } from '../pattern/recipe'
 import { DEFAULT_FABRIC_COUNT, isFabricCount, type FabricCount } from '../pattern/size'
 import { MAX_CHARS } from '../pattern/text'
 
@@ -15,16 +15,34 @@ export interface ShareState {
   accent: string
   fabric: FabricCount
   letterCase: LetterCase
+  /** The lettering style picked in Typography. */
+  style: StyleId
 }
+
+/** The style everyone starts with. */
+export const DEFAULT_STYLE: StyleId = 'swash'
 
 export const DEFAULT_STATE: ShareState = {
   text: 'Hello sunshine',
   seed: 'k3j9a',
-  width: DEFAULT_WIDTH,
+  // Wide enough for Swash to stitch HELLO SUNSHINE in its regular letters.
+  width: 100,
   lettering: codesForPaletteId(DEFAULT_PALETTE_ID)![0],
   accent: codesForPaletteId(DEFAULT_PALETTE_ID)![1],
   fabric: DEFAULT_FABRIC_COUNT,
   letterCase: 'typed',
+  style: DEFAULT_STYLE,
+}
+
+function isStyle(value: string | null): value is StyleId {
+  return value !== null && (STYLE_CHOICES as string[]).includes(value)
+}
+
+/** For a link made before styles were picked by hand: the style its seed always gave. */
+function styleOfSeed(seed: string, text: string, letterCase: LetterCase): StyleId {
+  const recipe = recipeFor(seed, 0, undefined, resolveChoices(text.trim().split(/\s+/), { motif: 'none', letterCase }))
+  const style = recipe.alphabet ?? recipe.font
+  return isStyle(style) ? style : DEFAULT_STYLE
 }
 
 /** True when the address names a pattern (a shared link or a reload), not a bare visit. */
@@ -45,7 +63,8 @@ export function readShareState(search: string): ShareState {
   const fromPalette = codesForPaletteId(params.get('p'))
   const fabric = Number(params.get('f'))
   const letterCase = params.get('c')
-  return {
+  const style = params.get('s')
+  const state = {
     text: text && text.trim() && text.length <= MAX_CHARS * 2 ? text : DEFAULT_STATE.text,
     seed: isSeed(seed) ? seed : DEFAULT_STATE.seed,
     width: Number.isInteger(width) && width >= MIN_WIDTH && width <= MAX_WIDTH ? width : DEFAULT_STATE.width,
@@ -53,7 +72,9 @@ export function readShareState(search: string): ShareState {
     accent: isThreadCode(accent) ? accent! : (fromPalette?.[1] ?? DEFAULT_STATE.accent),
     fabric: isFabricCount(fabric) ? fabric : DEFAULT_STATE.fabric,
     letterCase: letterCase === 'upper' || letterCase === 'lower' ? letterCase : DEFAULT_STATE.letterCase,
-  }
+  } as Omit<ShareState, 'style'>
+  const fromSeed = isSeed(seed) ? styleOfSeed(state.seed, state.text, state.letterCase) : DEFAULT_STYLE
+  return { ...state, style: isStyle(style) ? style : fromSeed }
 }
 
 export function shareSearch(state: ShareState): string {
@@ -65,6 +86,7 @@ export function shareSearch(state: ShareState): string {
     a: state.accent,
     f: String(state.fabric),
     c: state.letterCase,
+    s: state.style,
   })
   return `?${params.toString().replace(/\+/g, '%20')}`
 }

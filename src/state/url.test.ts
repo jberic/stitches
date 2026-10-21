@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_STATE, readShareState, shareSearch } from './url'
+import { STYLE_CHOICES } from '../pattern/recipe'
+import { DEFAULT_STATE, DEFAULT_STYLE, readShareState, shareSearch } from './url'
 
 describe('share links', () => {
   it('round-trips text, seed, width and both threads', () => {
@@ -11,6 +12,7 @@ describe('share links', () => {
       accent: '3721',
       fabric: 18,
       letterCase: 'lower',
+      style: 'holbein',
     } as const
     expect(readShareState(shareSearch(state))).toEqual(state)
   })
@@ -25,13 +27,22 @@ describe('share links', () => {
         accent: '729',
         fabric: 14,
         letterCase: 'upper',
+        style: 'swash',
       }),
-    ).toBe('?text=Hello%20sunshine&seed=k3j9a&w=50&l=814&a=729&f=14&c=upper')
+    ).toBe('?text=Hello%20sunshine&seed=k3j9a&w=50&l=814&a=729&f=14&c=upper&s=swash')
   })
 
   it("opens links from before the colour wheel in the palette's threads", () => {
     expect(readShareState('?p=07')).toMatchObject({ lettering: '939', accent: '729' })
     expect(readShareState('?p=02')).toMatchObject({ lettering: '814', accent: '470' })
+  })
+
+  it('gives a link from before styles were picked the style its seed always made', () => {
+    const old = readShareState('?text=Love&seed=k3j9a&w=50')
+    expect(STYLE_CHOICES).toContain(old.style)
+    expect(readShareState('?text=Love&seed=k3j9a&w=50').style).toBe(old.style)
+    expect(readShareState('?text=Love&seed=k3j9a&w=50&s=forest').style).toBe('forest')
+    expect(readShareState('?text=Love&s=nonsense').style).toBe(DEFAULT_STYLE)
   })
 
   it('falls back to defaults for missing or broken values', () => {

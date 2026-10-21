@@ -11,7 +11,18 @@ import { newSeed } from './random'
 import { styleWidth } from './styleWidths'
 import { renderStackedBlock, type LetterBox } from './layouts/stackedBlock'
 import { checkLegibility, type LegibilityCheck } from './legibility'
-import { DEFAULT_CHOICES, MAX_ATTEMPTS, WORDMARK_RECIPE, recipeFor, resolveChoices, type Choices, type Recipe } from './recipe'
+import {
+  DEFAULT_CHOICES,
+  MAX_ATTEMPTS,
+  WORDMARK_RECIPE,
+  isAlphabetStyle,
+  recipeFor,
+  resolveChoices,
+  styleRecipe,
+  type Choices,
+  type Recipe,
+  type StyleId,
+} from './recipe'
 import type { Pattern } from './types'
 
 export const MIN_WIDTH = 40
@@ -63,6 +74,8 @@ const MIN_STITCHES_PER_LETTER = 4
 
 export interface Rendered {
   pattern: Pattern
+  /** The stitch alphabet size used, if the style is an alphabet. */
+  size?: AlphabetSizeId
   /** The grid straight after downsampling, before tidy-up (for the dev page). */
   raw: Grid
   check: LegibilityCheck
@@ -77,6 +90,8 @@ export interface GenerateResult {
   pattern: Pattern
   recipe: Recipe
   check: LegibilityCheck
+  /** The stitch alphabet size used, if the style is an alphabet. */
+  size?: AlphabetSizeId
   /** Every attempt in order, the chosen one included. */
   attempts: Attempt[]
   /** Set when the longest word is too long for this width to stay readable. */
@@ -302,6 +317,7 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
       cells,
       meta: { text: lines.join(' '), lines: cased, font: recipe.font, seed, recipe: stitched },
     },
+    size,
     raw,
     check,
   }
@@ -376,6 +392,83 @@ export async function generatePattern({
     attempts,
     tooNarrow: narrowness(lines, width),
   }
+}
+
+/**
+ * A pattern in the style the person picked. Retries stay inside that style
+ * (see styleRecipe); if none is readable, the least bad one is returned with
+ * its check, so the page can say so instead of switching style.
+ */
+export async function generateInStyle({
+  lines,
+  width,
+  seed,
+  style,
+  choices = DEFAULT_CHOICES,
+}: {
+  lines: string[]
+  width: number
+  seed: string
+  style: StyleId
+  choices?: Choices
+}): Promise<GenerateResult> {
+  const attempts: Attempt[] = []
+  let best: Rendered | null = null
+  const resolved = resolveChoices(lines, choices)
+  // A stitch alphabet's letters are fixed, so it gets fewer retries than a font.
+  const tries = isAlphabetStyle(style) ? 2 : MAX_ATTEMPTS
+  for (let attempt = 0; attempt < tries; attempt++) {
+    const recipe = styleRecipe(seed, style, attempt, attempts[attempts.length - 1], resolved)
+    const rendered = await renderRecipe(lines, width, recipe, seed)
+    attempts.push({ recipe, check: rendered.check })
+    if (!best || rendered.check.penalty < best.check.penalty) best = rendered
+    // A phrase the alphabet can't draw at all won't be fixed by a retry.
+    if (rendered.check.ok || rendered.check.unsupported) break
+  }
+  return {
+    pattern: best!.pattern,
+    recipe: best!.pattern.meta.recipe,
+    check: best!.check,
+    size: best!.size,
+    attempts,
+    tooNarrow: narrowness(lines, width),
+  }
+}
+
+/**
+ * The width to start a style at for these words: the narrowest from the
+ * style's own width (STYLE_WIDTHS) up to the maximum where it's readable at
+ * its regular size, so a long phrase isn't stitched in the small one when a
+ * little more width would do. Falls back to the narrowest readable width at
+ * any size, then to the style's own width.
+ */
+export async function startingWidth(lines: string[], seed: string, style: StyleId, choices: Choices = DEFAULT_CHOICES) {
+  const from = styleWidth(style, DEFAULT_WIDTH)
+  let readable: number | null = null
+  for (let width = from; width <= MAX_WIDTH; width = Math.min(MAX_WIDTH, width + 4)) {
+    const result = await generateInStyle({ lines, width, seed, style, choices })
+    if (result.check.ok) {
+      if (result.size !== 'small') return width
+      readable ??= width
+    }
+    if (width === MAX_WIDTH) break
+  }
+  return readable ?? from
+}
+
+/** The narrowest wider width (steps of 2, up to the maximum) where the chosen style is readable, or null. */
+export async function readableWidthInStyle(
+  lines: string[],
+  seed: string,
+  style: StyleId,
+  from: number,
+  choices: Choices = DEFAULT_CHOICES,
+): Promise<number | null> {
+  for (let width = from + 2; width <= MAX_WIDTH; width += 2) {
+    const result = await generateInStyle({ lines, width, seed, style, choices })
+    if (result.check.ok) return width
+  }
+  return null
 }
 
 /** The site's own wordmark: a fixed recipe, no retries. */

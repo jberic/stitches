@@ -123,7 +123,7 @@ const ALPHABET_SHARE = 0.67
  * Alphabets the seed can pick. A capitals-only one (Slab) sets a phrase typed
  * in lowercase in capitals, unless the person chose Lowercase themselves.
  */
-const IN_MIX: AlphabetId[] = [
+export const IN_MIX: AlphabetId[] = [
   'block',
   'serif',
   'slab',
@@ -407,4 +407,83 @@ export function describeRecipe(recipe: Recipe): string {
 
 function round2(n: number) {
   return Math.round(n * 100) / 100
+}
+
+/** A lettering style the person can pick: a stitch alphabet or a display font. */
+export type StyleId = AlphabetId | DisplayFont
+
+/** The styles offered in Typography, alphabets first. */
+export const STYLE_CHOICES: StyleId[] = [...IN_MIX, ...PATTERN_FONTS]
+
+export function isAlphabetStyle(style: StyleId): style is AlphabetId {
+  return style in ALPHABETS
+}
+
+/** True when the style can't draw lowercase, so it sets every phrase in capitals. */
+export function capitalsOnly(style: StyleId): boolean {
+  return isAlphabetStyle(style) ? !ALPHABETS[style].lowercase : CAPITALS_ONLY.includes(style)
+}
+
+/** True when the style stitches part of every pattern in the second thread. */
+export function usesSecondThread(style: StyleId): boolean {
+  if (!isAlphabetStyle(style)) return false
+  const a = ALPHABETS[style]
+  return Boolean(a.ornamented || a.withEffect || a.twoTone || a.reversed)
+}
+
+/** What the style is called in the interface. */
+export function styleName(style: StyleId): string {
+  return isAlphabetStyle(style) ? ALPHABETS[style].name : style
+}
+
+/**
+ * The recipe for a chosen style: the seed still sets spacing and shape, but
+ * the letters are always that style, with no icon and no extra effect (an
+ * alphabet that always wears one, like Delft's frame, still gets it). A
+ * capitals-only style sets the phrase in capitals. Attempts after the first
+ * only change what can help inside the style: a font's threshold, an
+ * alphabet's spacing.
+ */
+export function styleRecipe(
+  seed: string,
+  style: StyleId,
+  attempt: number,
+  previous: PreviousAttempt | undefined,
+  choices: ResolvedChoices,
+): Recipe {
+  const base = recipeFor(seed, 0, undefined, choices)
+  const typed = choices.letterCase
+  const capitals = capitalsOnly(style) && typed !== 'upper'
+  const cased = capitals ? { letterCase: 'upper' as const, capitalsFrom: typed } : { letterCase: typed, capitalsFrom: null }
+  if (isAlphabetStyle(style)) {
+    const recipe: Recipe = {
+      ...base,
+      ...cased,
+      alphabet: style,
+      effect: 'none',
+      icon: null,
+      letterGap: 1,
+      lineGap: Math.max(1, base.lineGap),
+    }
+    // Alphabets are drawn on the grid; only a little more room between lines can help a retry.
+    return attempt === 0 ? recipe : { ...recipe, lineGap: recipe.lineGap + 1 }
+  }
+  const [lo, hi] = THRESHOLDS[style]
+  const recipe: Recipe = {
+    ...base,
+    ...cased,
+    font: style,
+    alphabet: null,
+    effect: 'none',
+    icon: null,
+    letterGap: Math.max(FONT_LETTER_GAP, base.letterGap),
+    lineGap: Math.max(FONT_LINE_GAP, base.lineGap),
+    threshold: round2((lo + hi) / 2),
+  }
+  if (attempt === 0 || !previous) return recipe
+  // Too heavy: raise the threshold; too light: lower it; the last try uses the font's rescue threshold.
+  if (attempt >= MAX_ATTEMPTS - 1) return { ...recipe, threshold: RESCUE_THRESHOLDS[style] }
+  const step = previous.check.tooHeavy ? THRESHOLD_STEP : previous.check.tooLight ? -THRESHOLD_STEP : THRESHOLD_STEP / 2
+  const threshold = Math.min(THRESHOLD_LIMITS[1], Math.max(THRESHOLD_LIMITS[0], previous.recipe.threshold + step))
+  return { ...recipe, threshold: round2(threshold), letterAspect: previous.recipe.letterAspect }
 }

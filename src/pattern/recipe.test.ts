@@ -4,7 +4,7 @@ import { hashString, isSeed, mulberry32, newSeed } from './random'
 import type { LegibilityCheck } from './legibility'
 import { ICON_SETS } from '../data/icons'
 import { CAPITALS_ONLY, PATTERN_FONTS, SCRIPT_FONTS } from '../fonts'
-import { MAX_ATTEMPTS, describeRecipe, recipeFor, textCase } from './recipe'
+import { MAX_ATTEMPTS, STYLE_CHOICES, describeRecipe, recipeFor, styleRecipe, textCase, type PreviousAttempt } from './recipe'
 
 describe('mulberry32', () => {
   it('repeats exactly for the same seed', () => {
@@ -241,5 +241,34 @@ describe('ornamented alphabets', () => {
       }
     }
     expect(seen).toBeGreaterThan(20)
+  })
+})
+
+describe('styleRecipe', () => {
+  const tooHeavy = { ok: false, tooHeavy: true, tooLight: false } as LegibilityCheck
+
+  it('keeps the chosen style on every attempt, with no icon or extra effect', () => {
+    for (const style of STYLE_CHOICES) {
+      let previous: PreviousAttempt | undefined
+      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        const r = styleRecipe('s1', style, attempt, previous, { motif: 'any', letterCase: 'mixed' })
+        expect(r.alphabet ?? r.font).toBe(style)
+        expect([r.icon, r.effect]).toEqual([null, 'none'])
+        previous = { recipe: r, check: tooHeavy }
+      }
+    }
+  })
+
+  it('sets capitals-only styles in capitals and remembers the typed case', () => {
+    const r = styleRecipe('s1', 'swash', 0, undefined, { motif: 'none', letterCase: 'mixed' })
+    expect([r.letterCase, r.capitalsFrom]).toEqual(['upper', 'mixed'])
+    const s = styleRecipe('s1', 'serif', 0, undefined, { motif: 'none', letterCase: 'mixed' })
+    expect([s.letterCase, s.capitalsFrom]).toEqual(['mixed', null])
+  })
+
+  it('raises a font threshold when the last try was too heavy', () => {
+    const first = styleRecipe('s1', 'Shrikhand', 0, undefined, { motif: 'none', letterCase: 'mixed' })
+    const next = styleRecipe('s1', 'Shrikhand', 1, { recipe: first, check: tooHeavy }, { motif: 'none', letterCase: 'mixed' })
+    expect(next.threshold).toBeGreaterThan(first.threshold)
   })
 })
