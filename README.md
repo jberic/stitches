@@ -45,6 +45,12 @@ The build makes two pages: `index.html`, the tool, and `404.html`, which hosts s
 
 Pages for checking the work, in the dev server only: `/dev.html` (the 30 test phrases through the generator), `/styles.html` (every style side by side), `/alphabets.html` (every glyph of every stitch alphabet), `/fonts.html` and `/icons.html`.
 
+## Deploy
+
+The site is hosted on GitHub Pages. Every push to `main` runs `.github/workflows/deploy.yml`: install, test, build, publish `dist/`. GitHub serves `404.html` for any address that doesn't exist.
+
+The site expects to be served from the root of its domain (`/fonts/…`, `/favicon.svg`), so it needs a custom domain, set under Settings → Pages. At `jberic.github.io/stitches/` the fonts and links would break.
+
 ## Where things are
 
 | Path                         | What's there                                                       |
@@ -140,7 +146,6 @@ I wrote a one-page brief and a `CLAUDE.md` with the rules: browser only, determi
 - **From a form to typing on the fabric.** I mocked up a new layout: the words stitched large on a full-screen Aida grid, and every setting in one floating toolbar. Claude rebuilt the page around it.
 - **From curated colour pairs to a colour wheel.** The brief asked for 10 to 15 good pairs. I wanted everyone to build their own instead, so the wheel snaps to the closest real thread (CIEDE2000), with plain warnings instead of rules.
 - **Fonts versus stitch alphabets.** Fonts shrunk onto a grid lose their character, so most styles became alphabets drawn stitch by stitch. Fifteen were made from a Claude Design exploration, each turned into stitches once from an open-licence font.
-- **Copyright.** I liked a commercial cross-stitch alphabet and asked to trace it. We drew our own from Cinzel, an open-licence font, with ornaments made for this project instead.
 - **Dropped what didn't read.** The wavy layout, two fonts (Chango, and a first set of handoff fonts used live), motif rows and one colour pair were built, looked at and removed.
 - **Details.** Letters jumped in size while typing, so the on-screen letter height is now fixed and Width starts on Auto. The toolbar's corners follow outer radius = inner radius + padding. The cursor is as tall as the letters. A first visit opens on today's weekday.
 
