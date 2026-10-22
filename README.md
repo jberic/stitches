@@ -2,6 +2,30 @@
 
 Type a phrase straight onto the page and it is stitched live as a two-colour cross-stitch pattern. Pick the lettering style, colours, case, width and fabric in the toolbar at the bottom, then download the chart.
 
+Everything runs in the browser; there is no backend.
+
+## What it does
+
+- **Type on the fabric.** The whole page is a cream Aida grid. Click anywhere and type up to four words (30 letters); the pattern is stitched as you go, with a stitched cursor that follows the text. A first visit opens on today's day of the week; a returning visitor carries on where they left off.
+- **37 lettering styles.** 34 stitch alphabets drawn on the grid, from Block and Sampler to Delft, Fraktur and Copperplate, and three open-licence display fonts. Typography previews every style with your own words.
+- **Your own colours.** A colour wheel that snaps to the closest real thread. The second thread is only offered for styles that stitch part of the pattern in it.
+- **Width on Auto.** Letters at their natural size and the pattern as wide as the words, shown at one letter height on screen so typing never makes them jump. Dragging Width makes the pattern bigger, up to 180 stitches.
+- **Thread key.** Codes, names, stitch counts, total and finished size for the chosen fabric (11, 14, 16 or 18 count).
+- **Download.** A PNG of the chart with symbols, 10-stitch guide lines, row and column numbers, and the thread key.
+- **Links.** The words, style, threads, width, fabric and case are in the address, so a link always opens the same pattern.
+
+## How a pattern is made
+
+1. **Recipe.** The style and a seed fix the settings: for a font, its coverage threshold and spacing; for a stitch alphabet, its letter and line gaps. A seeded random generator means the same words and seed always give the same pattern.
+2. **Letters.** A stitch alphabet sets its glyphs straight onto the grid. A font is drawn on an offscreen canvas at 8 times the grid size, then each cell becomes a stitch if enough of it is inked.
+3. **Cleanup.** Stray single stitches go, single-stitch gaps close.
+4. **Legibility check.** The result is compared with the high-resolution drawing: did ink disappear, did the hole in an O fill in, did two letters run together, did a letter turn into a block? If it fails, it is tried again in the same style (a different threshold or spacing), up to 5 times. If it still fails, the tool keeps the style and says so, with a width that works if there is one.
+5. **Chart.** The grid is drawn on canvas with a distinct symbol per colour, so it also works in black and white.
+
+A stitch alphabet stitches a character it hasn't got as its plain version (É as E, ’ as '). Anything with no plain version, like an emoji, is named in a message.
+
+The pattern data (a grid of colour indexes plus metadata) is kept apart from the drawing, so a PDF export can be added later.
+
 ## Run it locally
 
 ```bash
@@ -9,7 +33,39 @@ npm install
 npm run dev
 ```
 
-`npm run build` makes a static site in `dist/`. Everything runs in the browser; there is no backend.
+| Command          | What it does                                  |
+| ---------------- | --------------------------------------------- |
+| `npm run dev`    | Dev server at http://localhost:5173           |
+| `npm test`       | Unit tests (Vitest)                           |
+| `npm run lint`   | Lint (oxlint)                                 |
+| `npm run format` | Format (Prettier); run before committing      |
+| `npm run build`  | Type-check and build a static site in `dist/` |
+
+The build makes two pages: `index.html`, the tool, and `404.html`, which hosts serve for any address that doesn't exist.
+
+Pages for checking the work, in the dev server only: `/dev.html` (the 30 test phrases through the generator), `/styles.html` (every style side by side), `/alphabets.html` (every glyph of every stitch alphabet), `/fonts.html` and `/icons.html`.
+
+## Where things are
+
+| Path                         | What's there                                                       |
+| ---------------------------- | ------------------------------------------------------------------ |
+| `src/components/Tool.tsx`    | The page: state, generation, messages, toolbar items               |
+| `src/components/Stage.tsx`   | The fabric, the stitched words and the cursor                      |
+| `src/components/Toolbar.tsx` | The floating toolbar, its panels, and the bottom sheet on phones   |
+| `src/pattern/`               | Recipes, rendering, cleanup, legibility check, legend, sizes       |
+| `src/data/alphabets/`        | The stitch alphabets, one file each, glyphs as rows of `#` and `.` |
+| `src/data/threads.json`      | Thread colours (see below)                                         |
+| `src/export/patternImage.ts` | The downloaded PNG                                                 |
+| `src/state/url.ts`           | Links, and the last pattern kept in this browser                   |
+| `design/fonts/`              | Fonts the stitch alphabets were drawn from; not shipped            |
+
+## Accessibility
+
+- Everything works with the keyboard. Tab goes from the header to your words to the toolbar. Each toolbar panel takes focus when it opens, and Escape closes it and puts you back. In Typography, the arrow keys move around the styles and Enter picks one. On phones, the settings open as a sheet that keeps focus inside it.
+- Every control is labelled; the pattern has a text description for screen readers.
+- Text contrast is at least 5.8:1 on the fabric. Every thread colour has its own symbol.
+- With reduced motion on, the intro, the sewing animation and the panel transitions are switched off.
+- It works from 320px wide, with finger-sized touch targets on phones.
 
 ## Fonts
 
@@ -24,7 +80,9 @@ All fonts are under the [SIL Open Font License 1.1](https://openfontlicense.org)
 | IBM Plex Sans  | Interface                         | © 2017 IBM Corp. Reserved Font Name "Plex" |
 | IBM Plex Mono  | Codes and counts                  | © 2017 IBM Corp. Reserved Font Name "Plex" |
 
-The Flourish stitch alphabet is drawn from Cinzel Decorative Bold (© 2012 Natanael Gama, Reserved Font Name "Cinzel", OFL 1.1). The capitals were turned into stitches once and stored as grids in `src/data/alphabets/flourish.ts`, so the font itself isn't shipped; the file and its `OFL.txt` are kept in `design/fonts/cinzeldecorative/`. The hooks, swashes and knots on the letters are drawn for this project.
+Twenty of the stitch alphabets were drawn stitch by stitch on the grid for this project, with no font behind them: Block, Serif, Slab, Sampler, Sprig, Daisy, Beaded, Checker, Gothic, Art Deco, Swash, Tuscan, Botanical, Typewriter, Stencil, Hollow, Balloon, Western, Assisi and Cursive. The rest were drawn from open-licence fonts, as below.
+
+The Flourish stitch alphabet (in the repo, not offered in the tool yet) is drawn from Cinzel Decorative Bold (© 2012 Natanael Gama, Reserved Font Name "Cinzel", OFL 1.1). The capitals were turned into stitches once and stored as grids in `src/data/alphabets/flourish.ts`, so the font itself isn't shipped; the file and its `OFL.txt` are kept in `design/fonts/cinzeldecorative/`. The hooks, swashes and knots on the letters are drawn for this project.
 
 The Delft stitch alphabet is drawn from Cinzel Bold (© 2020 The Cinzel Project Authors, Reserved Font Name "Cinzel", OFL 1.1) in the same way; the font file and its `OFL.txt` are in `design/fonts/cinzel/`. Its rosettes and sampler frame follow style 2a of the Claude Design handoff "Stitch Alphabets".
 
@@ -49,11 +107,11 @@ All are OFL 1.1 except Ultra (Apache 2.0). The font files and their licences are
 
 ## Thread colours
 
-Every pattern sits on one fabric, cream #FBF3EC, and uses two threads: one for the lettering, one for the accent (shadow, ornaments, and in v2 the icons).
+Every pattern sits on one fabric, cream #FBF3EC, and uses up to two threads: one for the lettering, and a second one for styles that stitch part of the pattern in it (shadows, ornaments, a two-tone split).
 
 - **Colour wheel.** Pick either thread with a saturation and brightness square and a hue slider, or type a hex value or a thread code. Wherever you point, the pattern uses the closest thread in `threads.json`, measured with CIEDE2000 (how alike two colours look, not raw RGB), and the five closest are offered to choose between. Links store the two thread codes (`l` and `a`).
 - **Starting pair.** Everyone starts in Navy and mustard (939 and 729); there are no suggested pairs in the interface. The six pairs in `src/data/palettes.ts` remain so older links (`p=07`) still open in their exact threads and a chosen pair keeps its name.
-- **Warnings, not rules.** Any two threads can be used. The picker says so in plain words when the lettering is pale on the fabric (under 3:1), when the two threads are hard to tell apart (under 1.8:1), or when the accent barely shows (under 1.25:1).
+- **Warnings, not rules.** Any two threads can be used. The picker says so in plain words when the lettering is pale on the fabric (under 3:1), when the two threads are hard to tell apart (under 1.8:1), or when the second thread barely shows (under 1.25:1).
 - The fabric's screen colour is a design choice, not thread data. Screen colours are approximate for every thread, so "closest thread" means closest on screen. Check against a physical thread card.
 
 ## Thread colour data
@@ -67,3 +125,27 @@ Every pattern sits on one fabric, cream #FBF3EC, and uses two threads: one for t
 DMC does not publish screen colours for its threads. Every hex value here is an approximation. Check against your physical thread card.
 
 DMC is a trademark of its owner. This project is not affiliated with DMC. Thread codes are used as plain text only, to identify colours.
+
+## How I built this with Claude Code
+
+<!-- Draft written from the project's history. Rewrite it in your own words before publishing. -->
+
+I wrote a one-page brief and a `CLAUDE.md` with the rules: browser only, deterministic patterns, open-licence fonts, no brand logos, plain copy, a short plan before every big step. Claude Code wrote the code; I set the direction, reviewed every step in the browser and decided what stayed. It took about two and a half weeks of evenings, from 4 to 22 October 2026, in about 120 small commits.
+
+**What I asked for.** A tool that turns a phrase into a readable cross-stitch pattern in a retro lettering style, with a legibility check so it never hands you an unreadable result, real thread colours from a licensed data set, and a link that always opens the same pattern.
+
+**Where I steered.**
+
+- **From random styles to choosing one.** The brief had a Generate button that gave a new style on every press, and a history strip to get back to ones you liked. I wanted people to choose a look, not draw one at random. Generate and the history went; Typography now previews every style with your own words.
+- **From a form to typing on the fabric.** I mocked up a new layout: the words stitched large on a full-screen Aida grid, and every setting in one floating toolbar. Claude rebuilt the page around it.
+- **From curated colour pairs to a colour wheel.** The brief asked for 10 to 15 good pairs. I wanted everyone to build their own instead, so the wheel snaps to the closest real thread (CIEDE2000), with plain warnings instead of rules.
+- **Fonts versus stitch alphabets.** Fonts shrunk onto a grid lose their character, so most styles became alphabets drawn stitch by stitch. Fifteen were made from a Claude Design exploration, each turned into stitches once from an open-licence font.
+- **Copyright.** I liked a commercial cross-stitch alphabet and asked to trace it. We drew our own from Cinzel, an open-licence font, with ornaments made for this project instead.
+- **Dropped what didn't read.** The wavy layout, two fonts (Chango, and a first set of handoff fonts used live), motif rows and one colour pair were built, looked at and removed.
+- **Details.** Letters jumped in size while typing, so the on-screen letter height is now fixed and Width starts on Auto. The toolbar's corners follow outer radius = inner radius + padding. The cursor is as tall as the letters. A first visit opens on today's weekday.
+
+**What I fixed by hand.** <!-- Fill in: anything you changed yourself, outside Claude Code. If nothing, say so; that is part of the story. -->
+
+**What someone who stitches said.** <!-- Fill in: one quote from a stitcher who tried it. -->
+
+**Live:** <!-- Add the URL after deploying. -->
