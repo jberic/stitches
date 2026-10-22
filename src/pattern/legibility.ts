@@ -14,6 +14,8 @@ export interface LegibilityCheck {
   tooLight: boolean
   /** The style can't draw this phrase at all (a stitch alphabet missing a character, or too wide). */
   unsupported?: boolean
+  /** Why it can't: the characters a stitch alphabet hasn't got, if that's the reason. */
+  missing?: string[]
   /** Script lowercase set too small to read; a non-script font helps, a threshold doesn't. */
   tooSmall?: boolean
   metrics: {

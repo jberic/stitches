@@ -32,8 +32,34 @@ export type AlphabetLayoutResult =
       /** Width of the widest line, in stitches. */
       contentWidth: number
     }
-  | { ok: false; reason: 'missing'; char: string }
+  /** `char` is the first character the alphabet hasn't got; `chars`, every one, in the order typed. */
+  | { ok: false; reason: 'missing'; char: string; chars: string[] }
   | { ok: false; reason: 'too-wide' }
+
+/** Typographic punctuation, as phone keyboards type it, and the plain character to stitch instead. */
+const PLAIN: Record<string, string> = {
+  '\u2018': "'",
+  '\u2019': "'",
+  '\u201A': "'",
+  '\u201B': "'",
+  '\u201C': '"',
+  '\u201D': '"',
+  '\u201E': '"',
+  '\u2013': '-',
+  '\u2014': '-',
+}
+
+/** A character's glyph, or its plain version's when the alphabet only has that, like ' for ’. */
+function glyphFor(size: AlphabetSize, char: string) {
+  return size.glyphs.get(char) ?? (PLAIN[char] ? size.glyphs.get(PLAIN[char]) : undefined)
+}
+
+/** Every character in the lines that this size of the alphabet can't stitch, each once. */
+export function missingCharacters(size: AlphabetSize, lines: string[]): string[] {
+  const missing = new Set<string>()
+  for (const line of lines) for (const char of line) if (char !== ' ' && !glyphFor(size, char)) missing.add(char)
+  return [...missing]
+}
 
 interface SetLine {
   rows: string[]
@@ -64,7 +90,7 @@ function setLine(size: AlphabetSize, line: string, gap: number, joined = false, 
       x += size.space
       continue
     }
-    const glyph = size.glyphs.get(char)
+    const glyph = glyphFor(size, char)
     if (!glyph) return char
     rows.forEach((_, y) => (rows[y] += glyph.rows[y]))
     glyphs.push({ x, width: glyph.width })
@@ -95,7 +121,7 @@ function setTucked(size: AlphabetSize, line: string, gap: number): SetLine | str
       width += (i > 0 ? gap : 0) + size.space
       continue
     }
-    const glyph = size.glyphs.get(char)
+    const glyph = glyphFor(size, char)
     if (!glyph) return char
     let x = i > 0 ? width + gap : 0
     if (i > 0 && line[i - 1] !== ' ') {
@@ -137,7 +163,7 @@ export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions):
     const set: SetLine[] = []
     for (const line of lines) {
       const result = setLine(size, line, letterGap, alphabet.joined, alphabet.tails)
-      if (typeof result === 'string') return { ok: false, reason: 'missing', char: result }
+      if (typeof result === 'string') return { ok: false, reason: 'missing', char: result, chars: missingCharacters(size, lines) }
       set.push(result)
     }
     const widest = Math.max(...set.map((l) => l.rows[0].length))

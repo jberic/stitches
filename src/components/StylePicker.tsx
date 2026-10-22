@@ -17,6 +17,8 @@ interface Props {
 
 /** Previews already drawn, by words, case and style, so reopening the panel is instant. */
 const cache = new Map<string, Pattern | null>()
+/** Previews that couldn't be drawn (a font that didn't load). Not cached, so opening the panel again retries them. */
+const failed = new Set<string>()
 
 function Preview({ pattern, colours }: { pattern: Pattern | null | undefined; colours: ChartColours }) {
   const ref = useRef<HTMLCanvasElement>(null)
@@ -60,6 +62,7 @@ export function StylePicker({ lines, seed, choices, colours, value, onChange }: 
 
   useEffect(() => {
     let alive = true
+    failed.clear()
     ;(async () => {
       // The chosen style first, so its tile fills straight away.
       const order = [value, ...STYLE_CHOICES.filter((s) => s !== value)]
@@ -75,7 +78,7 @@ export function StylePicker({ lines, seed, choices, colours, value, onChange }: 
           if (result.check.unsupported) result = await draw(MAX_WIDTH)
           cache.set(id, result.check.unsupported ? null : result.pattern)
         } catch {
-          cache.set(id, null)
+          failed.add(id)
         }
         if (alive) redraw((n) => n + 1)
       }
@@ -130,6 +133,9 @@ export function StylePicker({ lines, seed, choices, colours, value, onChange }: 
               {capitalsOnly(style) && <span className="style-tag">Capitals</span>}
             </span>
             {preview === null && <span className="style-note">Your words don't fit in {MAX_WIDTH} stitches</span>}
+            {preview === undefined && failed.has(key(style)) && (
+              <span className="style-note">Didn't load. Check your connection.</span>
+            )}
           </button>
         )
       })}

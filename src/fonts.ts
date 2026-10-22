@@ -11,12 +11,19 @@ export const CAPITALS_ONLY: DisplayFont[] = ['Rubik Mono One']
 /** Joined, script-like lowercase that needs more stitches per letter to stay readable. */
 export const SCRIPT_FONTS: DisplayFont[] = ['Shrikhand']
 
+/** A lettering font that couldn't be fetched, usually because the connection dropped. */
+export class FontLoadError extends Error {
+  readonly font: DisplayFont
+  constructor(font: DisplayFont) {
+    super(`Font failed to load: ${font}`)
+    this.font = font
+  }
+}
+
 // Canvas text silently falls back to another font if the face isn't loaded yet,
 // so the generator must await this before drawing.
 export async function loadDisplayFont(font: DisplayFont, sizePx = 100): Promise<void> {
   const spec = `${sizePx}px "${font}"`
-  const faces = await document.fonts.load(spec, 'AaBbOo')
-  if (faces.length === 0 || !document.fonts.check(spec, 'AaBb')) {
-    throw new Error(`Font failed to load: ${font}`)
-  }
+  const faces = await document.fonts.load(spec, 'AaBbOo').catch(() => [])
+  if (faces.length === 0 || !document.fonts.check(spec, 'AaBb')) throw new FontLoadError(font)
 }

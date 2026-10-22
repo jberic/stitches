@@ -16,6 +16,8 @@ interface Props {
   sew: boolean
   /** Called once the first drawing is on screen (or sewing has started). */
   onReady: () => void
+  /** The wordmark couldn't be drawn: skip the intro rather than wait on a blank screen. */
+  onFailed: () => void
   /** Bumped by the parent to finish sewing immediately. */
   finishSignal: number
 }
@@ -25,17 +27,19 @@ function cssColour(el: Element, name: string) {
 }
 
 /** The site's name, drawn as a stitch pattern by the same engine as the tool. Shown in the intro. */
-export function Wordmark({ sew, onReady, finishSignal }: Props) {
+export function Wordmark({ sew, onReady, onFailed, finishSignal }: Props) {
   const h1Ref = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const drawerRef = useRef<StitchDrawer | null>(null)
   const sewRef = useRef(sew)
   const frameRef = useRef(0)
   const readyRef = useRef(onReady)
+  const failedRef = useRef(onFailed)
 
   useEffect(() => {
     readyRef.current = onReady
-  }, [onReady])
+    failedRef.current = onFailed
+  }, [onReady, onFailed])
 
   useEffect(() => {
     const h1 = h1Ref.current
@@ -46,7 +50,13 @@ export function Wordmark({ sew, onReady, finishSignal }: Props) {
     let alive = true
 
     const render = async () => {
-      const pattern = await patternReady
+      let pattern: Pattern
+      try {
+        pattern = await patternReady
+      } catch {
+        if (alive) failedRef.current()
+        return
+      }
       if (!alive) return
       const cell = Math.max(h1.clientWidth, introWordmarkWidth()) / pattern.width
       if (cell === lastCell) return

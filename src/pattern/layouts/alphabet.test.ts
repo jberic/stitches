@@ -69,8 +69,20 @@ describe('renderAlphabet', () => {
   })
 
   it('reports a character it has no glyph for, and words too wide for either size', () => {
-    expect(renderAlphabet(['CAFÉ'], options)).toEqual({ ok: false, reason: 'missing', char: 'É' })
+    expect(renderAlphabet(['CAFÉ'], options)).toEqual({ ok: false, reason: 'missing', char: 'É', chars: ['É'] })
     expect(renderAlphabet(['ABCDEFGHIJKLMNOP'], { ...options, width: 40 })).toEqual({ ok: false, reason: 'too-wide' })
+  })
+
+  it('lists every missing character once, in the order typed', () => {
+    const result = renderAlphabet(['SEÑOR É', 'Ñ🙂'], options)
+    expect(result.ok === false && result.reason === 'missing' && result.chars).toEqual(['Ñ', 'É', '🙂'])
+  })
+
+  it('stitches curly quotes and long dashes as the plain ones a phone keyboard replaced', () => {
+    const plain = renderAlphabet(["IT'S I-I"], options)
+    const curly = renderAlphabet(['IT\u2019S I\u2014I'], options)
+    if (!plain.ok || !curly.ok) throw new Error('expected layouts')
+    expect(curly.mask).toEqual(plain.mask)
   })
 
   it('draws exactly the glyph stitches, centred', () => {

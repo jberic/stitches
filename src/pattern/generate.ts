@@ -109,6 +109,8 @@ interface Lettering {
   letters: LetterBox[]
   /** Set when a stitch alphabet can't draw this phrase. */
   unsupported?: string
+  /** The characters it hasn't got, when that's why. */
+  missing?: string[]
   /** The stitch alphabet size used, if any. */
   size?: AlphabetSizeId
   /** An ornamented alphabet's decoration, one cell per stitch. */
@@ -119,9 +121,9 @@ interface Lettering {
 /** Clear columns between a drop-cap initial and the words beside it. */
 const INITIAL_GAP = 2
 
-function unsupportedLettering(width: number, why: string): Lettering {
+function unsupportedLettering(width: number, why: string, missing?: string[]): Lettering {
   const empty: Mask = { width: width * SCALE, height: SCALE, data: new Uint8Array(width * SCALE * SCALE) }
-  return { mask: empty, letters: [], unsupported: why }
+  return { mask: empty, letters: [], unsupported: why, missing }
 }
 
 /**
@@ -148,7 +150,7 @@ function drawInitialAt(
   const initial = ALPHABETS[recipe.alphabet!].sizes[initialSize]
   const char = lines[0].charAt(0).toLocaleUpperCase()
   const glyph = initial.glyphs.get(char)
-  if (!glyph) return unsupportedLettering(width, `This initial has no "${char}"`)
+  if (!glyph) return unsupportedLettering(width, `This initial has no "${char}"`, [char])
   const capRows = glyph.rows.slice(0, initial.capRows)
   const rest = [lines[0].slice(1), ...lines.slice(1)]
   if (rest[0] === '' && rest.length > 1) rest.shift()
@@ -169,6 +171,7 @@ function drawInitialAt(
     return unsupportedLettering(
       width,
       body.reason === 'missing' ? `Sampler has no "${body.char}"` : 'Too wide beside the initial',
+      body.reason === 'missing' ? body.chars : undefined,
     )
 
   const contentWidth = glyph.width + (body?.ok ? INITIAL_GAP + body.contentWidth : 0)
@@ -219,6 +222,7 @@ function drawLettering(upper: string[], width: number, recipe: Recipe, natural =
       return unsupportedLettering(
         width,
         result.reason === 'missing' ? `This alphabet has no "${result.char}"` : 'Too wide for this alphabet',
+        result.reason === 'missing' ? result.chars : undefined,
       )
     }
     return { mask: result.mask, letters: result.letters, size: result.size, accent: result.accent }
@@ -308,8 +312,8 @@ export async function renderRecipe(
       : recipe
   const reach = EFFECT_REACH[planned.effect]
   const inner = width - reach.left - reach.right
-  const { mask, letters, unsupported, size, accent } = drawLettering(cased, inner, recipe, natural)
-  if (unsupported) return unsupportedResult(lines, cased, width, recipe, seed, unsupported)
+  const { mask, letters, unsupported, missing, size, accent } = drawLettering(cased, inner, recipe, natural)
+  if (unsupported) return unsupportedResult(lines, cased, width, recipe, seed, unsupported, missing)
   const cover = coverage(mask, SCALE)
   const raw: Grid = { width: inner, height: cover.length / inner, cells: stitchesFrom(cover, recipe.threshold) }
   // Stitch alphabets are drawn exactly on the grid, so tidy-up would only do
@@ -369,7 +373,15 @@ function trimColumns(cells: Uint8Array, width: number, height: number) {
 }
 
 /** An attempt the style can't draw at all; it fails the check so the next attempt uses the font. */
-function unsupportedResult(lines: string[], cased: string[], width: number, recipe: Recipe, seed: string, why: string): Rendered {
+function unsupportedResult(
+  lines: string[],
+  cased: string[],
+  width: number,
+  recipe: Recipe,
+  seed: string,
+  why: string,
+  missing?: string[],
+): Rendered {
   const cells = new Uint8Array(width)
   return {
     pattern: {
@@ -387,6 +399,7 @@ function unsupportedResult(lines: string[], cased: string[], width: number, reci
       tooHeavy: false,
       tooLight: false,
       unsupported: true,
+      missing,
       metrics: {
         inkKept: 0,
         inkPrecision: 0,

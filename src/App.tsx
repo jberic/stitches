@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import stitchMark from './assets/stitch-mark.svg'
 import { About } from './components/About'
 import { Tool } from './components/Tool'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { SITE_NAME, Wordmark } from './components/Wordmark'
 import './App.css'
 
@@ -18,6 +19,8 @@ const PLAYED_KEY = 'say-it-with-stitches:intro-played'
 const INTRO_LINE = 'Type a phrase. Get a cross-stitch pattern.'
 const HOLD_MS = 2600
 const LEAVE_MS = 1300
+/** The longest the page waits for the wordmark before skipping the intro. */
+const WAIT_MS = 3000
 
 function shouldPlayIntro(): boolean {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false
@@ -55,6 +58,15 @@ export default function App() {
   const onWordmarkReady = useCallback(() => {
     setPhase((p) => (p === 'waiting' ? 'intro' : p))
   }, [])
+
+  const skipIntro = useCallback(() => setPhase('done'), [])
+
+  // Never a blank screen: if the wordmark is slow or fails to draw, go straight to the tool.
+  useEffect(() => {
+    if (phase !== 'waiting') return
+    const timer = window.setTimeout(skipIntro, WAIT_MS)
+    return () => window.clearTimeout(timer)
+  }, [phase, skipIntro])
 
   const leave = useCallback(() => {
     setPhase((p) => (p === 'intro' ? 'leaving' : p))
@@ -134,7 +146,9 @@ export default function App() {
 
       {/* Fades in rather than rising: the stage and toolbar are fixed to the screen, and a transform would carry them along. */}
       <main className="reveal reveal-fade" style={{ '--order': 1 } as React.CSSProperties}>
-        <Tool inputRef={inputRef} />
+        <ErrorBoundary>
+          <Tool inputRef={inputRef} />
+        </ErrorBoundary>
       </main>
 
       {/* Also holds the colour data credit its licence (CC BY 4.0) asks for. */}
@@ -144,7 +158,7 @@ export default function App() {
       {playIntro && phase !== 'done' && (
         <div className="intro" aria-hidden="true">
           <div className="intro-mark">
-            <Wordmark sew onReady={onWordmarkReady} finishSignal={finishSignal} />
+            <Wordmark sew onReady={onWordmarkReady} onFailed={skipIntro} finishSignal={finishSignal} />
           </div>
           <p className="intro-line">
             {INTRO_LINE.split(' ').map((word, i) => (

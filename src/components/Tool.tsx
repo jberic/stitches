@@ -25,6 +25,8 @@ import { downloadPatternSheet } from '../export/patternImage'
 import { legendFor } from '../pattern/legend'
 import { FABRIC_COUNTS, finishedSize, type FabricCount } from '../pattern/size'
 import { thread } from '../data/palettes'
+import { FontLoadError } from '../fonts'
+import type { Pattern } from '../pattern/types'
 import { readShareState, startingState, today, writeShareState } from '../state/url'
 import { Segmented } from './Segmented'
 import { Stage } from './Stage'
@@ -40,6 +42,11 @@ interface Props {
 }
 
 /** How many rows tall a style's capitals are at their natural size. */
+/** Characters for a sentence, bare so a quote mark can be listed too: É, Ñ or ”. */
+function listCharacters(chars: string[]): string {
+  return chars.length > 1 ? `${chars.slice(0, -1).join(', ')} or ${chars[chars.length - 1]}` : chars[0]
+}
+
 function naturalRows(style: StyleId): number {
   return isAlphabetStyle(style) ? ALPHABETS[style].sizes.regular.capRows : NATURAL_FONT_ROWS
 }
@@ -78,11 +85,16 @@ export function Tool({ inputRef }: Props) {
   /** The newest result, and the last one that could be drawn at all (kept on screen when a phrase doesn't fit). */
   const [result, setResult] = useState<GenerateResult | null>(null)
   const [shown, setShown] = useState<GenerateResult | null>(null)
-  const [failed, setFailed] = useState(false)
+  // Why the newest pattern couldn't be drawn: its font didn't load, or something else broke.
+  const [failed, setFailed] = useState<'font' | 'other' | null>(null)
+  // Bumped by Try again, to draw the same pattern once more.
+  const [attempt, setAttempt] = useState(0)
   const [focused, setFocused] = useState(false)
   // Where the text cursor is, so the stitched one can follow it.
   const [caretIndex, setCaretIndex] = useState(initial.text.length)
-  const [download, setDownload] = useState<'idle' | 'busy' | 'failed'>('idle')
+  const [download, setDownload] = useState<'idle' | 'busy'>('idle')
+  // The pattern whose download failed; the message goes once the pattern changes.
+  const [downloadFailed, setDownloadFailed] = useState<Pattern | null>(null)
   const [preview, setPreview] = useState<number | null>(null)
   const [pinned, setPinned] = useState<number | null>(null)
   const [readableAt, setReadableAt] = useState<{ for: GenerateResult; width: number | null } | null>(null)
@@ -103,7 +115,7 @@ export function Tool({ inputRef }: Props) {
           if (id !== request.current) return
           setResult(next)
           if (!next.check.unsupported) setShown(next)
-          setFailed(false)
+          setFailed(null)
           const mode = historyMode.current
           historyMode.current = 'replace'
           if (mode !== 'none') {
@@ -114,10 +126,10 @@ export function Tool({ inputRef }: Props) {
             )
           }
         })
-        .catch(() => id === request.current && setFailed(true))
+        .catch((error) => id === request.current && setFailed(error instanceof FontLoadError ? 'font' : 'other'))
     }, 90)
     return () => window.clearTimeout(timer)
-  }, [linesKey, width, seed, style, choices])
+  }, [linesKey, width, seed, style, choices, attempt])
 
   // Back and Forward step through the styles you picked.
   useEffect(() => {
@@ -176,6 +188,8 @@ export function Tool({ inputRef }: Props) {
     if (!result || result.check.ok || (result.tooNarrow && !result.check.unsupported)) return
     let alive = true
     const doesntFit = result.check.unsupported
+    // A letter the style hasn't got won't appear at any width.
+    if (result.check.missing) return
     // At Auto the letters already have all the width there is; nothing wider would fit them.
     if (doesntFit && width === null) return
     // From the width this result was drawn at, not the current one: once the pattern has
@@ -197,6 +211,7 @@ export function Tool({ inputRef }: Props) {
   const downloadSheet = async () => {
     if (!pattern || !legend || download === 'busy') return
     setDownload('busy')
+    setDownloadFailed(null)
     try {
       await downloadPatternSheet({
         pattern,
@@ -205,10 +220,10 @@ export function Tool({ inputRef }: Props) {
         fabricCount,
         description: describeRecipe(pattern.meta.recipe),
       })
-      setDownload('idle')
     } catch {
-      setDownload('failed')
+      setDownloadFailed(pattern)
     }
+    setDownload('idle')
   }
 
   const size = pattern && finishedSize(pattern.width, pattern.height, fabricCount)
@@ -440,9 +455,26 @@ export function Tool({ inputRef }: Props) {
           ) : !phrase.ok ? (
             <p className="stage-notice">{PHRASE_MESSAGES[phrase.reason]}</p>
           ) : failed ? (
-            <p className="stage-notice">Something went wrong drawing that. Try again.</p>
-          ) : download === 'failed' ? (
-            <p className="stage-notice">The download didn't work. Try again.</p>
+            <p className="stage-notice">
+              {failed === 'font'
+                ? `The ${name} lettering didn't load. Check your connection.`
+                : 'Something went wrong drawing that.'}{' '}
+              <button type="button" className="link-button" onClick={() => setAttempt((n) => n + 1)}>
+                Try again
+              </button>
+            </p>
+          ) : downloadFailed && downloadFailed === pattern ? (
+            <p className="stage-notice">
+              The download didn't work.{' '}
+              <button type="button" className="link-button" onClick={downloadSheet}>
+                Try again
+              </button>
+            </p>
+          ) : result?.check.missing ? (
+            <p className="stage-notice">
+              {name} has no {listCharacters(result.check.missing)}. Leave {result.check.missing.length > 1 ? 'them' : 'it'} out,
+              or try another style.
+            </p>
           ) : unsupported ? (
             // While it looks for a width that fits, say nothing; the pattern widens itself.
             searched ? (
