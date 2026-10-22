@@ -280,7 +280,8 @@ function stitchedEffect(recipe: Recipe, size: AlphabetSizeId | undefined): Effec
 
 /** Draws, downsamples, tidies and checks one recipe. Deterministic for the same inputs. */
 export async function renderRecipe(lines: string[], width: number, recipe: Recipe, seed = ''): Promise<Rendered> {
-  await loadDisplayFont(recipe.font)
+  // A stitch alphabet is drawn on the grid; only a font needs its file loaded.
+  if (!recipe.alphabet) await loadDisplayFont(recipe.font)
   const cased = lines.map((line) =>
     recipe.letterCase === 'upper' ? line.toLocaleUpperCase() : recipe.letterCase === 'lower' ? line.toLocaleLowerCase() : line,
   )

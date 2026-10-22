@@ -7,7 +7,8 @@ import { introWordmarkWidth } from './wordmarkSize'
 export const SITE_NAME = 'Say It With Stitches'
 
 const LINES = ['Say it with stitches']
-const STITCHES_WIDE = 120
+// Serif's regular letters need 144 stitches for the name on one line.
+const STITCHES_WIDE = 144
 const SEW_MS = 1100
 
 interface Props {

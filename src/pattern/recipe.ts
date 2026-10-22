@@ -371,9 +371,10 @@ export const WORDMARK_RECIPE: Recipe = {
   threshold: 0.5,
   icon: null,
   effect: 'none',
-  letterCase: 'upper',
+  // As written, "Say it with stitches", in the Serif stitch alphabet.
+  letterCase: 'mixed',
   capitalsFrom: null,
-  alphabet: null,
+  alphabet: 'serif',
 }
 
 const EFFECT_PHRASES: Record<Effect, string | null> = {
