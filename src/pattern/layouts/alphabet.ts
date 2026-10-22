@@ -178,7 +178,7 @@ export function renderAlphabet(lines: string[], options: AlphabetLayoutOptions):
             }
           }
         })
-        letters.push({ x: x0, y: glyphTop, width: gw, height: line.rows.length * enlarge })
+        letters.push({ x: x0, y: glyphTop, width: gw, height: line.rows.length * enlarge, capHeight: size.capRows * enlarge })
       }
       top += (line.rows.length + lineGap) * enlarge
     }

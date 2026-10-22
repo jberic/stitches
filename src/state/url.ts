@@ -22,10 +22,15 @@ export interface ShareState {
 /** The style everyone starts with. */
 export const DEFAULT_STYLE: StyleId = 'swash'
 
+/** Today's day of the week, like "Thursday": what a first visit opens on. */
+export function today(date = new Date()): string {
+  return date.toLocaleDateString('en-GB', { weekday: 'long' })
+}
+
 export const DEFAULT_STATE: ShareState = {
-  text: 'Hello sunshine',
+  text: today(),
   seed: 'k3j9a',
-  // Wide enough for Swash to stitch HELLO SUNSHINE in its regular letters.
+  // Swash fits every day at 100 but WEDNESDAY, which widens the pattern a little by itself.
   width: 100,
   lettering: codesForPaletteId(DEFAULT_PALETTE_ID)![0],
   accent: codesForPaletteId(DEFAULT_PALETTE_ID)![1],

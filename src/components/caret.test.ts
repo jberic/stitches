@@ -23,6 +23,11 @@ describe('the stitched cursor', () => {
     expect(caretBox(text, letters, 6)).toEqual({ x: 17, top: 10, height: 8 })
   })
 
+  it('is as tall as the letters, not the room left for tails below them', () => {
+    const tails = [{ x: 0, y: 0, width: 5, height: 26, capHeight: 20 }]
+    expect(caretBox('A', tails, 1)).toEqual({ x: 5, top: 0, height: 20 })
+  })
+
   it('has nowhere to go without letters', () => {
     expect(caretBox('', [], 0)).toBeNull()
   })

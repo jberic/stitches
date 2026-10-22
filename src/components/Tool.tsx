@@ -24,7 +24,7 @@ import { legendFor } from '../pattern/legend'
 import { FABRIC_COUNTS, finishedSize, type FabricCount } from '../pattern/size'
 import { styleWidth } from '../pattern/styleWidths'
 import { thread } from '../data/palettes'
-import { readShareState, startingState, writeShareState } from '../state/url'
+import { readShareState, startingState, today, writeShareState } from '../state/url'
 import { Segmented } from './Segmented'
 import { Stage } from './Stage'
 import { StylePicker } from './StylePicker'
@@ -288,7 +288,7 @@ export function Tool({ inputRef }: Props) {
       wide: true,
       panel: (
         <StylePicker
-          lines={phrase.ok ? phrase.lines : ['Hello', 'sunshine']}
+          lines={phrase.ok ? phrase.lines : [today()]}
           seed={seed}
           choices={choices}
           colours={chartColours}

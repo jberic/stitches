@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { STYLE_CHOICES } from '../pattern/recipe'
-import { DEFAULT_STATE, DEFAULT_STYLE, readShareState, shareSearch } from './url'
+import { DEFAULT_STATE, DEFAULT_STYLE, readShareState, shareSearch, today } from './url'
 
 describe('share links', () => {
   it('round-trips text, seed, width and both threads', () => {
@@ -43,6 +43,12 @@ describe('share links', () => {
     expect(readShareState('?text=Love&seed=k3j9a&w=50').style).toBe(old.style)
     expect(readShareState('?text=Love&seed=k3j9a&w=50&s=forest').style).toBe('forest')
     expect(readShareState('?text=Love&s=nonsense').style).toBe(DEFAULT_STYLE)
+  })
+
+  it("opens a first visit on today's day of the week", () => {
+    expect(today(new Date(2026, 9, 22))).toBe('Thursday')
+    expect(today(new Date(2026, 9, 25))).toBe('Sunday')
+    expect(DEFAULT_STATE.text).toBe(today())
   })
 
   it('falls back to defaults for missing or broken values', () => {

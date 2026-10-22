@@ -13,6 +13,9 @@ export function letterIndexes(text: string): number[] {
   return out
 }
 
+/** The cursor is as tall as the letters: down to the baseline, not into the room left for tails. */
+const tall = (box: LetterBox) => box.capHeight ?? box.height
+
 export interface CaretBox {
   x: number
   top: number
@@ -32,12 +35,12 @@ export function caretBox(text: string, letters: LetterBox[], index: number): Car
   const afterLetter = index > 0 && !/\s/.test(text[index - 1] ?? ' ')
   if (afterLetter && before > 0 && letters[before - 1]) {
     const box = letters[before - 1]
-    return { x: box.x + box.width, top: box.y, height: box.height }
+    return { x: box.x + box.width, top: box.y, height: tall(box) }
   }
   const next = letters[Math.min(before, letters.length - 1)]
-  if (before < letters.length) return { x: next.x, top: next.y, height: next.height }
+  if (before < letters.length) return { x: next.x, top: next.y, height: tall(next) }
   const last = letters[letters.length - 1]
-  return { x: last.x + last.width, top: last.y, height: last.height }
+  return { x: last.x + last.width, top: last.y, height: tall(last) }
 }
 
 /** The text index nearest a point: before or after the closest letter on the closest line. */

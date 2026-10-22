@@ -25,6 +25,8 @@ export interface LetterBox {
   y: number
   width: number
   height: number
+  /** Rows from the top of the box to the baseline, when tails can hang below it (stitch alphabets). */
+  capHeight?: number
 }
 
 export interface StackedBlockResult {
