@@ -1,3 +1,4 @@
+import type { DisplayFont } from '../fonts'
 import { describe, expect, it } from 'vitest'
 import { ALPHABET_IDS } from '../data/alphabets'
 import { PATTERN_FONTS } from '../fonts'
@@ -15,7 +16,7 @@ describe('style widths', () => {
   })
 
   it('falls back for a style not in the list', () => {
-    expect(styleWidth('Chango', 57)).toBe(57)
+    expect(styleWidth('Not a style' as DisplayFont, 57)).toBe(57)
     expect(styleWidth('assisi', 57)).toBe(40)
   })
 })

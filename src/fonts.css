@@ -28,11 +28,6 @@
 
 /* Display fonts for patterns. Only loaded when a recipe asks for them. */
 @font-face {
-  font-family: 'Chango';
-  src: url('/fonts/chango/Chango-Regular.ttf') format('truetype');
-  font-display: block;
-}
-@font-face {
   font-family: 'Shrikhand';
   src: url('/fonts/shrikhand/Shrikhand-Regular.ttf') format('truetype');
   font-display: block;

@@ -72,11 +72,10 @@ export interface PreviousAttempt {
 
 /**
  * Where each font's stitch threshold starts. Measured on the hardest test
- * phrases: Chango's counters only stay open from about 0.56, while Bagel Fat
- * One and Rubik Mono One keep theirs at 0.44 to 0.5 and lose strokes above.
+ * phrases: Bagel Fat One and Rubik Mono One keep their counters at 0.44 to
+ * 0.5 and lose strokes above.
  */
 const THRESHOLDS: Record<DisplayFont, [number, number]> = {
-  Chango: [0.5, 0.6],
   Shrikhand: [0.44, 0.54],
   'Bagel Fat One': [0.42, 0.52],
   'Rubik Mono One': [0.42, 0.52],
@@ -90,7 +89,6 @@ const FALLBACK_FONTS: DisplayFont[] = ['Bagel Fat One', 'Rubik Mono One', 'Shrik
  * words with small counters: Butterfly, Wonderful, Happy birthday).
  */
 const RESCUE_THRESHOLDS: Record<DisplayFont, number> = {
-  Chango: 0.62,
   Shrikhand: 0.5,
   'Bagel Fat One': 0.46,
   'Rubik Mono One': 0.46,
@@ -364,7 +362,8 @@ export function recipeFor(
 
 /** The fixed look of the site's own wordmark. */
 export const WORDMARK_RECIPE: Recipe = {
-  font: 'Chango',
+  // Unused: the wordmark is a stitch alphabet. A recipe always names a font.
+  font: 'Shrikhand',
   letterAspect: 1.5,
   letterGap: 1,
   lineGap: 1,

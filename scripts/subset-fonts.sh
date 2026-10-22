@@ -2,7 +2,7 @@
 # Cuts large display fonts down to Latin characters. Needs fonttools:
 #   python3 -m pip install --user fonttools
 # Only fonts without a Reserved Font Name may be subset under the OFL
-# (Chango and IBM Plex reserve their names, so they stay unmodified).
+# (IBM Plex reserves its name, so it stays unmodified).
 set -e
 cd "$(dirname "$0")/.."
 

@@ -11,7 +11,7 @@ const pattern = (cells: number[], recipe: Partial<Recipe> = {}): Pattern => ({
   meta: {
     text: 'x',
     lines: ['X'],
-    font: 'Chango',
+    font: 'Shrikhand',
     seed: 's',
     recipe: { ...WORDMARK_RECIPE, ...recipe },
   },

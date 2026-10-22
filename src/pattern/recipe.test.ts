@@ -92,7 +92,7 @@ describe('recipeFor', () => {
     }
   })
 
-  it('spreads the pattern fonts across seeds, and never picks Chango', () => {
+  it('spreads the pattern fonts across seeds', () => {
     const fonts = new Set(Array.from({ length: 40 }, (_, i) => recipeFor(`f${i}`).font))
     expect([...fonts].sort()).toEqual([...PATTERN_FONTS].sort())
   })
@@ -141,7 +141,9 @@ describe('recipeFor', () => {
 
   it('names the style in plain words', () => {
     const plain = { ...recipeFor('x'), icon: null, effect: 'none', alphabet: null } as const
-    expect(describeRecipe({ ...plain, font: 'Chango', letterAspect: 1.8, letterGap: 1 })).toBe('Chango · tall letters')
+    expect(describeRecipe({ ...plain, font: 'Bagel Fat One', letterAspect: 1.8, letterGap: 1 })).toBe(
+      'Bagel Fat One · tall letters',
+    )
     expect(
       describeRecipe({ ...plain, font: 'Shrikhand', icon: 'lemon', effect: 'shadow', letterAspect: 1.5, letterGap: 1 }),
     ).toBe('Shrikhand · with a shadow and a lemon slice')
