@@ -36,7 +36,12 @@ export type AlphabetLayoutResult =
   | { ok: false; reason: 'missing'; char: string; chars: string[] }
   | { ok: false; reason: 'too-wide' }
 
-/** Typographic punctuation, as phone keyboards type it, and the plain character to stitch instead. */
+/**
+ * Characters to stitch as a plainer one when the alphabet hasn't got them:
+ * typographic punctuation as phone keyboards type it, and letters whose
+ * accent can't be split off (accented letters like É fall back to E by
+ * themselves, below).
+ */
 const PLAIN: Record<string, string> = {
   '\u2018': "'",
   '\u2019': "'",
@@ -47,11 +52,29 @@ const PLAIN: Record<string, string> = {
   '\u201E': '"',
   '\u2013': '-',
   '\u2014': '-',
+  Ø: 'O',
+  ø: 'o',
+  Ł: 'L',
+  ł: 'l',
+  Đ: 'D',
+  đ: 'd',
+  Ħ: 'H',
+  ħ: 'h',
 }
 
-/** A character's glyph, or its plain version's when the alphabet only has that, like ' for ’. */
-function glyphFor(size: AlphabetSize, char: string) {
-  return size.glyphs.get(char) ?? (PLAIN[char] ? size.glyphs.get(PLAIN[char]) : undefined)
+/** The letter without its accent, like E for É; the character itself if it has none. */
+const unaccented = (char: string) => char.normalize('NFD').replace(/\p{M}/gu, '')
+
+/**
+ * A character's glyph: its own if the alphabet has one, else the plain
+ * version's, like ' for ’ or E for É. One glyph per character, always, so
+ * the letters still line up with the text for the cursor.
+ */
+export function glyphFor(size: AlphabetSize, char: string) {
+  const own = size.glyphs.get(char)
+  if (own) return own
+  const plain = PLAIN[char] ?? unaccented(char)
+  return [...plain].length === 1 ? size.glyphs.get(plain) : undefined
 }
 
 /** Every character in the lines that this size of the alphabet can't stitch, each once. */

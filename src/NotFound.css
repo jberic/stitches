@@ -1,0 +1,59 @@
+/* The fabric, as on the tool: a cream Aida grid edge to edge. */
+.not-found {
+  background-color: var(--sheet);
+  background-image:
+    linear-gradient(rgb(0 0 0 / 0.09) 1px, transparent 1px), linear-gradient(90deg, rgb(0 0 0 / 0.09) 1px, transparent 1px);
+  /* Until the 404 is drawn; then one square per stitch, set in NotFound.tsx. */
+  background-size: 14px 14px;
+}
+
+.not-found-body {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: clamp(3rem, 12vh, 8rem) var(--gutter) 3rem;
+  text-align: center;
+}
+
+.not-found-mark {
+  /* 40 stitches at 10px, or 8px on a phone: big enough to see the crosses. */
+  width: min(25rem, 80vw);
+  margin-bottom: 1rem;
+}
+
+.not-found h1 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 500;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.not-found p {
+  margin: 0;
+  color: var(--fg-muted);
+}
+
+.not-found-home {
+  margin-top: 0.75rem;
+  padding: 0.85rem 1.4rem;
+  border-radius: 0.875rem;
+  background: var(--accent);
+  color: #fbf4ec;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 160ms ease;
+}
+
+.not-found-home:hover {
+  background: var(--accent-strong);
+}
+
+.not-found-home:focus-visible,
+.site-mark:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}

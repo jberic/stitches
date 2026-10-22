@@ -12,6 +12,11 @@ const STITCHES_WIDE = 144
 const SEW_MS = 1100
 
 interface Props {
+  /** What to stitch, and how many stitches wide; the site name unless set. */
+  lines?: string[]
+  stitchesWide?: number
+  /** The widest it's ever shown, in CSS pixels, so it's drawn sharp at that size. */
+  widest?: () => number
   /** Sew the stitches in over about a second instead of showing them at once. */
   sew: boolean
   /** Called once the first drawing is on screen (or sewing has started). */
@@ -27,7 +32,15 @@ function cssColour(el: Element, name: string) {
 }
 
 /** The site's name, drawn as a stitch pattern by the same engine as the tool. Shown in the intro. */
-export function Wordmark({ sew, onReady, onFailed, finishSignal }: Props) {
+export function Wordmark({
+  sew,
+  onReady,
+  onFailed,
+  finishSignal,
+  lines = LINES,
+  stitchesWide = STITCHES_WIDE,
+  widest = introWordmarkWidth,
+}: Props) {
   const h1Ref = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const drawerRef = useRef<StitchDrawer | null>(null)
@@ -45,7 +58,7 @@ export function Wordmark({ sew, onReady, onFailed, finishSignal }: Props) {
     const h1 = h1Ref.current
     const canvas = canvasRef.current
     if (!h1 || !canvas) return
-    const patternReady: Promise<Pattern> = renderWordmark(LINES, STITCHES_WIDE)
+    const patternReady: Promise<Pattern> = renderWordmark(lines, stitchesWide)
     let lastCell = 0
     let alive = true
 
@@ -58,7 +71,7 @@ export function Wordmark({ sew, onReady, onFailed, finishSignal }: Props) {
         return
       }
       if (!alive) return
-      const cell = Math.max(h1.clientWidth, introWordmarkWidth()) / pattern.width
+      const cell = Math.max(h1.clientWidth, widest()) / pattern.width
       if (cell === lastCell) return
       lastCell = cell
 
@@ -95,7 +108,8 @@ export function Wordmark({ sew, onReady, onFailed, finishSignal }: Props) {
       observer.disconnect()
       cancelAnimationFrame(frameRef.current)
     }
-  }, [])
+    // Drawn once: what it stitches never changes on a page.
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (finishSignal === 0) return

@@ -6,7 +6,7 @@ import { maskFromCanvas } from './canvas'
 import { cleanup, smoothEdges, type Grid } from './cleanup'
 import { ACCENT, EFFECT_REACH, addEffect, type Effect, iconSizeFor, padColumns, placeIconBelow } from './compose'
 import { coverage, stitchesFrom, trimRows, type Mask } from './downsample'
-import { renderAlphabet } from './layouts/alphabet'
+import { glyphFor, renderAlphabet } from './layouts/alphabet'
 import { newSeed } from './random'
 import { styleWidth } from './styleWidths'
 import { renderStackedBlock, type LetterBox } from './layouts/stackedBlock'
@@ -149,7 +149,7 @@ function drawInitialAt(
 ): Lettering {
   const initial = ALPHABETS[recipe.alphabet!].sizes[initialSize]
   const char = lines[0].charAt(0).toLocaleUpperCase()
-  const glyph = initial.glyphs.get(char)
+  const glyph = glyphFor(initial, char)
   if (!glyph) return unsupportedLettering(width, `This initial has no "${char}"`, [char])
   const capRows = glyph.rows.slice(0, initial.capRows)
   const rest = [lines[0].slice(1), ...lines.slice(1)]

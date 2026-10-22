@@ -69,13 +69,21 @@ describe('renderAlphabet', () => {
   })
 
   it('reports a character it has no glyph for, and words too wide for either size', () => {
-    expect(renderAlphabet(['CAFÉ'], options)).toEqual({ ok: false, reason: 'missing', char: 'É', chars: ['É'] })
+    expect(renderAlphabet(['CAF@'], options)).toEqual({ ok: false, reason: 'missing', char: '@', chars: ['@'] })
     expect(renderAlphabet(['ABCDEFGHIJKLMNOP'], { ...options, width: 40 })).toEqual({ ok: false, reason: 'too-wide' })
   })
 
   it('lists every missing character once, in the order typed', () => {
-    const result = renderAlphabet(['SEÑOR É', 'Ñ🙂'], options)
-    expect(result.ok === false && result.reason === 'missing' && result.chars).toEqual(['Ñ', 'É', '🙂'])
+    const result = renderAlphabet(['HI@ #', '@🙂'], options)
+    expect(result.ok === false && result.reason === 'missing' && result.chars).toEqual(['@', '#', '🙂'])
+  })
+
+  it('stitches an accented letter it has no glyph for as the plain letter, one glyph each', () => {
+    const plain = renderAlphabet(['CAFE SENOR OLA'], { ...options, width: 200 })
+    const accented = renderAlphabet(['CAFÉ SEÑOR ØLA'], { ...options, width: 200 })
+    if (!plain.ok || !accented.ok) throw new Error('expected layouts')
+    expect(accented.mask).toEqual(plain.mask)
+    expect(accented.letters).toHaveLength(12)
   })
 
   it('stitches curly quotes and long dashes as the plain ones a phone keyboard replaced', () => {
