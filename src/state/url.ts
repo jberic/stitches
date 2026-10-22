@@ -21,7 +21,7 @@ export interface ShareState {
 }
 
 /** The style everyone starts with. */
-export const DEFAULT_STYLE: StyleId = 'swash'
+export const DEFAULT_STYLE: StyleId = 'delft'
 
 /** Today's day of the week, like "Thursday": what a first visit opens on. */
 export function today(date = new Date()): string {

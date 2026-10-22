@@ -27,8 +27,8 @@ import type { Pattern } from './types'
 
 // Low enough to show a short word at Auto, where the pattern is only as wide as the letters.
 export const MIN_WIDTH = 20
-// Wide enough for the 20-row stitch alphabets to set a two-word phrase like HELLO SUNSHINE at full size.
-export const MAX_WIDTH = 150
+// Wide enough for the default, Delft, to stitch every day of the week (WEDNESDAY needs 174 with its frame).
+export const MAX_WIDTH = 180
 export const DEFAULT_WIDTH = 50
 
 /** Mask pixels per stitch. */
