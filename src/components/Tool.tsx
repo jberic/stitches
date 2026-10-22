@@ -192,7 +192,7 @@ export function Tool({ inputRef }: Props) {
   }, [result, seed, style, choices]) // eslint-disable-line react-hooks/exhaustive-deps
   // Done looking for a width: searched for this result, or at Auto, where there's nothing wider to try.
   const searched = readableAt?.for === result || Boolean(result?.check.unsupported && width === null)
-  const suggestedWidth = searched ? readableAt.width : null
+  const suggestedWidth = readableAt?.for === result ? readableAt.width : null
 
   const downloadSheet = async () => {
     if (!pattern || !legend || download === 'busy') return
