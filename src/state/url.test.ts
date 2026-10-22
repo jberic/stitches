@@ -51,6 +51,13 @@ describe('share links', () => {
     expect(DEFAULT_STATE.text).toBe(today())
   })
 
+  it('keeps Auto out of the width: no width, or w=auto, means Auto', () => {
+    expect(readShareState('?text=Hi').width).toBeNull()
+    expect(readShareState('?text=Hi&w=auto').width).toBeNull()
+    expect(readShareState('?text=Hi&w=64').width).toBe(64)
+    expect(shareSearch({ ...DEFAULT_STATE, width: null })).toContain('w=auto')
+  })
+
   it('falls back to defaults for missing or broken values', () => {
     expect(readShareState('')).toEqual(DEFAULT_STATE)
     expect(readShareState('?text=%20%20&seed=NOT!&w=500&p=99&l=XYZ&a=0&f=13&m=meat')).toEqual(DEFAULT_STATE)

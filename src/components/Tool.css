@@ -123,3 +123,29 @@
   outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
+
+/* Auto: back to the letters' natural size. */
+.width-auto {
+  justify-self: start;
+  margin-top: 0.25rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.width-auto[aria-pressed='true'] {
+  border-color: var(--fg);
+  background: var(--fg);
+  color: #fff;
+}
+
+.width-auto:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}

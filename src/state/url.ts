@@ -9,7 +9,8 @@ import { MAX_CHARS } from '../pattern/text'
 export interface ShareState {
   text: string
   seed: string
-  width: number
+  /** Stitches wide, or null for Auto: the letters at their natural size. */
+  width: number | null
   /** Thread codes: the lettering thread and the accent thread. */
   lettering: string
   accent: string
@@ -30,8 +31,7 @@ export function today(date = new Date()): string {
 export const DEFAULT_STATE: ShareState = {
   text: today(),
   seed: 'k3j9a',
-  // Swash fits every day at 100 but WEDNESDAY, which widens the pattern a little by itself.
-  width: 100,
+  width: null,
   lettering: codesForPaletteId(DEFAULT_PALETTE_ID)![0],
   accent: codesForPaletteId(DEFAULT_PALETTE_ID)![1],
   fabric: DEFAULT_FABRIC_COUNT,
@@ -72,6 +72,7 @@ export function readShareState(search: string): ShareState {
   const state = {
     text: text && text.trim() && text.length <= MAX_CHARS * 2 ? text : DEFAULT_STATE.text,
     seed: isSeed(seed) ? seed : DEFAULT_STATE.seed,
+    // A link without a width, or with w=auto, is Auto.
     width: Number.isInteger(width) && width >= MIN_WIDTH && width <= MAX_WIDTH ? width : DEFAULT_STATE.width,
     lettering: isThreadCode(lettering) ? lettering! : (fromPalette?.[0] ?? DEFAULT_STATE.lettering),
     accent: isThreadCode(accent) ? accent! : (fromPalette?.[1] ?? DEFAULT_STATE.accent),
@@ -86,7 +87,7 @@ export function shareSearch(state: ShareState): string {
   const params = new URLSearchParams({
     text: state.text,
     seed: state.seed,
-    w: String(state.width),
+    w: state.width === null ? 'auto' : String(state.width),
     l: state.lettering,
     a: state.accent,
     f: String(state.fabric),

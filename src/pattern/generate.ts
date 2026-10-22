@@ -25,7 +25,8 @@ import {
 } from './recipe'
 import type { Pattern } from './types'
 
-export const MIN_WIDTH = 40
+// Low enough to show a short word at Auto, where the pattern is only as wide as the letters.
+export const MIN_WIDTH = 20
 // Wide enough for the 20-row stitch alphabets to set a two-word phrase like HELLO SUNSHINE at full size.
 export const MAX_WIDTH = 150
 export const DEFAULT_WIDTH = 50
@@ -201,7 +202,7 @@ function drawInitialAt(
   return { mask, letters, size: initialSize, accent }
 }
 
-function drawLettering(upper: string[], width: number, recipe: Recipe): Lettering {
+function drawLettering(upper: string[], width: number, recipe: Recipe, natural = false): Lettering {
   if (recipe.alphabet && ALPHABETS[recipe.alphabet].initial) return drawInitial(upper, width, recipe)
   if (recipe.alphabet) {
     const result = renderAlphabet(upper, {
@@ -211,6 +212,8 @@ function drawLettering(upper: string[], width: number, recipe: Recipe): Letterin
       letterGap: recipe.letterGap,
       lineGap: recipe.lineGap + 1,
       sizes: ALPHABETS[recipe.alphabet].largeOnly ? ['regular'] : undefined,
+      // At its natural size a stitch alphabet is never enlarged to fill the width.
+      maxScale: natural ? 1 : undefined,
     })
     if (!result.ok) {
       return unsupportedLettering(
@@ -231,6 +234,8 @@ function drawLettering(upper: string[], width: number, recipe: Recipe): Letterin
     letterGap: recipe.letterGap,
     lineGap: recipe.lineGap,
     minLineRows: MIN_ROWS[recipe.letterCase],
+    // At its natural size the width is chosen for the letter height, so it mustn't cap it.
+    maxLineRatio: natural ? 10 : undefined,
   })
   return {
     mask: padSides(maskFromCanvas(canvas), FONT_MARGIN * SCALE),
@@ -279,7 +284,14 @@ function stitchedEffect(recipe: Recipe, size: AlphabetSizeId | undefined): Effec
 }
 
 /** Draws, downsamples, tidies and checks one recipe. Deterministic for the same inputs. */
-export async function renderRecipe(lines: string[], width: number, recipe: Recipe, seed = ''): Promise<Rendered> {
+export async function renderRecipe(
+  lines: string[],
+  width: number,
+  recipe: Recipe,
+  seed = '',
+  /** Letters at their natural size (see generateInStyle), with empty columns trimmed off. */
+  natural = false,
+): Promise<Rendered> {
   // A stitch alphabet is drawn on the grid; only a font needs its file loaded.
   if (!recipe.alphabet) await loadDisplayFont(recipe.font)
   const cased = lines.map((line) =>
@@ -296,7 +308,7 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
       : recipe
   const reach = EFFECT_REACH[planned.effect]
   const inner = width - reach.left - reach.right
-  const { mask, letters, unsupported, size, accent } = drawLettering(cased, inner, recipe)
+  const { mask, letters, unsupported, size, accent } = drawLettering(cased, inner, recipe, natural)
   if (unsupported) return unsupportedResult(lines, cased, width, recipe, seed, unsupported)
   const cover = coverage(mask, SCALE)
   const raw: Grid = { width: inner, height: cover.length / inner, cells: stitchesFrom(cover, recipe.threshold) }
@@ -317,13 +329,20 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
   const { cells, height } = decorate(lettering, stitched)
   // The letters as placed: shifted by the trimmed rows, the effect's room on the left and above.
   const top = EFFECT_REACH[stitched.effect].top - trimmed.top
-  const placed = letters.map((box) => ({ ...box, x: box.x + left, y: box.y + top }))
+  let placed = letters.map((box) => ({ ...box, x: box.x + left, y: box.y + top }))
+  let final = { width, cells }
+  // At natural size the pattern is only as wide as what's stitched.
+  if (natural) {
+    const cropped = trimColumns(cells, width, height)
+    final = cropped
+    placed = placed.map((box) => ({ ...box, x: box.x - cropped.left }))
+  }
 
   return {
     pattern: {
-      width,
+      width: final.width,
       height,
-      cells,
+      cells: final.cells,
       meta: { text: lines.join(' '), lines: cased, font: recipe.font, seed, recipe: stitched },
     },
     letters: placed,
@@ -331,6 +350,22 @@ export async function renderRecipe(lines: string[], width: number, recipe: Recip
     raw,
     check,
   }
+}
+
+/** The same cells without the empty columns at either side, and how many were taken off the left. */
+function trimColumns(cells: Uint8Array, width: number, height: number) {
+  const used = (x: number) => {
+    for (let y = 0; y < height; y++) if (cells[y * width + x]) return true
+    return false
+  }
+  let left = 0
+  let right = width - 1
+  while (left < right && !used(left)) left++
+  while (right > left && !used(right)) right--
+  const w = right - left + 1
+  const out = new Uint8Array(w * height)
+  for (let y = 0; y < height; y++) out.set(cells.subarray(y * width + left, y * width + right + 1), y * w)
+  return { width: w, cells: out, left }
 }
 
 /** An attempt the style can't draw at all; it fails the check so the next attempt uses the font. */
@@ -419,7 +454,8 @@ export async function generateInStyle({
   choices = DEFAULT_CHOICES,
 }: {
   lines: string[]
-  width: number
+  /** Stitches wide, or 'auto': the letters at their natural size, the pattern as wide as they are. */
+  width: number | 'auto'
   seed: string
   style: StyleId
   choices?: Choices
@@ -431,7 +467,9 @@ export async function generateInStyle({
   const tries = isAlphabetStyle(style) ? 2 : MAX_ATTEMPTS
   for (let attempt = 0; attempt < tries; attempt++) {
     const recipe = styleRecipe(seed, style, attempt, attempts[attempts.length - 1], resolved)
-    const rendered = await renderRecipe(lines, width, recipe, seed)
+    const auto = width === 'auto'
+    const across = !auto ? width : recipe.alphabet ? MAX_WIDTH : naturalFontWidth(lines, recipe)
+    const rendered = await renderRecipe(lines, across, recipe, seed, auto)
     attempts.push({ recipe, check: rendered.check })
     if (!best || rendered.check.penalty < best.check.penalty) best = rendered
     // A phrase the alphabet can't draw at all won't be fixed by a retry.
@@ -444,29 +482,27 @@ export async function generateInStyle({
     size: best!.size,
     letters: best!.letters,
     attempts,
-    tooNarrow: narrowness(lines, width),
+    tooNarrow: width === 'auto' ? undefined : narrowness(lines, width),
   }
 }
 
+/** How tall a font's capitals are at its natural size, in rows: as tall as the stitch alphabets drawn from fonts. */
+export const NATURAL_FONT_ROWS = 20
+
 /**
- * The width to start a style at for these words: the narrowest from the
- * style's own width (STYLE_WIDTHS) up to the maximum where it's readable at
- * its regular size, so a long phrase isn't stitched in the small one when a
- * little more width would do. Falls back to the narrowest readable width at
- * any size, then to the style's own width.
+ * The width at which a font's letters come out NATURAL_FONT_ROWS tall: each
+ * line's letters at that height and the recipe's proportions, the longest
+ * line deciding (stacked block stretches the others to match).
  */
-export async function startingWidth(lines: string[], seed: string, style: StyleId, choices: Choices = DEFAULT_CHOICES) {
-  const from = styleWidth(style, DEFAULT_WIDTH)
-  let readable: number | null = null
-  for (let width = from; width <= MAX_WIDTH; width = Math.min(MAX_WIDTH, width + 4)) {
-    const result = await generateInStyle({ lines, width, seed, style, choices })
-    if (result.check.ok) {
-      if (result.size !== 'small') return width
-      readable ??= width
-    }
-    if (width === MAX_WIDTH) break
-  }
-  return readable ?? from
+function naturalFontWidth(lines: string[], recipe: Recipe): number {
+  const perLetter = NATURAL_FONT_ROWS / recipe.letterAspect
+  const widest = Math.max(
+    ...lines.map((line) => {
+      const letters = [...line].filter((c) => !/\s/.test(c)).length
+      return letters * perLetter + recipe.letterGap * Math.max(0, letters - 1)
+    }),
+  )
+  return Math.min(MAX_WIDTH, Math.max(8, Math.round(widest + FONT_MARGIN * 2)))
 }
 
 /** The narrowest wider width (steps of 4, up to the maximum) where the chosen style is readable, or null. */

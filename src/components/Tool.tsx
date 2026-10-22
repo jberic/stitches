@@ -3,14 +3,16 @@ import { pairPalette, patternColours } from '../data/palettes'
 import {
   MAX_WIDTH,
   MIN_WIDTH,
+  NATURAL_FONT_ROWS,
   generateInStyle,
   readableWidthInStyle,
-  startingWidth,
   type GenerateResult,
 } from '../pattern/generate'
+import { ALPHABETS } from '../data/alphabets'
 import {
   DEFAULT_MOTIF,
   capitalsOnly,
+  isAlphabetStyle,
   describeRecipe,
   styleName,
   usesSecondThread,
@@ -22,7 +24,6 @@ import { PHRASE_MESSAGES, MAX_CHARS, parsePhrase } from '../pattern/text'
 import { downloadPatternSheet } from '../export/patternImage'
 import { legendFor } from '../pattern/legend'
 import { FABRIC_COUNTS, finishedSize, type FabricCount } from '../pattern/size'
-import { styleWidth } from '../pattern/styleWidths'
 import { thread } from '../data/palettes'
 import { readShareState, startingState, today, writeShareState } from '../state/url'
 import { Segmented } from './Segmented'
@@ -36,6 +37,11 @@ import './Tool.css'
 
 interface Props {
   inputRef?: React.RefObject<HTMLInputElement | null>
+}
+
+/** How many rows tall a style's capitals are at their natural size. */
+function naturalRows(style: StyleId): number {
+  return isAlphabetStyle(style) ? ALPHABETS[style].sizes.regular.capRows : NATURAL_FONT_ROWS
 }
 
 const CASE_LABELS: Record<LetterCase, string> = { typed: 'As typed', upper: 'Capitals', lower: 'Lowercase' }
@@ -81,7 +87,6 @@ export function Tool({ inputRef }: Props) {
   const [pinned, setPinned] = useState<number | null>(null)
   const [readableAt, setReadableAt] = useState<{ for: GenerateResult; width: number | null } | null>(null)
   const request = useRef(0)
-  const styleRequest = useRef<StyleId | null>(null)
   const historyMode = useRef<'replace' | 'push' | 'none'>('replace')
   const wide = useMedia('(min-width: 1440px)')
   const ids = { text: useId(), hint: useId(), width: useId() }
@@ -93,7 +98,7 @@ export function Tool({ inputRef }: Props) {
     if (linesKey === null) return
     const id = ++request.current
     const timer = window.setTimeout(() => {
-      generateInStyle({ lines: linesKey.split('\n'), width, seed, style, choices })
+      generateInStyle({ lines: linesKey.split('\n'), width: width ?? 'auto', seed, style, choices })
         .then((next) => {
           if (id !== request.current) return
           setResult(next)
@@ -131,17 +136,12 @@ export function Tool({ inputRef }: Props) {
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
-  const chooseStyle = async (next: StyleId) => {
+  // A new style starts at its letters' natural size.
+  const chooseStyle = (next: StyleId) => {
     if (next === style) return
-    // Show the new style straight away at its usual width, then settle on the width that suits these words.
     historyMode.current = 'push'
-    styleRequest.current = next
     setStyle(next)
-    setWidth(styleWidth(next, width))
-    if (!phrase.ok) return
-    const fitted = await startingWidth(phrase.lines, seed, next, choices)
-    // Only if no other style was picked meanwhile.
-    if (styleRequest.current === next) setWidth(fitted)
+    setWidth(null)
   }
 
   const chooseThreads = (lettering: string, accent: string) => {
@@ -176,6 +176,11 @@ export function Tool({ inputRef }: Props) {
     if (!result || result.check.ok || (result.tooNarrow && !result.check.unsupported)) return
     let alive = true
     const doesntFit = result.check.unsupported
+    // At Auto the letters already have all the width there is; nothing wider would fit them.
+    if (doesntFit && width === null) {
+      setReadableAt({ for: result, width: null })
+      return
+    }
     // From the width this result was drawn at, not the current one: once the pattern has
     // widened, this same result mustn't send it wider again before the new one arrives.
     readableWidthInStyle(result.pattern.meta.lines, seed, style, result.pattern.width, choices).then((found) => {
@@ -186,7 +191,8 @@ export function Tool({ inputRef }: Props) {
     return () => {
       alive = false
     }
-  }, [result, seed, style, choices])
+    // The width is read only to tell Auto apart; a change of width brings a new result anyway.
+  }, [result, seed, style, choices]) // eslint-disable-line react-hooks/exhaustive-deps
   const searched = readableAt?.for === result
   const suggestedWidth = searched ? readableAt.width : null
 
@@ -208,6 +214,8 @@ export function Tool({ inputRef }: Props) {
   }
 
   const size = pattern && finishedSize(pattern.width, pattern.height, fabricCount)
+  // What the width slider shows: the chosen width, or at Auto the width the words came out at.
+  const shownWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, width ?? pattern?.width ?? MIN_WIDTH))
   const capitals = capitalsOnly(style)
   const second = usesSecondThread(style)
   const name = styleName(style)
@@ -339,7 +347,7 @@ export function Tool({ inputRef }: Props) {
     {
       id: 'width',
       label: 'Width',
-      value: `${width} stitches`,
+      value: width === null ? `Auto · ${shownWidth}` : `${width} stitches`,
       panel: (
         <div className="width-control">
           <div className="field-row">
@@ -347,7 +355,7 @@ export function Tool({ inputRef }: Props) {
               Stitches wide
             </label>
             <output htmlFor={ids.width} className="mono value">
-              {width}
+              {shownWidth}
             </output>
           </div>
           <input
@@ -357,14 +365,22 @@ export function Tool({ inputRef }: Props) {
             min={MIN_WIDTH}
             max={MAX_WIDTH}
             step={1}
-            value={width}
+            value={shownWidth}
             onChange={(e) => setWidth(Number(e.target.value))}
-            style={{ '--fill': `${((width - MIN_WIDTH) / (MAX_WIDTH - MIN_WIDTH)) * 100}%` } as React.CSSProperties}
+            style={{ '--fill': `${((shownWidth - MIN_WIDTH) / (MAX_WIDTH - MIN_WIDTH)) * 100}%` } as React.CSSProperties}
           />
           <div className="range-scale mono" aria-hidden="true">
             <span>{MIN_WIDTH}</span>
             <span>{MAX_WIDTH}</span>
           </div>
+          <button type="button" className="width-auto" aria-pressed={width === null} onClick={() => setWidth(null)}>
+            Auto
+          </button>
+          <p className="hint">
+            {width === null
+              ? 'Auto keeps the letters at their natural size, and the pattern as wide as your words. Drag to make them bigger.'
+              : 'Wider makes the letters bigger. Auto puts them back to their natural size.'}
+          </p>
         </div>
       ),
     },
@@ -418,6 +434,7 @@ export function Tool({ inputRef }: Props) {
         letters={empty ? [] : (shown?.letters ?? [])}
         caretIndex={caretIndex}
         onPick={pickPosition}
+        naturalRows={naturalRows(style)}
       >
         <div id={ids.hint} role="status" aria-live="polite">
           {empty ? (
@@ -437,7 +454,7 @@ export function Tool({ inputRef }: Props) {
             ) : null
           ) : tooNarrow ? (
             <p className="stage-notice">
-              “{tooNarrow.word}” is too long to read clearly at {width} stitches wide.{' '}
+              “{tooNarrow.word}” is too long to read clearly at {shownWidth} stitches wide.{' '}
               {tooNarrow.suggestedWidth ? (
                 <button type="button" className="link-button" onClick={() => setWidth(tooNarrow.suggestedWidth!)}>
                   Make it {tooNarrow.suggestedWidth} wide
@@ -448,7 +465,7 @@ export function Tool({ inputRef }: Props) {
             </p>
           ) : hardToRead && searched ? (
             <p className="stage-notice">
-              Hard to read in {name} at {width} stitches.{' '}
+              Hard to read in {name} at {shownWidth} stitches.{' '}
               {suggestedWidth ? (
                 <button type="button" className="link-button" onClick={() => setWidth(suggestedWidth)}>
                   Make it {suggestedWidth} wide

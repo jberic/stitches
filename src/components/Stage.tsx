@@ -27,6 +27,8 @@ interface Props {
   caretIndex: number
   /** A click or tap on the words: the text index it lands nearest. */
   onPick: (index: number) => void
+  /** How many rows tall the style's letters are at their natural size; sets the stitch size on screen. */
+  naturalRows: number
 }
 
 const SEW_MS = 520
@@ -45,6 +47,11 @@ function sewingOrder(pattern: Pattern): Float32Array {
   }
   for (let i = 0; i < rank.length; i++) rank[i] /= max || 1
   return rank
+}
+
+/** How tall letters at their natural size are on screen, in CSS pixels: comfortable to read, never huge. */
+function letterHeight({ w, top, bottom }: { w: number; top: number; bottom: number }) {
+  return Math.round(Math.min((bottom - top) * 0.32, w * 0.11))
 }
 
 interface Layout {
@@ -74,6 +81,7 @@ export function Stage({
   letters,
   caretIndex,
   onPick,
+  naturalRows,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [viewport, setViewport] = useState({ w: 0, h: 0, top: 0, bottom: 0 })
@@ -105,14 +113,18 @@ export function Stage({
     const areaTop = viewport.top + 24
     // Room under the words for the hint.
     const areaBottom = viewport.bottom - 72
+    // One letter height on screen for every pattern, whatever its length: letters at their
+    // natural size are this tall, so typing never makes them jump. Only a pattern that
+    // would run off the screen is drawn smaller to fit.
+    const set = letterHeight(viewport) / naturalRows
     const fit = Math.min((viewport.w * side) / pattern.width, (areaBottom - areaTop) / pattern.height)
-    const cell = Math.max(MIN_CELL, Math.min(MAX_CELL, Math.floor(fit)))
+    const cell = Math.max(MIN_CELL, Math.min(MAX_CELL, Math.floor(Math.min(set, fit))))
     return {
       cell,
       x: Math.round((viewport.w - pattern.width * cell) / 2),
       y: Math.round(areaTop + (areaBottom - areaTop - pattern.height * cell) / 2),
     }
-  }, [pattern, viewport])
+  }, [pattern, viewport, naturalRows])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -200,7 +212,7 @@ export function Stage({
           height: box.height * layout.cell,
         }
       : !pattern && viewport.w > 0
-        ? { left: viewport.w / 2 - 2, top: middle - 40, width: 4, height: 80 }
+        ? { left: viewport.w / 2 - 2, top: middle - letterHeight(viewport) / 2, width: 4, height: letterHeight(viewport) }
         : null
 
   // Where a click lands among the letters, so you can add or delete right there.
