@@ -170,17 +170,25 @@ export function Tool({ inputRef }: Props) {
   const tooNarrow = result && !unsupported ? result.tooNarrow : undefined
 
   // When the pattern isn't readable at this width, look for a width in the same style that is.
+  // If the letters don't fit at all, the pattern simply grows to that width as you type:
+  // on screen the stitches get smaller, the letters keep every detail.
   useEffect(() => {
     if (!result || result.check.ok || (result.tooNarrow && !result.check.unsupported)) return
     let alive = true
-    readableWidthInStyle(result.pattern.meta.lines, seed, style, width, choices).then(
-      (found) => alive && setReadableAt({ for: result, width: found }),
-    )
+    const doesntFit = result.check.unsupported
+    // From the width this result was drawn at, not the current one: once the pattern has
+    // widened, this same result mustn't send it wider again before the new one arrives.
+    readableWidthInStyle(result.pattern.meta.lines, seed, style, result.pattern.width, choices).then((found) => {
+      if (!alive) return
+      if (doesntFit && found) setWidth(found)
+      else setReadableAt({ for: result, width: found })
+    })
     return () => {
       alive = false
     }
-  }, [result, seed, style, width, choices])
-  const suggestedWidth = readableAt?.for === result ? readableAt.width : null
+  }, [result, seed, style, choices])
+  const searched = readableAt?.for === result
+  const suggestedWidth = searched ? readableAt.width : null
 
   const downloadSheet = async () => {
     if (!pattern || !legend || download === 'busy') return
@@ -421,16 +429,12 @@ export function Tool({ inputRef }: Props) {
           ) : download === 'failed' ? (
             <p className="stage-notice">The download didn't work. Try again.</p>
           ) : unsupported ? (
-            <p className="stage-notice">
-              Too long for {name} at {width} stitches.{' '}
-              {suggestedWidth ? (
-                <button type="button" className="link-button" onClick={() => setWidth(suggestedWidth)}>
-                  Make it {suggestedWidth} wide
-                </button>
-              ) : (
-                'Try fewer letters or another style.'
-              )}
-            </p>
+            // While it looks for a width that fits, say nothing; the pattern widens itself.
+            searched ? (
+              <p className="stage-notice">
+                Too long for {name}, even at {MAX_WIDTH} stitches. Try fewer letters or another style.
+              </p>
+            ) : null
           ) : tooNarrow ? (
             <p className="stage-notice">
               “{tooNarrow.word}” is too long to read clearly at {width} stitches wide.{' '}
@@ -442,7 +446,7 @@ export function Tool({ inputRef }: Props) {
                 'Try a shorter word.'
               )}
             </p>
-          ) : hardToRead ? (
+          ) : hardToRead && searched ? (
             <p className="stage-notice">
               Hard to read in {name} at {width} stitches.{' '}
               {suggestedWidth ? (
