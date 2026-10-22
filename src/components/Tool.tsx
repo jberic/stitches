@@ -177,10 +177,7 @@ export function Tool({ inputRef }: Props) {
     let alive = true
     const doesntFit = result.check.unsupported
     // At Auto the letters already have all the width there is; nothing wider would fit them.
-    if (doesntFit && width === null) {
-      setReadableAt({ for: result, width: null })
-      return
-    }
+    if (doesntFit && width === null) return
     // From the width this result was drawn at, not the current one: once the pattern has
     // widened, this same result mustn't send it wider again before the new one arrives.
     readableWidthInStyle(result.pattern.meta.lines, seed, style, result.pattern.width, choices).then((found) => {
@@ -193,7 +190,8 @@ export function Tool({ inputRef }: Props) {
     }
     // The width is read only to tell Auto apart; a change of width brings a new result anyway.
   }, [result, seed, style, choices]) // eslint-disable-line react-hooks/exhaustive-deps
-  const searched = readableAt?.for === result
+  // Done looking for a width: searched for this result, or at Auto, where there's nothing wider to try.
+  const searched = readableAt?.for === result || Boolean(result?.check.unsupported && width === null)
   const suggestedWidth = searched ? readableAt.width : null
 
   const downloadSheet = async () => {
