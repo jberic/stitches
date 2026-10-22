@@ -166,8 +166,8 @@ export async function renderPatternSheet(sheet: PatternSheet): Promise<HTMLCanva
   ctx.fillText('Say It With Stitches', left, y)
   ctx.font = `400 12px ${UI}`
   ctx.fillStyle = MUTED
-  ctx.fillText('Screen colours are approximate. Check against your physical thread card.', left, y + 22)
-  ctx.fillText('Colour data: craft-color-codes by MakeBead, CC BY 4.0.', left, y + 40)
+  ctx.fillText('Screen colors are approximate. Check against your physical thread card.', left, y + 22)
+  ctx.fillText('Color data: craft-color-codes by MakeBead, CC BY 4.0.', left, y + 40)
 
   return canvas
 }

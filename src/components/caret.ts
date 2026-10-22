@@ -17,14 +17,18 @@ export function letterIndexes(text: string): number[] {
 const tall = (box: LetterBox) => box.capHeight ?? box.height
 
 export interface CaretBox {
+  /** The middle of the cursor: in the gap between two letters, clear of both. */
   x: number
   top: number
   height: number
 }
 
+/** Half a stitch: how far out the cursor sits at the start or end of a line. */
+const HALF = 0.5
+
 /**
- * Where the cursor sits for a text index: right after the letter before it,
- * or, at the start of a word, just before that word's first letter.
+ * Where the cursor sits for a text index: in the gap after the letter before
+ * it, or, at the start of a word, in front of that word's first letter.
  */
 export function caretBox(text: string, letters: LetterBox[], index: number): CaretBox | null {
   const at = letterIndexes(text)
@@ -35,12 +39,16 @@ export function caretBox(text: string, letters: LetterBox[], index: number): Car
   const afterLetter = index > 0 && !/\s/.test(text[index - 1] ?? ' ')
   if (afterLetter && before > 0 && letters[before - 1]) {
     const box = letters[before - 1]
-    return { x: box.x + box.width, top: box.y, height: tall(box) }
+    const right = box.x + box.width
+    // The next letter on the same line, if any: the cursor goes in the middle of the gap.
+    const next = letters[before]
+    const x = next && next.y === box.y && next.x >= right ? (right + next.x) / 2 : right + HALF
+    return { x, top: box.y, height: tall(box) }
   }
   const next = letters[Math.min(before, letters.length - 1)]
-  if (before < letters.length) return { x: next.x, top: next.y, height: tall(next) }
+  if (before < letters.length) return { x: next.x - HALF, top: next.y, height: tall(next) }
   const last = letters[letters.length - 1]
-  return { x: last.x + last.width, top: last.y, height: tall(last) }
+  return { x: last.x + last.width + HALF, top: last.y, height: tall(last) }
 }
 
 /** The text index nearest a point: before or after the closest letter on the closest line. */

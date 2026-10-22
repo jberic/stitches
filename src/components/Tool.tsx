@@ -252,15 +252,17 @@ export function Tool({ inputRef }: Props) {
   }
 
   // Until you've typed, the example is just a placeholder: the first character
-  // you type, paste or delete replaces all of it, wherever the cursor was.
+  // you type or paste replaces all of it, wherever the cursor was. Deleting
+  // works as usual, a letter at a time, so you can edit the example instead.
   const ownRef = useRef<HTMLInputElement | null>(null)
   const fieldRef = inputRef ?? ownRef
   useEffect(() => {
     const field = fieldRef.current
     if (!field || !pristine) return
     const onBefore = (e: InputEvent) => {
+      if (e.inputType.startsWith('delete')) return
       e.preventDefault()
-      onType(e.inputType.startsWith('delete') ? '' : (e.data ?? e.dataTransfer?.getData('text') ?? ''))
+      onType(e.data ?? e.dataTransfer?.getData('text') ?? '')
     }
     field.addEventListener('beforeinput', onBefore)
     return () => field.removeEventListener('beforeinput', onBefore)
@@ -320,7 +322,7 @@ export function Tool({ inputRef }: Props) {
     },
     {
       id: 'colours',
-      label: 'Colours',
+      label: 'Colors',
       value: (
         <>
           <span className="toolbar-swatch" style={{ background: l.hex }} />
@@ -332,7 +334,7 @@ export function Tool({ inputRef }: Props) {
       panel: (
         <>
           <ThreadPicker lettering={threads.lettering} accent={threads.accent} onChange={chooseThreads} showAccent={second} />
-          <p className="hint">Screen colours are approximate. Check against your physical thread card.</p>
+          <p className="hint">Screen colors are approximate. Check against your physical thread card.</p>
         </>
       ),
     },

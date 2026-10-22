@@ -45,8 +45,10 @@ function focusFirst(root: HTMLElement | null) {
   const first = root?.querySelector<HTMLElement>(
     'button:not([disabled]):not(.toolbar-close):not([role="tab"]):not([tabindex="-1"]), input:not([disabled]), [tabindex="0"]:not([role="tab"])',
   )
+  // The panel opens at its top, even when the chosen item is further down.
   first?.focus({ preventScroll: true })
-  first?.scrollIntoView({ block: 'nearest' })
+  root?.querySelectorAll<HTMLElement>('.toolbar-panel, .toolbar-sheet-body').forEach((el) => el.scrollTo({ top: 0 }))
+  if (root?.matches('.toolbar-panel')) root.scrollTo({ top: 0 })
 }
 
 /** Everything Tab can reach inside an element, in order. */

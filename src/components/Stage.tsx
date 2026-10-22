@@ -205,10 +205,10 @@ export function Stage({
   const caret =
     box && layout
       ? {
-          // On the boundary between letters, centred on it.
-          left: layout.x + box.x * layout.cell - Math.max(1, Math.round(layout.cell / 6)),
+          // A third of a stitch wide, centred in the gap between letters, so it never touches either.
+          left: layout.x + box.x * layout.cell - Math.max(1, layout.cell / 3) / 2,
           top: layout.y + box.top * layout.cell,
-          width: Math.max(2, Math.round(layout.cell / 3)),
+          width: Math.max(1, layout.cell / 3),
           height: box.height * layout.cell,
         }
       : !pattern && viewport.w > 0

@@ -5,7 +5,7 @@ import { DEFAULT_STATE, DEFAULT_STYLE, readShareState, shareSearch, today } from
 describe('share links', () => {
   it('round-trips text, seed, width and both threads', () => {
     const state = {
-      text: 'Stay cosy',
+      text: 'Stay cozy',
       seed: 'm4n5b',
       width: 64,
       lettering: '310',

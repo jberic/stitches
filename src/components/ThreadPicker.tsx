@@ -115,7 +115,7 @@ export function ThreadPicker({ lettering, accent, onChange, showAccent }: Props)
 
   return (
     <fieldset className="threads" aria-describedby={notes.length ? ids.notes : undefined}>
-      <legend className="visually-hidden">Colours</legend>
+      <legend className="visually-hidden">Colors</legend>
 
       <div className="threads-tabs" role="group" aria-label="Thread to change">
         {(showAccent ? (['lettering', 'accent'] as Role[]) : (['lettering'] as Role[])).map((role) => {
@@ -146,7 +146,7 @@ export function ThreadPicker({ lettering, accent, onChange, showAccent }: Props)
         className="threads-field"
         role="slider"
         tabIndex={0}
-        aria-label={editing === 'lettering' ? 'Colour for the lettering' : 'Colour for the second thread'}
+        aria-label={editing === 'lettering' ? 'Color for the lettering' : 'Color for the second thread'}
         aria-valuetext={`${current.code} ${current.name}`}
         aria-valuenow={Math.round(s * 100)}
         aria-valuemin={0}

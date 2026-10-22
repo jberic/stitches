@@ -35,7 +35,8 @@ export function About({ open, onClose }: Props) {
           </button>
         </div>
         <p className="about-lead">
-          Type a phrase and get a two-colour cross-stitch pattern. Generate again for the same words in a new style.
+          Say It With Stitches is made as a vibecoding project for people who love cross stitching. Just type a phrase and get a
+          cross-stitch pattern that you can download.
         </p>
         <dl className="about-credits">
           <div>
@@ -45,7 +46,7 @@ export function About({ open, onClose }: Props) {
             </dd>
           </div>
           <div>
-            <dt>Colour data</dt>
+            <dt>Color data</dt>
             <dd>
               <a href="https://github.com/makebead/craft-color-codes">craft-color-codes</a> by MakeBead, CC BY 4.0
             </dd>

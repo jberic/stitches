@@ -78,7 +78,8 @@
 }
 
 .toolbar-label {
-  font-size: 0.9375rem;
+  font-family: var(--font-heading);
+  font-size: 1rem;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -178,6 +179,17 @@
   margin-bottom: 0.875rem;
 }
 
+/* A panel's head stays in view while its settings scroll under it. */
+.toolbar-panel .toolbar-panel-head {
+  position: sticky;
+  top: -1rem;
+  z-index: 1;
+  margin: -1rem -1.25rem 0.875rem;
+  padding: 1rem 1.25rem 0.5rem;
+  background: #fff;
+}
+
+/* The same type as the toolbar button that opened it. */
 .toolbar-panel-head h2 {
   margin: 0;
   font-family: var(--font-heading);

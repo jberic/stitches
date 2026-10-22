@@ -100,7 +100,7 @@ export default function App() {
       if (input && document.activeElement !== input && (e.key.length === 1 || e.key === 'Backspace')) {
         typedDuringIntro.current = true
         input.focus({ preventScroll: true })
-        input.select()
+        input.setSelectionRange(input.value.length, input.value.length)
       }
       leave()
     }
@@ -124,10 +124,9 @@ export default function App() {
     if (playIntro) rememberIntroPlayed()
     const input = inputRef.current
     if (!input || typedDuringIntro.current || document.activeElement !== document.body) return
+    // The cursor at the end of the example: typing replaces it, Backspace deletes a letter at a time.
     input.focus({ preventScroll: true })
-    // Selecting lets a typed phrase replace the example. On touch screens the
-    // keyboard isn't open yet, so a selection would only look like a glitch.
-    if (window.matchMedia('(pointer: fine)').matches) input.select()
+    input.setSelectionRange(input.value.length, input.value.length)
   }, [phase, playIntro])
 
   return (

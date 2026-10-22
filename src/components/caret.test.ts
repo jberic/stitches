@@ -16,16 +16,21 @@ describe('the stitched cursor', () => {
     expect(letterIndexes(text)).toEqual([0, 1, 3, 4, 5])
   })
 
-  it('sits after the letter before it, or before the first letter of a word', () => {
-    expect(caretBox(text, letters, 0)).toEqual({ x: 0, top: 0, height: 8 })
-    expect(caretBox(text, letters, 2)).toEqual({ x: 11, top: 0, height: 8 })
-    expect(caretBox(text, letters, 3)).toEqual({ x: 0, top: 10, height: 8 })
-    expect(caretBox(text, letters, 6)).toEqual({ x: 17, top: 10, height: 8 })
+  it('sits in the gap between two letters, clear of both', () => {
+    expect(caretBox(text, letters, 1)).toEqual({ x: 5.5, top: 0, height: 8 })
+    expect(caretBox(text, letters, 4)).toEqual({ x: 5.5, top: 10, height: 8 })
+  })
+
+  it('sits half a stitch out at the start and end of a line', () => {
+    expect(caretBox(text, letters, 0)).toEqual({ x: -0.5, top: 0, height: 8 })
+    expect(caretBox(text, letters, 2)).toEqual({ x: 11.5, top: 0, height: 8 })
+    expect(caretBox(text, letters, 3)).toEqual({ x: -0.5, top: 10, height: 8 })
+    expect(caretBox(text, letters, 6)).toEqual({ x: 17.5, top: 10, height: 8 })
   })
 
   it('is as tall as the letters, not the room left for tails below them', () => {
     const tails = [{ x: 0, y: 0, width: 5, height: 26, capHeight: 20 }]
-    expect(caretBox('A', tails, 1)).toEqual({ x: 5, top: 0, height: 20 })
+    expect(caretBox('A', tails, 1)).toEqual({ x: 5.5, top: 0, height: 20 })
   })
 
   it('has nowhere to go without letters', () => {

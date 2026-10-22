@@ -34,7 +34,7 @@ function Stitched({ rows, cell, colour }: { rows: string[]; cell: number; colour
   return <canvas ref={ref} role="img" aria-label={rows.length ? 'stitched letters' : ''} />
 }
 
-const SAMPLES = ['HELLO SUNSHINE', 'hello sunshine', 'Stay cosy!', "What's up? 2026"]
+const SAMPLES = ['HELLO SUNSHINE', 'hello sunshine', 'Stay cozy!', "What's up? 2026"]
 
 export function AlphabetGallery() {
   const ink = patternColours(paletteById('07')).lettering.hex
