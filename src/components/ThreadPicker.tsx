@@ -146,7 +146,7 @@ export function ThreadPicker({ lettering, accent, onChange, showAccent }: Props)
         className="threads-field"
         role="slider"
         tabIndex={0}
-        aria-label={`Colour for the ${editing} thread`}
+        aria-label={editing === 'lettering' ? 'Colour for the lettering' : 'Colour for the second thread'}
         aria-valuetext={`${current.code} ${current.name}`}
         aria-valuenow={Math.round(s * 100)}
         aria-valuemin={0}

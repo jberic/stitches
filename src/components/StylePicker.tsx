@@ -86,12 +86,44 @@ export function StylePicker({ lines, seed, choices, colours, value, onChange }: 
     // Only the words, case and seed change what the previews look like; the chosen style just goes first.
   }, [words, letterCase, seed]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // One Tab stop for the whole grid, on the chosen style; the arrow keys move around it, Enter or Space picks.
+  const onKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const tiles = [...e.currentTarget.querySelectorAll<HTMLElement>('.style-tile')]
+    const at = tiles.indexOf(document.activeElement as HTMLElement)
+    if (at < 0) return
+    // Columns as laid out: the tiles whose top matches the first one's.
+    const top = tiles[0].offsetTop
+    const columns = Math.max(1, tiles.filter((t) => t.offsetTop === top).length)
+    const moves: Record<string, number> = {
+      ArrowRight: at + 1,
+      ArrowLeft: at - 1,
+      ArrowDown: at + columns,
+      ArrowUp: at - columns,
+      Home: 0,
+      End: tiles.length - 1,
+    }
+    const to = moves[e.key]
+    if (to === undefined) return
+    e.preventDefault()
+    const tile = tiles[Math.min(Math.max(to, 0), tiles.length - 1)]
+    tiles.forEach((t) => (t.tabIndex = t === tile ? 0 : -1))
+    tile.focus({ preventScroll: true })
+    tile.scrollIntoView({ block: 'nearest' })
+  }
+
   return (
-    <div className="styles" role="group" aria-label="Lettering styles">
+    <div className="styles" role="group" aria-label="Lettering styles" onKeyDown={onKey}>
       {STYLE_CHOICES.map((style) => {
         const preview = cache.get(key(style))
         return (
-          <button key={style} type="button" className="style-tile" aria-pressed={style === value} onClick={() => onChange(style)}>
+          <button
+            key={style}
+            type="button"
+            className="style-tile"
+            aria-pressed={style === value}
+            tabIndex={style === value ? 0 : -1}
+            onClick={() => onChange(style)}
+          >
             <Preview pattern={preview} colours={colours} />
             <span className="style-name">
               {styleName(style)}

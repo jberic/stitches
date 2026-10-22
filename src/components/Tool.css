@@ -149,3 +149,10 @@
   outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
+
+/* On touch screens the slider's hit area is finger-sized; the thread drawn across stays thin. */
+@media (pointer: coarse) {
+  .range {
+    height: 2.75rem;
+  }
+}

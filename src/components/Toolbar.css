@@ -186,6 +186,7 @@
 }
 
 .toolbar-close {
+  position: relative;
   display: grid;
   place-items: center;
   width: 2rem;
@@ -196,6 +197,13 @@
   background: transparent;
   color: var(--fg-muted);
   cursor: pointer;
+}
+
+/* A finger-sized target around the small close button, without making it look bigger. */
+.toolbar-close::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
 }
 
 .toolbar-close:hover {
@@ -377,7 +385,9 @@
   overflow-x: hidden;
   overflow-y: auto;
   min-height: 0;
-  padding-bottom: 0.5rem;
+  /* Room for focus rings, which the scrolling would otherwise clip. */
+  margin-inline: -6px;
+  padding: 6px 6px 0.5rem;
 }
 
 /* Changing tab: the new section slides in a little and fades up. */

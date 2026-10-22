@@ -36,13 +36,27 @@ function useCompact() {
   return compact
 }
 
-/** Focus the first control inside an element (skipping its close button), so keyboard users land on it. */
+/**
+ * Focus the first control inside an element (skipping its close button and
+ * tabs), so keyboard users land on it. In a group you move through with the
+ * arrow keys, that's the chosen item: the only one Tab stops at.
+ */
 function focusFirst(root: HTMLElement | null) {
-  root
-    ?.querySelector<HTMLElement>(
-      'button:not([disabled]):not(.toolbar-close):not([role="tab"]), input:not([disabled]), [tabindex="0"]',
-    )
-    ?.focus({ preventScroll: true })
+  const first = root?.querySelector<HTMLElement>(
+    'button:not([disabled]):not(.toolbar-close):not([role="tab"]):not([tabindex="-1"]), input:not([disabled]), [tabindex="0"]:not([role="tab"])',
+  )
+  first?.focus({ preventScroll: true })
+  first?.scrollIntoView({ block: 'nearest' })
+}
+
+/** Everything Tab can reach inside an element, in order. */
+function tabbable(root: HTMLElement): HTMLElement[] {
+  return [...root.querySelectorAll<HTMLElement>('button, input, select, textarea, a[href], [tabindex]')].filter((el) => {
+    if (el.tabIndex < 0 || el.matches(':disabled') || el.getClientRects().length === 0) return false
+    // A radio group is one stop: the chosen radio.
+    if (el instanceof HTMLInputElement && el.type === 'radio') return el.checked
+    return true
+  })
 }
 
 function CloseButton({ label, onClick }: { label: string; onClick: () => void }) {
@@ -86,6 +100,23 @@ function WideBar({ items, action }: Props) {
         e.stopPropagation()
         close(true)
       }
+      // The panel reads as part of its button: Tab out of its end goes on to the next
+      // item, Shift+Tab out of its start back to the button.
+      const panel = panelRef.current
+      if (e.key !== 'Tab' || !panel?.contains(document.activeElement)) return
+      const stops = tabbable(panel)
+      const ids = items.map((item) => item.id)
+      const opener = buttons.current.get(open)
+      if (e.shiftKey && document.activeElement === stops[0]) {
+        e.preventDefault()
+        opener?.focus()
+      } else if (!e.shiftKey && document.activeElement === stops[stops.length - 1]) {
+        e.preventDefault()
+        const next = ids[ids.indexOf(open) + 1]
+        setOpen(null)
+        if (next) buttons.current.get(next)?.focus()
+        else barRef.current?.querySelector<HTMLElement>('.toolbar-action button')?.focus()
+      }
     }
     const onDown = (e: PointerEvent) => {
       if (!barRef.current?.contains(e.target as Node)) close(false)
@@ -117,9 +148,11 @@ function WideBar({ items, action }: Props) {
     return () => window.removeEventListener('resize', place)
   }, [open])
 
+  // Once the panel is placed and showing: a hidden panel can't take focus.
+  const placed = left !== null
   useEffect(() => {
-    if (open) focusFirst(panelRef.current)
-  }, [open])
+    if (open && placed) focusFirst(panelRef.current)
+  }, [open, placed])
 
   const current = items.find((item) => item.id === open)
 
@@ -195,6 +228,21 @@ function CompactBar({ items, compactAction }: Props) {
         e.stopPropagation()
         close()
       }
+      // The sheet covers the page, so Tab goes round inside it.
+      const sheet = sheetRef.current
+      if (e.key !== 'Tab' || !sheet) return
+      const stops = tabbable(sheet)
+      if (stops.length === 0) return
+      const first = stops[0]
+      const last = stops[stops.length - 1]
+      const inside = sheet.contains(document.activeElement)
+      if (e.shiftKey && (document.activeElement === first || !inside)) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && (document.activeElement === last || !inside)) {
+        e.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener('keydown', onKey, true)
     // The page behind the sheet doesn't scroll while it's open.
@@ -206,9 +254,10 @@ function CompactBar({ items, compactAction }: Props) {
     }
   })
 
+  // Opening the sheet puts focus on the first setting. Changing tab leaves it on the tab.
   useEffect(() => {
     if (open) focusFirst(sheetRef.current)
-  }, [open, tab])
+  }, [open])
 
   const chooseTab = (id: string, button: HTMLElement) => {
     if (id === current.id) return
@@ -222,6 +271,26 @@ function CompactBar({ items, compactAction }: Props) {
     button.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: reduced ? 'auto' : 'smooth' })
   }
 
+  // Tabs work like tabs: the arrow keys, Home and End move between them, and Tab goes on to the settings.
+  const onTabKey = (e: React.KeyboardEvent<HTMLElement>) => {
+    const at = items.findIndex((item) => item.id === current.id)
+    const to =
+      e.key === 'ArrowRight'
+        ? (at + 1) % items.length
+        : e.key === 'ArrowLeft'
+          ? (at - 1 + items.length) % items.length
+          : e.key === 'Home'
+            ? 0
+            : e.key === 'End'
+              ? items.length - 1
+              : -1
+    if (to < 0) return
+    e.preventDefault()
+    const button = e.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]')[to]
+    button?.focus()
+    if (button) chooseTab(items[to].id, button)
+  }
+
   return (
     <>
       {open && <div className="toolbar-scrim" aria-hidden="true" onClick={close} />}
@@ -232,7 +301,7 @@ function CompactBar({ items, compactAction }: Props) {
             <h2>Adjust</h2>
             <CloseButton label="Adjust" onClick={close} />
           </div>
-          <div className="toolbar-tabs" role="tablist" aria-label="Settings">
+          <div className="toolbar-tabs" role="tablist" aria-label="Settings" onKeyDown={onTabKey}>
             {items.map((item) => (
               <button
                 key={item.id}
@@ -240,6 +309,7 @@ function CompactBar({ items, compactAction }: Props) {
                 role="tab"
                 id={`${baseId}-tab-${item.id}`}
                 aria-selected={item.id === current.id}
+                tabIndex={item.id === current.id ? 0 : -1}
                 aria-controls={`${baseId}-panel`}
                 className="toolbar-tab"
                 onClick={(e) => chooseTab(item.id, e.currentTarget)}

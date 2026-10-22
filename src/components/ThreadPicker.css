@@ -191,3 +191,20 @@
   font-size: 0.8125rem;
   color: var(--fg);
 }
+
+/* On touch screens the hue strip and its thumb are easier to grab. */
+@media (pointer: coarse) {
+  .threads-hue {
+    height: 1.75rem;
+  }
+
+  .threads-hue::-webkit-slider-thumb {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .threads-hue::-moz-range-thumb {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+}

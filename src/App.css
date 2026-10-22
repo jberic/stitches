@@ -59,6 +59,7 @@
 }
 
 .about-link {
+  position: relative;
   padding: 0.5rem 0;
   border: 0;
   background: none;
@@ -69,6 +70,13 @@
   text-underline-offset: 0.3em;
   cursor: pointer;
   transition: text-decoration-color 160ms ease;
+}
+
+/* A finger-sized target around the small About link. */
+.about-link::after {
+  content: '';
+  position: absolute;
+  inset: -5px -10px;
 }
 
 .about-link:hover {
