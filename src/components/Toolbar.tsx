@@ -343,7 +343,12 @@ function CompactBar({ items, compactAction }: Props) {
             className="toolbar-adjust"
             aria-expanded={open}
             aria-haspopup="dialog"
-            onClick={() => (open ? close() : setOpen(true))}
+            onClick={() => {
+              if (open) return close()
+              // Settings take the screen: put the keyboard away.
+              ;(document.activeElement as HTMLElement | null)?.blur()
+              setOpen(true)
+            }}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />

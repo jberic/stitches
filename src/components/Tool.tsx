@@ -242,9 +242,15 @@ export function Tool({ inputRef }: Props) {
   }
 
   // A click or tap on the words puts the cursor there, to add or delete letters in place.
+  // The first one on a first visit clears the example, ready for your own words.
   const pickPosition = (index: number) => {
     const field = fieldRef.current
     if (!field) return
+    if (pristine) {
+      onType('', 0)
+      field.focus({ preventScroll: true })
+      return
+    }
     setPristine(false)
     field.focus({ preventScroll: true })
     field.setSelectionRange(index, index)

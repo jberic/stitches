@@ -29,6 +29,17 @@
   cursor: text;
 }
 
+/* On a touch screen the field covers only the words, so a tap elsewhere puts the keyboard away. */
+@media (pointer: coarse) {
+  .stage-input {
+    inset: auto;
+    left: var(--type-x);
+    top: var(--type-y);
+    width: var(--type-w);
+    height: var(--type-h);
+  }
+}
+
 .stage-input::selection {
   background: transparent;
 }

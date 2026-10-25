@@ -32,9 +32,13 @@ interface Props {
 }
 
 const SEW_MS = 520
-/** Largest and smallest stitch on screen, in CSS pixels. */
+/** Largest stitch on screen, and the smallest drawn in whole pixels, in CSS pixels. */
 const MAX_CELL = 26
 const MIN_CELL = 3
+/** Below this, on an upright phone, the words are small enough to suggest turning it sideways. */
+const SMALL_CELL = 4
+/** Room around the words that still counts as the writing area on a touch screen. */
+const TAP_MARGIN = 20
 
 function sewingOrder(pattern: Pattern): Float32Array {
   const rank = new Float32Array(pattern.cells.length)
@@ -118,7 +122,11 @@ export function Stage({
     // would run off the screen is drawn smaller to fit.
     const set = letterHeight(viewport) / naturalRows
     const fit = Math.min((viewport.w * side) / pattern.width, (areaBottom - areaTop) / pattern.height)
-    const cell = Math.max(MIN_CELL, Math.min(MAX_CELL, Math.floor(Math.min(set, fit))))
+    // Whole pixels while there's room; below that, a long word still fits on screen, with each
+    // stitch snapped to the screen's own pixels so it stays crisp.
+    const want = Math.min(MAX_CELL, set, fit)
+    const dpr = window.devicePixelRatio || 1
+    const cell = want >= MIN_CELL ? Math.floor(want) : Math.max(1 / dpr, Math.floor(want * dpr) / dpr)
     return {
       cell,
       x: Math.round((viewport.w - pattern.width * cell) / 2),
@@ -215,16 +223,45 @@ export function Stage({
         ? { left: viewport.w / 2 - 2, top: middle - letterHeight(viewport) / 2, width: 4, height: letterHeight(viewport) }
         : null
 
+  // On a touch screen only the words and the space around them are for typing: a tap anywhere
+  // else puts the keyboard away. (With a mouse, the whole page is the writing area.)
+  const typing =
+    layout && pattern
+      ? {
+          x: layout.x - TAP_MARGIN,
+          y: layout.y - TAP_MARGIN,
+          w: pattern.width * layout.cell + TAP_MARGIN * 2,
+          h: Math.max(88, pattern.height * layout.cell + TAP_MARGIN * 2),
+        }
+      : { x: 0, y: middle - letterHeight(viewport), w: viewport.w, h: Math.max(88, letterHeight(viewport) * 2) }
+  const typingArea = {
+    '--type-x': `${typing.x}px`,
+    '--type-y': `${typing.y}px`,
+    '--type-w': `${typing.w}px`,
+    '--type-h': `${typing.h}px`,
+  } as React.CSSProperties
+  const phoneUpright = viewport.w < 600 && viewport.h > viewport.w
+  const tiny = Boolean(pattern && layout && phoneUpright && layout.cell < SMALL_CELL)
+
   // Where a click lands among the letters, so you can add or delete right there.
   const pick = (e: React.PointerEvent) => {
-    if (!pattern || !layout || e.button !== 0) return
+    const field = e.currentTarget.querySelector<HTMLInputElement>('.stage-input')
+    if (e.pointerType !== 'mouse' && e.target !== field) {
+      field?.blur()
+      return
+    }
+    if (e.button !== 0) return
+    if (!pattern || !layout) {
+      onPick(0)
+      return
+    }
     const x = (e.clientX - layout.x) / layout.cell
     const y = (e.clientY - layout.y) / layout.cell
     onPick(indexAt(text, letters, x, y))
   }
 
   return (
-    <div className="stage" onPointerUp={pick}>
+    <div className="stage" style={typingArea} onPointerUp={pick}>
       <canvas ref={canvasRef} className="stage-fabric" role="img" aria-label={label} />
       {input}
       {caret && focused && <span className="stage-caret" aria-hidden="true" style={caret} />}
@@ -237,6 +274,7 @@ export function Stage({
         }
       >
         {children}
+        {tiny && <p className="stage-hint">Turn your phone sideways to see it bigger</p>}
       </div>
     </div>
   )
