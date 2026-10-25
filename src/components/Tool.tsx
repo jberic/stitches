@@ -453,7 +453,7 @@ export function Tool({ inputRef }: Props) {
       >
         <div id={ids.hint} role="status" aria-live="polite">
           {empty ? (
-            <p className="stage-hint">Type your own words · up to four</p>
+            <p className="stage-hint">Type your own words</p>
           ) : !phrase.ok ? (
             <p className="stage-notice">{PHRASE_MESSAGES[phrase.reason]}</p>
           ) : failed ? (
@@ -507,7 +507,7 @@ export function Tool({ inputRef }: Props) {
               )}
             </p>
           ) : pristine ? (
-            <p className="stage-hint">Type your own words · up to four</p>
+            <p className="stage-hint">Type your own words</p>
           ) : null}
         </div>
       </Stage>
