@@ -49,6 +49,8 @@ Pages for checking the work, in the dev server only: `/dev.html` (the 30 test ph
 
 The site is hosted on GitHub Pages. Every push to `main` runs `.github/workflows/deploy.yml`: install, test, build, publish `dist/`. GitHub serves `404.html` for any address that doesn't exist.
 
+It lives at https://sayitwithstitches.com. Visits are counted with [Plausible](https://plausible.io), which uses no cookies; its script is in the head of `index.html` and `404.html`.
+
 The site expects to be served from the root of its domain (`/fonts/…`, `/favicon.svg`), so it needs a custom domain, set under Settings → Pages. At `jberic.github.io/stitches/` the fonts and links would break.
 
 ## Where things are
