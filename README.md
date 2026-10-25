@@ -155,4 +155,4 @@ I wrote a one-page brief and a `CLAUDE.md` with the rules: browser only, determi
 
 **What someone who stitches said.** <!-- Fill in: one quote from a stitcher who tried it. -->
 
-**Live:** <!-- Add the URL after deploying. -->
+**Live:** https://sayitwithstitches.com
