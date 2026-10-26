@@ -53,19 +53,26 @@ It lives at https://sayitwithstitches.com. Visits are counted with [Plausible](h
 
 The site expects to be served from the root of its domain (`/fonts/…`, `/favicon.svg`), so it needs a custom domain, set under Settings → Pages. At `jberic.github.io/stitches/` the fonts and links would break.
 
+## Search engines and AI assistants
+
+- `src/content/site.ts` holds what the site says about itself: the title, the description, the features and the questions and answers. The About panel shows the questions; the build (`seo()` in `vite.config.ts`) puts the same words into `index.html` as plain text and structured data (WebSite, WebApplication, FAQPage), and writes `llms.txt`. Change the words there, and everything follows.
+- `public/` has `robots.txt` (search engines and AI assistants are all allowed), `sitemap.xml`, the share image `og-image.png` (drawn with the tool's own stitches), the app icons and `site.webmanifest`.
+- Shared pattern links all point search engines at the home page (`<link rel="canonical">`), so they count as one page.
+
 ## Where things are
 
-| Path                         | What's there                                                       |
-| ---------------------------- | ------------------------------------------------------------------ |
-| `src/components/Tool.tsx`    | The page: state, generation, messages, toolbar items               |
-| `src/components/Stage.tsx`   | The fabric, the stitched words and the cursor                      |
-| `src/components/Toolbar.tsx` | The floating toolbar, its panels, and the bottom sheet on phones   |
-| `src/pattern/`               | Recipes, rendering, cleanup, legibility check, legend, sizes       |
-| `src/data/alphabets/`        | The stitch alphabets, one file each, glyphs as rows of `#` and `.` |
-| `src/data/threads.json`      | Thread colors (see below)                                          |
-| `src/export/patternImage.ts` | The downloaded PNG                                                 |
-| `src/state/url.ts`           | Links, and the last pattern kept in this browser                   |
-| `design/fonts/`              | Fonts the stitch alphabets were drawn from; not shipped            |
+| Path                         | What's there                                                        |
+| ---------------------------- | ------------------------------------------------------------------- |
+| `src/components/Tool.tsx`    | The page: state, generation, messages, toolbar items                |
+| `src/components/Stage.tsx`   | The fabric, the stitched words and the cursor                       |
+| `src/components/Toolbar.tsx` | The floating toolbar, its panels, and the bottom sheet on phones    |
+| `src/pattern/`               | Recipes, rendering, cleanup, legibility check, legend, sizes        |
+| `src/data/alphabets/`        | The stitch alphabets, one file each, glyphs as rows of `#` and `.`  |
+| `src/data/threads.json`      | Thread colors (see below)                                           |
+| `src/export/patternImage.ts` | The downloaded PNG                                                  |
+| `src/state/url.ts`           | Links, and the last pattern kept in this browser                    |
+| `src/content/site.ts`        | Title, description, features and questions, for the page and search |
+| `design/fonts/`              | Fonts the stitch alphabets were drawn from; not shipped             |
 
 ## Accessibility
 
@@ -77,7 +84,7 @@ The site expects to be served from the root of its domain (`/fonts/…`, `/favic
 
 ## Fonts
 
-All fonts are under the [SIL Open Font License 1.1](https://openfontlicense.org), self-hosted from `public/fonts/`, with each font's `OFL.txt` next to it. Files come from the [Google Fonts repository](https://github.com/google/fonts). Bagel Fat One is cut down to Latin characters (1.5 MB to 51 KB) with `scripts/subset-fonts.sh`; the others are unmodified. Fonts with a Reserved Font Name (IBM Plex) must stay unmodified under the OFL.
+All fonts are under the [SIL Open Font License 1.1](https://openfontlicense.org), self-hosted from `public/fonts/`, with each font's `OFL.txt` next to it. Files come from the [Google Fonts repository](https://github.com/google/fonts). Fraunces and the three pattern fonts are served as WOFF2, cut down to Latin characters by `scripts/webfonts.sh` from the TTF files in `design/fonts/web/` (1.5 MB of fonts became 200 KB; the letters are unchanged). IBM Plex reserves its name under the OFL, so it is served exactly as published.
 
 | Font           | Use                               | Copyright                                  |
 | -------------- | --------------------------------- | ------------------------------------------ |

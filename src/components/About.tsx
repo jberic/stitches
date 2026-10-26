@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react'
+import { FAQ } from '../content/site'
 import './About.css'
 
 interface Props {
@@ -38,6 +39,14 @@ export function About({ open, onClose }: Props) {
           Say It With Stitches is made as a vibecoding project for people who love cross stitching. Just type a phrase and get a
           cross-stitch pattern that you can download.
         </p>
+        <div className="about-faq">
+          {FAQ.map(({ q, a }) => (
+            <details key={q}>
+              <summary>{q}</summary>
+              <p>{a}</p>
+            </details>
+          ))}
+        </div>
         <dl className="about-credits">
           <div>
             <dt>Stitched by</dt>

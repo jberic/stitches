@@ -1,9 +1,10 @@
-/* All fonts are SIL OFL 1.1, self-hosted from public/fonts (licence files sit next to each font). */
+/* All fonts are SIL OFL 1.1, self-hosted from public/fonts (license files sit next to each font).
+   The WOFF2 files are made by scripts/webfonts.sh; IBM Plex is shipped unchanged. */
 
 /* UI fonts */
 @font-face {
   font-family: 'Fraunces';
-  src: url('/fonts/fraunces/Fraunces-Variable.ttf') format('truetype');
+  src: url('/fonts/fraunces/Fraunces-Variable.woff2') format('woff2');
   font-weight: 100 900;
   font-display: block;
 }
@@ -29,16 +30,16 @@
 /* Display fonts for patterns. Only loaded when a recipe asks for them. */
 @font-face {
   font-family: 'Shrikhand';
-  src: url('/fonts/shrikhand/Shrikhand-Regular.ttf') format('truetype');
+  src: url('/fonts/shrikhand/Shrikhand-Regular.woff2') format('woff2');
   font-display: block;
 }
 @font-face {
   font-family: 'Bagel Fat One';
-  src: url('/fonts/bagelfatone/BagelFatOne-Regular.ttf') format('truetype');
+  src: url('/fonts/bagelfatone/BagelFatOne-Regular.woff2') format('woff2');
   font-display: block;
 }
 @font-face {
   font-family: 'Rubik Mono One';
-  src: url('/fonts/rubikmonoone/RubikMonoOne-Regular.ttf') format('truetype');
+  src: url('/fonts/rubikmonoone/RubikMonoOne-Regular.woff2') format('woff2');
   font-display: block;
 }

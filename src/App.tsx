@@ -134,7 +134,7 @@ export default function App() {
       <header className="site-header reveal" style={{ '--order': 0 } as React.CSSProperties}>
         <div className="site-nav">
           <h1 className="site-mark">
-            <img src={stitchMark} alt={SITE_NAME} width="32.4" height="32.4" />
+            <img src={stitchMark} alt={`${SITE_NAME}: free cross-stitch pattern maker`} width="32.4" height="32.4" />
           </h1>
           <button ref={aboutRef} type="button" className="about-link" onClick={() => setAboutOpen(true)} aria-haspopup="dialog">
             About
