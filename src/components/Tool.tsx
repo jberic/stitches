@@ -53,18 +53,6 @@ function naturalRows(style: StyleId): number {
 
 const CASE_LABELS: Record<LetterCase, string> = { typed: 'As typed', upper: 'Capitals', lower: 'Lowercase' }
 
-/** True while the media query matches. */
-function useMedia(query: string) {
-  const [matches, setMatches] = useState(() => window.matchMedia(query).matches)
-  useEffect(() => {
-    const list = window.matchMedia(query)
-    const onChange = () => setMatches(list.matches)
-    list.addEventListener('change', onChange)
-    return () => list.removeEventListener('change', onChange)
-  }, [query])
-  return matches
-}
-
 export function Tool({ inputRef }: Props) {
   const [initial] = useState(() => startingState(window.location.search))
   const [text, setText] = useState(initial.text)
@@ -100,7 +88,6 @@ export function Tool({ inputRef }: Props) {
   const [readableAt, setReadableAt] = useState<{ for: GenerateResult; width: number | null } | null>(null)
   const request = useRef(0)
   const historyMode = useRef<'replace' | 'push' | 'none'>('replace')
-  const wide = useMedia('(min-width: 1440px)')
   const ids = { text: useId(), hint: useId(), width: useId() }
 
   const phrase = parsePhrase(text)
@@ -426,7 +413,7 @@ export function Tool({ inputRef }: Props) {
       ),
     },
   ]
-  if (!wide && keyProps) {
+  if (keyProps) {
     items.push({
       id: 'threads',
       label: 'Threads',
@@ -517,8 +504,6 @@ export function Tool({ inputRef }: Props) {
           ) : null}
         </div>
       </Stage>
-
-      {wide && keyProps && <ThreadKey {...keyProps} card />}
 
       <Toolbar
         items={items}
