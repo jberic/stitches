@@ -270,7 +270,8 @@ export function Stage({
         style={
           layout && pattern
             ? { top: layout.y + pattern.height * layout.cell + Math.max(16, layout.cell * 1.5) }
-            : { top: middle + 64 }
+            : // Under the empty cursor, the same distance below it as below the words.
+              { top: middle + letterHeight(viewport) / 2 + 24 }
         }
       >
         {children}

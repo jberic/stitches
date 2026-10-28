@@ -51,8 +51,9 @@
   display: grid;
   gap: 0.05rem;
   justify-items: center;
-  min-width: 5.5rem;
-  padding: 0.55rem 1rem;
+  /* Every item the same width, so the bar never changes size as the values change. */
+  width: 8.5rem;
+  padding: 0.55rem 0.75rem;
   border: 0;
   border-radius: var(--item-radius);
   background: transparent;
@@ -88,7 +89,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  max-width: 9rem;
+  max-width: 100%;
   overflow: hidden;
   font-family: var(--font-mono);
   font-size: 0.75rem;
