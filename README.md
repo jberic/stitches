@@ -84,7 +84,7 @@ The site expects to be served from the root of its domain (`/fonts/…`, `/favic
 
 ## Fonts
 
-All fonts are under the [SIL Open Font License 1.1](https://openfontlicense.org), self-hosted from `public/fonts/`, with each font's `OFL.txt` next to it. Files come from the [Google Fonts repository](https://github.com/google/fonts). Fraunces and the three pattern fonts are served as WOFF2, cut down to Latin characters by `scripts/webfonts.sh` from the TTF files in `design/fonts/web/` (1.5 MB of fonts became 200 KB; the letters are unchanged). IBM Plex reserves its name under the OFL, so it is served exactly as published.
+All fonts are under the [SIL Open Font License 1.1](https://openfontlicense.org), self-hosted from `public/fonts/`, with each font's `OFL.txt` next to it. Fraunces and the pattern fonts come from the [Google Fonts repository](https://github.com/google/fonts); IBM Plex from [IBM](https://github.com/IBM/plex). Fraunces and the three pattern fonts are served as WOFF2, cut down to Latin characters by `scripts/webfonts.sh` from the TTF files in `design/fonts/web/` (1.5 MB of fonts became 200 KB; the letters are unchanged). IBM Plex reserves its name under the OFL, so it is served exactly as IBM publishes it: the official WOFF2 files from the `@ibm/plex-sans-variable` (0.2.0) and `@ibm/plex-mono` (2.5.0) packages, split by alphabet with IBM's own character ranges, so a browser downloads only the parts a page uses (67 KB for Plex Sans instead of 537 KB).
 
 | Font           | Use                               | Copyright                                  |
 | -------------- | --------------------------------- | ------------------------------------------ |
