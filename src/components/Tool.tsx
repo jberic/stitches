@@ -25,6 +25,7 @@ import { downloadPatternSheet } from '../export/patternImage'
 import { legendFor } from '../pattern/legend'
 import { FABRIC_COUNTS, finishedSize, type FabricCount } from '../pattern/size'
 import { thread } from '../data/palettes'
+import { track } from '../analytics'
 import { FontLoadError } from '../fonts'
 import type { Pattern } from '../pattern/types'
 import { readShareState, startingState, today, writeShareState } from '../state/url'
@@ -138,6 +139,7 @@ export function Tool({ inputRef }: Props) {
   // A new style starts at its letters' natural size.
   const chooseStyle = (next: StyleId) => {
     if (next === style) return
+    track('Style', { style: styleName(next) })
     historyMode.current = 'push'
     setStyle(next)
     setWidth(null)
@@ -206,6 +208,13 @@ export function Tool({ inputRef }: Props) {
         colours: chartColours,
         fabricCount,
         description: describeRecipe(pattern.meta.recipe),
+      })
+      // Which settings people download with; never the words themselves.
+      track('Download', {
+        style: name,
+        fabric: `${fabricCount}-count`,
+        width: width === null ? 'Auto' : 'Set by hand',
+        threads: legend.rows.length,
       })
     } catch {
       setDownloadFailed(pattern)
