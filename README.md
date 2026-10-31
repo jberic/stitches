@@ -6,7 +6,7 @@ Everything runs in the browser; there is no backend.
 
 ## What it does
 
-- **Type on the fabric.** The whole page is a cream Aida grid. Click anywhere and type up to four words (30 letters); the pattern is stitched as you go, with a stitched cursor that follows the text. A first visit opens on today's day of the week; a returning visitor carries on where they left off.
+- **Type on the fabric.** The whole page is a cream Aida grid. Click anywhere and type up to four words (30 letters); the pattern is stitched as you go, with a stitched cursor that follows the text. Every visit opens on today's day of the week in Delft; a shared link opens the pattern it names.
 - **37 lettering styles.** 34 stitch alphabets drawn on the grid, from Block and Sampler to Delft, Fraktur and Copperplate, and three open-license display fonts. Typography previews every style with your own words.
 - **Your own colors.** A color wheel that snaps to the closest real thread. The second thread is only offered for styles that stitch part of the pattern in it.
 - **Width on Auto.** Letters at their natural size and the pattern as wide as the words, shown at one letter height on screen so typing never makes them jump. Dragging Width makes the pattern bigger, up to 180 stitches.
@@ -70,7 +70,7 @@ The site expects to be served from the root of its domain (`/fonts/…`, `/favic
 | `src/data/alphabets/`        | The stitch alphabets, one file each, glyphs as rows of `#` and `.`  |
 | `src/data/threads.json`      | Thread colors (see below)                                           |
 | `src/export/patternImage.ts` | The downloaded PNG                                                  |
-| `src/state/url.ts`           | Links, and the last pattern kept in this browser                    |
+| `src/state/url.ts`           | Links, and the default pattern                                      |
 | `src/content/site.ts`        | Title, description, features and questions, for the page and search |
 | `design/fonts/`              | Fonts the stitch alphabets were drawn from; not shipped             |
 

@@ -104,35 +104,24 @@ export function shareSearch(state: ShareState): string {
  */
 export function writeShareState(state: ShareState, mode: 'replace' | 'push') {
   const search = shareSearch(state)
-  rememberLastState(search)
   if (search === window.location.search) return
   const url = `${window.location.pathname}${search}${window.location.hash}`
   if (mode === 'push') window.history.pushState(null, '', url)
   else window.history.replaceState(null, '', url)
 }
 
-const LAST_KEY = 'say-it-with-stitches:last'
-
-/** Kept in this browser only, so a returning visitor carries on where they left off. */
-function rememberLastState(search: string) {
-  try {
-    window.localStorage.setItem(LAST_KEY, search)
-  } catch {
-    // Storage blocked: the next visit just starts fresh.
-  }
-}
+/** Where earlier versions kept a visitor's last pattern; cleared so it can't come back. */
+const OLD_LAST_KEY = 'say-it-with-stitches:last'
 
 /**
- * Where the tool opens: the pattern a link names; otherwise this browser's
- * last pattern; otherwise the default.
+ * Where the tool opens: the pattern a link names, or else the same default for
+ * everyone, new or returning: today's day of the week in Delft.
  */
 export function startingState(search: string): ShareState {
-  if (hasShareState(search)) return readShareState(search)
   try {
-    const last = window.localStorage.getItem(LAST_KEY)
-    if (last) return readShareState(last)
+    window.localStorage.removeItem(OLD_LAST_KEY)
   } catch {
-    // Storage blocked: start fresh.
+    // Storage blocked: nothing was kept anyway.
   }
-  return readShareState('')
+  return hasShareState(search) ? readShareState(search) : readShareState('')
 }

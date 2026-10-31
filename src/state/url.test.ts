@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { STYLE_CHOICES } from '../pattern/recipe'
-import { DEFAULT_STATE, DEFAULT_STYLE, readShareState, shareSearch, today } from './url'
+import { DEFAULT_STATE, DEFAULT_STYLE, readShareState, shareSearch, startingState, today } from './url'
 
 describe('share links', () => {
   it('round-trips text, seed, width and both threads', () => {
@@ -62,5 +62,26 @@ describe('share links', () => {
     expect(readShareState('')).toEqual(DEFAULT_STATE)
     expect(readShareState('?text=%20%20&seed=NOT!&w=500&p=99&l=XYZ&a=0&f=13&m=meat')).toEqual(DEFAULT_STATE)
     expect(readShareState('?w=50.5').width).toBe(DEFAULT_STATE.width)
+  })
+})
+
+describe('where the tool opens', () => {
+  it('opens on the default for every visit to the plain address, whatever was stored before', () => {
+    // The tests run without a browser: a stand-in for the page's storage.
+    const stored = new Map([['say-it-with-stitches:last', '?text=Old&s=fraktur']])
+    const localStorage = { removeItem: (key: string) => stored.delete(key) }
+    Object.assign(globalThis, { window: { localStorage } })
+    try {
+      const state = startingState('')
+      expect(state.text).toBe(today())
+      expect(state.style).toBe(DEFAULT_STYLE)
+      expect(stored.has('say-it-with-stitches:last')).toBe(false)
+    } finally {
+      delete (globalThis as { window?: unknown }).window
+    }
+  })
+
+  it('opens the pattern a link names', () => {
+    expect(startingState('?text=Love&seed=k3j9a&s=fraktur').style).toBe('fraktur')
   })
 })
